@@ -1,30 +1,29 @@
 #include "larva.h"
 
 /**
- *    Sets up the processor
+ *  Sets up the processor
  */
 void larva_init()
 {
     vars_count = MIN_VARIABLES;
     vars = malloc(sizeof(var) * MIN_VARIABLES);
 
-    var_add("foo", VAR_GENERIC, "qwwew");
-
-    fputs(vars[0].name, stderr);
+    // skip first variable
+    var_add(NULL, VAR_UNSET, NULL);
 }
 
 /**
- *    Processes code buffer
+ *  Processes code buffer
  */
 int larva_digest(char *code, size_t length)
 {
     size_t pos = 0;
-    char token[32];
+    char *operator, *operand;
 
     while (pos < length)
     {
         // find first significant character
-        if (code[pos] == ' ' || code[pos] == 10 || code[pos] == 13)
+        if (code[pos] == ';' || code[pos] == 32 || code[pos] == 8 || code[pos] == 10 || code[pos] == 13)
         {
             // next please
             pos++;
@@ -33,83 +32,99 @@ int larva_digest(char *code, size_t length)
 
         if (code[pos] == '#')
         {
-            read_until_newline(code, (void *)&pos);
+            // read until newline
+            while (pos < length)
+            {
+                pos++;
+                if (code[pos] == 10 || code[pos] == 13) break;
+            }
             continue;
         }
 
-        // memorize token start position
-        int token_start = pos;
-        int token_size = 0;
+        size_t operator_start = pos;
+        size_t operator_size = read_until_token(code, (void *)&pos, ' ');
+        operator = malloc(sizeof(char) * operator_size);
+        memcpy(operator, &code[operator_start], operator_size);
 
-        while (pos < length)
+        if (!strcmp(operator, "var"))
         {
-            token_size = pos - token_start;
-            if (token_size >= 32)
+            // skip possible spaces
+            read_until_not_token(code, (void *)&pos, ' ');
+
+            size_t operand_start = pos;
+            size_t operand_size = read_until_token(code, (void *)&pos, ' ');
+            operand = malloc(sizeof(char) * operand_size);
+            memcpy(operand, (void *)&code[operand_start], operand_size);
+
+            size_t expression_start = pos;
+            size_t expression_size = read_until_token(code, (void *)&pos, ';');
+
+            // if does not exist -- create
+            if (!var_get_index(operand))
             {
-                return larva_stop(-1);
+                var_add(operand, VAR_GENERIC, 0);
             }
 
-            if (code[pos] == ' ')
-            {
-                token[token_size] = '\0';
-                break;
-            }
-
-            token[token_size] = code[pos];
-
-            pos++;
-        }
-
-        if (!strcmp(token, "var"))
-        {
-            read_until_newline(code, (void *)&pos);
-        }
-        else if (!strcmp(token, "varx"))
-        {
-            read_until_newline(code, (void *)&pos);
+            fprintf(stdout, "Creating variable '%s'\n", operand);
         }
         else
         {
-            // TODO: count line number and report it
+            int line = 1, sym = 0;
+            for (size_t i = 0; i < length; i++)
+            {
+                sym++;
+                if (code[i] == 10 || code[i] == 13)
+                {
+                    line++;
+                    sym = 0;
+                }
 
-            fputs("Syntax error. Last token is '", stderr);
-            fputs(token, stderr);
-            fputs("'.\n", stderr);
+                if (i == pos) break;
+            }
+
+            fprintf(stderr, "Line %d, position %d: last token is '%s'.\n", line, sym, operator);
 
             return larva_stop(-1);
         }
-
-   /*     fputs(token, stdout);
-        fputs("\n", stdout);
-
-        pos++;*/
     }
-
-
- /*   var a;
-    var *b = malloc(sizeof(var) * 10);
-    free(b);
-    fputs(code, stdout);*/
 
     return 0;
 }
 
 /**
- *    Reads until new line is not met
+ *  Reads until token character is met or the expression is not closed
  */
-void read_until_newline(char *code, size_t *pos)
+size_t read_until_token(char *code, size_t *pos, char token)
 {
+    size_t start = *pos;
     size_t length = strlen(code);
 
     // read until newline
     while ((*pos) < length)
     {
         (*pos)++;
-        if (code[(*pos)] == 10 || code[(*pos)] == 13)
-        {
-            break;
-        }
+        if (code[(*pos)] == token || code[(*pos)] == ';') break;
     }
+
+    return (*pos) - start;
+}
+
+/**
+ *  Reads until token character stops meeting
+ */
+size_t read_until_not_token(char *code, size_t *pos, char token)
+{
+    size_t start = *pos;
+    size_t length = strlen(code);
+
+    // read until newline
+    while ((*pos) < length)
+    {
+        (*pos)++;
+        if (code[(*pos)] != token) break;
+    }
+
+    return (*pos) - start;
 }
 
 
@@ -118,10 +133,7 @@ void read_until_newline(char *code, size_t *pos)
  */
 int larva_stop(int code)
 {
-    if (vars)
-    {
-        free(vars);
-    }
+    if (vars) free(vars);
 
     return code;
 }

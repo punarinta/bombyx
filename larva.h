@@ -10,7 +10,8 @@ var *vars;
 unsigned long vars_count;
 
 void larva_init();
-void read_until_newline(char *, size_t *);
+size_t read_until_token(char *, size_t *, char);
+size_t read_until_not_token(char *, size_t *, char);
 int larva_digest(char *, size_t);
 int larva_stop(int);
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define VAR_UNSET       00
 #define VAR_GENERIC     01
 #define VAR_INTEGER     02
 #define VAR_STRING      03
@@ -20,6 +21,7 @@ typedef struct
 } var;
 
 size_t var_add(char *, unsigned short, void *);
+unsigned long var_get_index(char *);
 void var_delete(char *);
 void var_delete_by_index(unsigned long);
 
