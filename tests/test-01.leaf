@@ -1,4 +1,4 @@
-# Everything after a pair of '#' sign and until a new line is considered a comment.
+# Everything after a '#' sign and until a new line is considered a comment.
 
 var foo;                    # This will allocate a generic variable. Not necessary to do it, but it can speed up further code.
                             # Generic variables are convenient to use, but are relatively slow.
