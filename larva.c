@@ -18,7 +18,7 @@ void larva_init()
 int larva_digest(char *code, size_t length)
 {
     size_t pos = 0;
-    char *operator, *operand;
+    char *operator = NULL, *operand = NULL;
 
     while (pos < length)
     {
@@ -40,6 +40,10 @@ int larva_digest(char *code, size_t length)
             }
             continue;
         }
+
+        // collect garbage
+        if (operator) free(operator);
+        if (operand) free(operand);
 
         size_t operator_start = pos;
         size_t operator_size = read_until_token(code, (void *)&pos, ' ');
