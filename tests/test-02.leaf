@@ -1,0 +1,15 @@
+# This demo will show show standard library usage.
+
+# Output functions
+
+var foo = 'aaa';
+out foo;                        # Drives the variable content to the standard output.
+var bar = 'zzz';
+out foo + bar;                  # Note concatenation operator.
+
+
+# Array functions
+
+[1,2,4,3].sort()                # Will A-Z sort the array.
+[1,2,4,3].sort(SORT_REVERSE)    # Will Z-A sort the array.
+[1,2,4,3].implode('.')          # Implodes an array with a defined separator. If omitted, separator is comma.

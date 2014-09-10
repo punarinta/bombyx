@@ -1,0 +1,44 @@
+# Everything after a pair of '#' sign and until a new line is considered a comment.
+
+var foo;                    # This will allocate a generic variable. Not necessary to do it, but it can speed up further code.
+                            # Generic variables are convenient to use, but are relatively slow.
+
+var foo = 'some text';      # You may redefine generic variable at any moment.
+
+foo = 10;                   # This will work too, as 'foo' is still of generic type.
+foo= 10;                    # This will fail. Produce a clear and readable code, please.
+
+int bar;                    # This adds a variable with a specific type.
+                            # Types are int, text, float, bool, array, function, object.
+
+bar = 'text data';          # This will cause an error. 'bar' was defined as an integer.
+
+
+function sayHello;          # Functions are variables too. And yes, they may be empty.
+
+sayHello();                 # Will return NULL.
+
+sayHello =                  # This will define a function body.
+{
+    var a = 2, b = 3;
+    return a * b;           # Will return and call garbage collector.
+};
+
+object X =                  # Creates an object.
+{
+    var a, b, c;
+    method count =          # Method is a synonym for function.
+    {
+        return a + b - c;   # NB: 'this' keyword is not needed.
+    };
+};
+
+X.count()                   # Will return the result.
+
+var A = [1, 3, 'hi', 9];    # Defines an array of vars. You may omit spaces after comma in arrays.
+
+sayHello = [var x, var y]   # That's how arguments are passed to a function.
+{
+    var a = 5;
+    return a * x;
+};
