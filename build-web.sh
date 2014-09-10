@@ -1,8 +1,8 @@
 #!/bin/sh
 
 g++ \
-core/*.cpp \
-larva.cpp \
+core/*.c \
+larva.c \
 web.cpp \
 \
 -lfcgi++ -lfcgi -lmysqlclient_r -std=c++11 \

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-g++ \
-core/*.cpp \
-larva.cpp \
-console.cpp \
+gcc \
+core/*.c \
+larva.c \
+console.c \
 \
 -o bombyx
