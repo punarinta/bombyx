@@ -24,5 +24,6 @@ size_t var_add(char *, unsigned short, void *);
 unsigned long var_get_index(char *);
 void var_delete(char *);
 void var_delete_by_index(unsigned long);
+char *trim(char *);
 
 #endif

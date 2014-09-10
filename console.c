@@ -9,7 +9,7 @@ int main (void)
     char *source = NULL;
     size_t newLen = 0;
 
-    FILE *fp = fopen("tests/test-01.leaf", "rt");
+    FILE *fp = fopen("tests/1.leaf", "rt");
 
     if (fp != NULL)
     {

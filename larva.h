@@ -1,6 +1,7 @@
 #ifndef _LARVA_H_
 #define _LARVA_H_ 1
 
+#include <ctype.h>
 #include "core/var.h"
 
 #define MIN_VARIABLES 100

@@ -18,12 +18,12 @@ void larva_init()
 int larva_digest(char *code, size_t length)
 {
     size_t pos = 0;
-    char *operator = NULL, *operand = NULL;
+    char *operator = NULL, *operand = NULL, *expression = NULL;
 
     while (pos < length)
     {
         // find first significant character
-        if (code[pos] == ';' || code[pos] == 32 || code[pos] == 8 || code[pos] == 10 || code[pos] == 13)
+        if (code[pos] == ';' || isspace(code[pos]))
         {
             // next please
             pos++;
@@ -44,11 +44,13 @@ int larva_digest(char *code, size_t length)
         // collect garbage
         if (operator) free(operator);
         if (operand) free(operand);
+        if (expression) free(expression);
 
         size_t operator_start = pos;
         size_t operator_size = read_until_token(code, (void *)&pos, ' ');
-        operator = malloc(sizeof(char) * operator_size);
+        operator = malloc(sizeof(char) * (operator_size + 1));
         memcpy(operator, &code[operator_start], operator_size);
+        operator[operator_size] = 0;
 
         if (!strcmp(operator, "var"))
         {
@@ -56,23 +58,32 @@ int larva_digest(char *code, size_t length)
             read_until_not_token(code, (void *)&pos, ' ');
 
             size_t operand_start = pos;
-            size_t operand_size = read_until_token(code, (void *)&pos, ' ');
+            size_t operand_size = read_until_token(code, (void *)&pos, '=');
             operand = malloc(sizeof(char) * operand_size);
             memcpy(operand, (void *)&code[operand_start], operand_size);
-
-            size_t expression_start = pos;
-            size_t expression_size = read_until_token(code, (void *)&pos, ';');
+            strcpy(operand, trim(operand));
 
             // if does not exist -- create
             if (!var_get_index(operand))
             {
+                fprintf(stdout, "Creating variable '%s'\n", operand);
                 var_add(operand, VAR_GENERIC, 0);
             }
 
-            fprintf(stdout, "Creating variable '%s'\n", operand);
+            if (code[pos] == ';') continue;
+
+            size_t expression_start = pos;
+            size_t expression_size = read_until_token(code, (void *)&pos, ';');
+            expression = malloc(sizeof(char) * expression_size);
+            memcpy(expression, (void *)&code[expression_start], expression_size);
+
+            fprintf(stdout, "Assigning variable '%s' to '%s'\n", operand, expression);
         }
         else
         {
+            // no more operators
+            if (pos == length - 1) return 0;
+
             int line = 1, sym = 0;
             for (size_t i = 0; i < length; i++)
             {
@@ -140,4 +151,16 @@ int larva_stop(int code)
     if (vars) free(vars);
 
     return code;
+}
+
+char *trim(char *str)
+{
+    char *end;
+    while (isspace(*str)) str++;
+    if (*str == 0) return str;
+    end = str + strlen(str) - 1;
+    while (end > str && isspace(*end)) end--;
+    *(end+1) = 0;
+
+    return str;
 }

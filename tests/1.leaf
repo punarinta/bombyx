@@ -1,0 +1,4 @@
+# dev tests
+
+var a;
+var b = 56;
