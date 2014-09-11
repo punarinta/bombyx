@@ -15,15 +15,19 @@
 
 typedef struct
 {
-    unsigned short int type;
+    unsigned short type;
     char *name;
     void *data;
+    unsigned long data_length;
 } var;
 
-size_t var_add(char *, unsigned short, void *);
+unsigned long var_add(char *, unsigned short, void *);
 unsigned long var_get_index(char *);
+int var_set_by_index(unsigned long, var, int);
 void var_delete(char *);
 void var_delete_by_index(unsigned long);
 char *trim(char *);
+
+#include "../common.h"
 
 #endif

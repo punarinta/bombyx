@@ -1,4 +1,12 @@
+#include "common.h"
 #include "larva.h"
+
+char *gl_code = NULL;
+char *command = NULL, *object = NULL, *expression = NULL, *oper = NULL; // 'operator' can be reserved
+char gl_errmsg[256];
+
+size_t read_command(char *, size_t *);
+void larva_poo();
 
 /**
  *  Sets up the processor
@@ -6,29 +14,42 @@
 void larva_init()
 {
     vars_count = MIN_VARIABLES;
-    vars = malloc(sizeof(var) * MIN_VARIABLES);
-
-    // skip first variable
-    var_add(NULL, VAR_UNSET, NULL);
+    vars = calloc(MIN_VARIABLES, sizeof(var));
+    for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
 }
+
+
+/**
+ *  Allocates more space for variables
+ */
+void larva_grow(unsigned long size)
+{
+    if (!size)
+    {
+        // by default just double it
+        size = MIN_VARIABLES;
+    }
+
+    vars = realloc(vars, sizeof(var) * (vars_count + size));
+
+    if (!vars) larva_stop(ERR_NO_MEMORY);
+}
+
 
 /**
  *  Processes code buffer
  */
 int larva_digest(char *code, size_t length)
 {
+    unsigned long index = 0;
     size_t pos = 0;
-    char *operator = NULL, *operand = NULL, *expression = NULL;
+
+    // memorize
+    gl_code = code;
 
     while (pos < length)
     {
-        // find first significant character
-        if (code[pos] == ';' || isspace(code[pos]))
-        {
-            // next please
-            pos++;
-            continue;
-        }
+        index = 0;
 
         if (code[pos] == '#')
         {
@@ -41,70 +62,201 @@ int larva_digest(char *code, size_t length)
             continue;
         }
 
+        // find first significant character
+        if (code[pos] == ';' || isspace(code[pos]))
+        {
+            // next please
+            pos++;
+            continue;
+        }
+
         // collect garbage
-        if (operator) free(operator);
-        if (operand) free(operand);
-        if (expression) free(expression);
+        if (command) free(command);
 
-        size_t operator_start = pos;
-        size_t operator_size = read_until_token(code, (void *)&pos, ' ');
-        operator = malloc(sizeof(char) * (operator_size + 1));
-        memcpy(operator, &code[operator_start], operator_size);
-        operator[operator_size] = 0;
 
-        if (!strcmp(operator, "var"))
+        size_t command_start = pos;
+        size_t command_size = read_command(code, (void *)&pos);
+        command = malloc(sizeof(char) * (command_size + 1));
+        memcpy(command, &code[command_start], command_size);
+        command[command_size] = 0;
+
+        trim(command);
+
+        index = var_get_index(command);
+
+        if (!strcmp(command, "var"))
         {
             // skip possible spaces
             read_until_not_token(code, (void *)&pos, ' ');
 
-            size_t operand_start = pos;
-            size_t operand_size = read_until_token(code, (void *)&pos, '=');
-            operand = malloc(sizeof(char) * operand_size);
-            memcpy(operand, (void *)&code[operand_start], operand_size);
-            trim(operand);
+            size_t object_start = pos;
+            size_t object_size = read_until_token(code, (void *)&pos, ' ');
+            if (object) free(object);
+            object = malloc(sizeof(char) * (object_size + 1));
+            memcpy(object, (void *)&code[object_start], object_size);
+            object[object_size] = 0;
 
-            // if does not exist -- create
-            if (!var_get_index(operand))
+            trim(object);
+
+            if (var_get_index(object))
             {
-                fprintf(stdout, "Creating variable '%s'\n", operand);
-                var_add(operand, VAR_GENERIC, 0);
+                sprintf(gl_errmsg, "Variable '%s' already exists.", object);
+                larva_error(pos);
             }
 
-            if (code[pos] == ';') continue;
+            // variable is just initialized, but not defined
+            if (code[pos] == ';')
+            {
+                if (!var_get_index(object))
+                {
+                    fprintf(stdout, "Creating variable '%s'\n", object);
+                    var_add(object, VAR_GENERIC, 0);
+                }
+                continue;
+            }
+            
+            // expect operator '='
+            size_t oper_start = pos;
+            size_t oper_size = read_until_token(code, (void *)&pos, ' ');
+            if (oper) free(oper);
+            oper = malloc(sizeof(char) * (oper_size + 1));
+            memcpy(oper, (void *)&code[oper_start], oper_size);
+            oper[oper_size] = 0;
+            trim(oper);
+
+            if (strcmp(oper, "="))
+            {
+                sprintf(gl_errmsg, "Operator '=' expected, found '%s'", oper);
+                larva_error(pos);
+            }
 
             size_t expression_start = pos;
             size_t expression_size = read_until_token(code, (void *)&pos, ';');
-            expression = malloc(sizeof(char) * expression_size);
+            if (expression) free(expression);
+            expression = malloc(sizeof(char) * (expression_size + 1));
             memcpy(expression, (void *)&code[expression_start], expression_size);
+            expression[expression_size] = 0;
+            trim(expression);
 
-            fprintf(stdout, "Assigning variable '%s' to '%s'\n", operand, expression);
+            if (index)
+            {
+                fprintf(stdout, "Assigning variable '%s' to '%s'\n", object, expression);
+                var_set_by_index(index, parse(expression), 0);
+            }
+            else
+            {
+                fprintf(stdout, "Creating variable '%s' as '%s'\n", object, expression);
+                var_set_by_index(var_add(object, VAR_GENERIC, 0), parse(expression), 0);
+            }
+        }
+        else if (index)
+        {
+            // this is an object, find an operator
+            
+            if (code[pos] == '(')
+            {
+                size_t expression_start = pos;
+                size_t expression_size = read_until_token(code, (void *)&pos, ';');
+                if (expression) free(expression);
+                expression = malloc(sizeof(char) * (expression_size + 1));
+                memcpy(expression, (void *)&code[expression_start], expression_size);
+            
+                expression[expression_size] = 0;
+                fprintf(stdout, "Parsing expression '%s' and executing function '%s' with it\n", expression, command);
+
+                var temp = parse(expression);
+
+                // call function 'command' with argument '*temp.data'
+
+                // free temp's data
+
+                continue;
+            }
+
+            size_t oper_start = pos;
+            size_t oper_size = read_until_token(code, (void *)&pos, ' ');
+            if (oper) free(oper);
+            oper = malloc(sizeof(char) * (oper_size + 1));
+            memcpy(oper, (void *)&code[oper_start], oper_size);
+            oper[oper_size] = 0;
+            trim(oper);
+
+            if (!strlen(oper))
+            {
+                // dummy
+                // TODO: add warnings
+                continue;
+            }
+            
+            if (!strcmp(oper, "="))
+            {
+                size_t expression_start = pos;
+                size_t expression_size = read_until_token(code, (void *)&pos, ';');
+                if (expression) free(expression);
+                expression = malloc(sizeof(char) * (expression_size + 1));
+                memcpy(expression, (void *)&code[expression_start], expression_size);
+                expression[expression_size] = 0;
+                trim(expression);
+
+                fprintf(stdout, "Parsing expression '%s'\n", expression);
+
+                var_set_by_index(index, parse(expression), 0);
+            }
+            else
+            {
+                sprintf(gl_errmsg, "Unknown operator '%s'", oper);
+                larva_error(pos);
+            }
         }
         else
         {
-            // no more operators
-            if (pos == length - 1) return 0;
+            if (pos == length - 1) return larva_stop(0);
 
-            int line = 1, sym = 0;
-            for (size_t i = 0; i < length; i++)
-            {
-                sym++;
-                if (code[i] == 10 || code[i] == 13)
-                {
-                    line++;
-                    sym = 0;
-                }
-
-                if (i == pos) break;
-            }
-
-            fprintf(stderr, "Line %d, position %d: last token is '%s'.\n", line, sym, operator);
-
-            return larva_stop(-1);
+            strcpy(gl_errmsg, "Unknown token");
+            larva_error(pos);
         }
     }
 
-    return 0;
+    return larva_stop(0);
 }
+
+void larva_error(unsigned long pos)
+{
+    int line = 1, sym = 0; size_t i = 0;
+    while (gl_code[i] != 0)
+    {
+        i++;
+        sym++;
+        if (gl_code[i] == 10 || gl_code[i] == 13)
+        {
+            line++;
+            sym = 0;
+        }
+
+        if (i == pos) break;
+    }
+
+    fprintf(stderr, "\nError: %s\nLast command is '%s' (line %d, sym %d).\n\n", gl_errmsg, command, line, sym);
+
+    larva_stop(ERR_SYNTAX);
+}
+
+size_t read_command(char *code, size_t *pos)
+{
+    size_t start = *pos;
+    size_t length = strlen(code);
+
+    // read until newline
+    while ((*pos) < length)
+    {
+        (*pos)++;
+        // either it's a function call or just a command
+        if (code[(*pos)] == '(' || code[(*pos)] == ';' || isspace(code[(*pos)])) break;
+    }
+
+    return (*pos) - start;
+}
+
 
 /**
  *  Reads until token character is met or the expression is not closed
@@ -123,6 +275,7 @@ size_t read_until_token(char *code, size_t *pos, char token)
 
     return (*pos) - start;
 }
+
 
 /**
  *  Reads until token character stops meeting
@@ -144,23 +297,47 @@ size_t read_until_not_token(char *code, size_t *pos, char token)
 
 
 /**
- *    Call to stop execution
+ *  Call to stop execution
  */
 int larva_stop(int code)
 {
-    if (vars) free(vars);
+    fputs("=============== DUMP =============\n", stdout);
+    larva_poo();
+    fputs("==================================\n", stdout);
 
-    return code;
+    unsigned long i = vars_count;
+    while (--i) var_delete_by_index(i);
+
+    if (vars) free(vars);
+    if (gl_code) free(gl_code);
+    if (command) free(command);
+    if (object) free(object);
+    if (expression) free(expression);
+    if (oper) free(oper);
+
+    exit(code);
 }
 
-char *trim(char *str)
+void larva_poo()
 {
-    char *end;
-    while (isspace(*str)) str++;
-    if (*str == 0) return str;
-    end = str + strlen(str) - 1;
-    while (end > str && isspace(*end)) end--;
-    *(end+1) = 0;
+    for (unsigned long i = 1; i < vars_count; i++)
+    {
+        if (vars[i].type == VAR_UNSET) continue;
 
-    return str;
+        if (vars[i].data) fprintf(stdout, "'%s' [type %d, size %lu] = %ld\n", vars[i].name, vars[i].type, vars[i].data_length, (long) &vars[i].data);
+        else fprintf(stdout, "'%s' [type %d, size %lu] = %s\n", vars[i].name, vars[i].type, vars[i].data_length, vars[i].data);
+    }
+}
+
+
+int is_oper(char c)
+{
+    if (
+    c == '(' ||
+    c == ')' ||
+    c == '+' ||
+    c == '-'
+    ) return 1;
+
+    return 0;
 }

@@ -4,12 +4,18 @@
 void larva_init();
 int larva_digest(char *, size_t);
 
-int main (void)
+int main(int argc, char *argv[])
 {
     char *source = NULL;
     size_t newLen = 0;
 
-    FILE *fp = fopen("tests/1.leaf", "rt");
+    if (argc < 2)
+    {
+        fputs("Usage: bombyx [FILENAME]\n\n", stderr);
+        return 1;
+    }
+
+    FILE *fp = fopen(argv[1], "rt");
 
     if (fp != NULL)
     {
@@ -17,11 +23,17 @@ int main (void)
         if (fseek(fp, 0L, SEEK_END) == 0)
         {
             long bufsize = ftell(fp);
-            if (bufsize == -1) { /* Error */ }
+            if (bufsize == -1)
+            {
+                fputs("Where's the file end?\n", stderr);
+            }
 
             source = malloc(sizeof(char) * (bufsize + 1));
 
-            if (fseek(fp, 0L, SEEK_SET) != 0) { /* Error */ }
+            if (fseek(fp, 0L, SEEK_SET) != 0)
+            {
+                fputs("Looks like the file has just disappeared.\n", stderr);
+            }
 
             newLen = fread(source, sizeof(char), bufsize, fp);
             if (newLen == 0)

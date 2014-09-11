@@ -1,7 +1,6 @@
 #include "var.h"
-#include "../larva.h"
 
-size_t var_add(char *name, unsigned short type, void *value)
+unsigned long var_add(char *name, unsigned short type, void *value)
 {
     unsigned long i;
 
@@ -11,47 +10,85 @@ size_t var_add(char *name, unsigned short type, void *value)
     }
 
     // find first empty
-    for (i = 0; i < vars_count; i++)
+    for (i = 1; i < vars_count; i++)
     {
-        if (vars[i].name == NULL)
+        if (vars[i].type == VAR_UNSET)
         {
-            break;
+            goto OK;
         }
-        if (vars[vars_count - i - 1].name == NULL)
+    /*    if (vars[vars_count - i].type == VAR_UNSET)
         {
-            i = vars_count - i - 1;
-            break;
-        }
+            i = vars_count - i;
+            goto OK;
+        }*/
     }
 
-    if (type == VAR_STRING)
+    larva_stop(ERR_NO_MEMORY);
+
+    // TODO: support proper growing
+
+  /*  if (i == vars_count)
     {
-        size_t len = strlen(value);
+        // try to allocate some space
+        larva_grow(0);
+    }*/
 
-        vars[i].name = malloc(sizeof(char) * len);
-        strcpy(vars[i].name, value);
+    OK:;
 
-        return len;
+    // save variable name
+    size_t len = strlen(name) + 1;
+    if (len > 32)
+    {
+        larva_stop(ERR_TOO_LONG);
     }
 
-    return 0;
+    vars[i].name = calloc(len, sizeof(char));
+
+    if (!vars[i].name)
+    {
+        larva_stop(ERR_NO_MEMORY);
+    }
+
+    strcpy(vars[i].name, name);
+    vars[i].type = 1;
+
+    return i;
+}
+
+int var_set_by_index(unsigned long i, var o, int OBSOLETE)
+{
+    fprintf(stdout, "setting var %lu to %ld\n", i, (long) &o.data);
+
+    if (!i || i <= vars_count || vars[i].type == VAR_UNSET) return 0;
+
+    // deallocate memory of the old variable
+    var_delete_by_index(i);
+
+    vars[i] = o;
+
+    return 1;
 }
 
 unsigned long var_get_index(char *name)
 {
-    for (unsigned long i = 0; i < vars_count; i++)
+    for (unsigned long i = 1; i < vars_count; i++)
     {
-        if (vars[i].name != NULL && !strcmp(vars[i].name, name))
+        if (vars[i].type != VAR_UNSET && !strcmp(vars[i].name, name))
         {
+         /*   fputs("ID of var '", stdout);
+            fputs(name, stdout);
+            fputs("' = ", stdout);
+            echo_int(i);
+            fputs("\n", stdout);*/
             return i;
         }
-        if (vars[vars_count - i - 1].name != NULL && !strcmp(vars[vars_count - i - 1].name, name))
+    /*    if (vars[vars_count - i].type != VAR_UNSET && !strcmp(vars[vars_count - i - 1].name, name))
         {
-            i = vars_count - i - 1;
-            return i;
-        }
+            return vars_count - i;
+        }*/
     }
 
+  //  fputs(" var not found ", stdout);
     return 0;
 }
 
@@ -64,7 +101,8 @@ void var_delete_by_index(unsigned long index)
 {
     if (index && index < vars_count)
     {
-        free(vars[index].name);
+        if (vars[index].name) free(vars[index].name);
         vars[index].type = VAR_UNSET;
+        if (vars[index].data) free(vars[index].data);
     }
 }
