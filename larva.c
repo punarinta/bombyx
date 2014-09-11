@@ -61,7 +61,7 @@ int larva_digest(char *code, size_t length)
             size_t operand_size = read_until_token(code, (void *)&pos, '=');
             operand = malloc(sizeof(char) * operand_size);
             memcpy(operand, (void *)&code[operand_start], operand_size);
-            strcpy(operand, trim(operand));
+            trim(operand);
 
             // if does not exist -- create
             if (!var_get_index(operand))
