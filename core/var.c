@@ -16,11 +16,6 @@ unsigned long var_init(char *name, unsigned short type, void *value)
         {
             goto OK;
         }
-    /*    if (vars[vars_count - i].type == VAR_UNSET)
-        {
-            i = vars_count - i;
-            goto OK;
-        }*/
     }
 
     larva_stop(ERR_NO_MEMORY);
@@ -37,11 +32,7 @@ unsigned long var_init(char *name, unsigned short type, void *value)
 
     // save variable name
     size_t len = strlen(name) + 1;
-    if (len > 32)
-    {
-        larva_stop(ERR_TOO_LONG);
-    }
-
+    
     vars[i].name = calloc(len, sizeof(char));
 
     if (!vars[i].name)
