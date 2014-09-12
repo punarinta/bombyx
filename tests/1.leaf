@@ -1,13 +1,13 @@
 # dev tests
 
 var my_func;
-var hello;
+var hello = "world";
 #var my_func2;
 #var a;
 #a = 5;
 #a = 7;
 
-hello("hue!",2);
+#hello("hue!",2);
 #my_func("hello", "world");
 #my_func2();
 

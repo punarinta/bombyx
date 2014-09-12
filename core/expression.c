@@ -194,13 +194,7 @@ var parser_read_double(parser_data *pd)
 
         val = var_as_string(token);
 
-        if (c != '"')
-        {
-            fputs("No closing quote\n", stderr);
-            larva_error(0);
-        }
-
-        // consume closing quote
+        // the closing quote
         parser_eat(pd);
 	}
 	else

@@ -41,7 +41,7 @@ void larva_grow(unsigned long size)
  */
 int larva_digest(char *code, size_t length)
 {
-    unsigned long index = 0;
+    unsigned long index;
     size_t pos = 0;
 
     // memorize
@@ -54,11 +54,7 @@ int larva_digest(char *code, size_t length)
         if (code[pos] == '#')
         {
             // read until newline
-            while (pos < length)
-            {
-                pos++;
-                if (code[pos] == 10 || code[pos] == 13) break;
-            }
+            while (pos++ < length) if (code[pos] == 10 || code[pos] == 13) break;
             continue;
         }
 
@@ -73,13 +69,11 @@ int larva_digest(char *code, size_t length)
         // collect garbage
         if (command) free(command);
 
-
         size_t command_start = pos;
         size_t command_size = read_command(code, (void *)&pos);
         command = malloc(sizeof(char) * (command_size + 1));
         memcpy(command, &code[command_start], command_size);
         command[command_size] = 0;
-
         trim(command);
 
         index = var_get_index(command);
@@ -95,7 +89,6 @@ int larva_digest(char *code, size_t length)
             object = malloc(sizeof(char) * (object_size + 1));
             memcpy(object, (void *)&code[object_start], object_size);
             object[object_size] = 0;
-
             trim(object);
 
             if (var_get_index(object))
@@ -130,24 +123,11 @@ int larva_digest(char *code, size_t length)
                 larva_error(pos);
             }
 
-        /*    size_t expression_start = pos;
-            size_t expression_size = read_until_token(code, (void *)&pos, ';');
-            if (expression) free(expression);
-            expression = malloc(sizeof(char) * (expression_size + 1));
-            memcpy(expression, (void *)&code[expression_start], expression_size);
-            expression[expression_size] = 0;
-            trim(expression);*/
+            // no var -- create it
+            if (!index) index = var_init(object, VAR_STRING, 0);
 
-            if (index)
-            {
-            //    fprintf(stdout, "Assigning variable '%s' to '%s'\n", object, expression);
-                var_set_by_index(index, parse(&pos), 0);
-            }
-            else
-            {
-            //    fprintf(stdout, "Creating variable '%s' as '%s'\n", object, expression);
-                var_set_by_index(var_init(object, VAR_STRING, 0), parse(&pos), 0);
-            }
+            // equalize
+            var_set_by_index(index, parse(&pos), 0);
         }
         else if (index)
         {
@@ -155,29 +135,9 @@ int larva_digest(char *code, size_t length)
             
             if (code[pos] == '(')
             {
-                // check if this is an internal function
-                if (0)
-                {
-                    continue;
-                }
-
-            /*    size_t expression_start = pos;
-                size_t expression_size = read_until_token(code, (void *)&pos, ';');
-                if (expression) free(expression);
-                expression = malloc(sizeof(char) * (expression_size + 1));
-                memcpy(expression, (void *)&code[expression_start], expression_size);
-            
-                expression[expression_size] = 0;
-                fprintf(stdout, "Parsing expression '%s' and executing function '%s' with it\n", expression, command);
-
-                pos = command_start;*/
-
-
                 // this will parse the function call as a part of an expression
-
                 pos = command_start;
                 parse(&pos);
-
                 continue;
             }
 
@@ -198,16 +158,6 @@ int larva_digest(char *code, size_t length)
             
             if (!strcmp(oper, "="))
             {
-            /*    size_t expression_start = pos;
-                size_t expression_size = read_until_token(code, (void *)&pos, ';');
-                if (expression) free(expression);
-                expression = malloc(sizeof(char) * (expression_size + 1));
-                memcpy(expression, (void *)&code[expression_start], expression_size);
-                expression[expression_size] = 0;
-                trim(expression);
-
-                fprintf(stdout, "Parsing expression '%s'\n", expression);*/
-
                 var_set_by_index(index, parse(&pos), 0);
             }
             else
@@ -320,7 +270,6 @@ int larva_stop(int code)
     if (gl_code) free(gl_code);
     if (command) free(command);
     if (object) free(object);
-  //  if (expression) free(expression);
     if (oper) free(oper);
 
     exit(code);
@@ -346,7 +295,8 @@ void larva_poo()
         switch (vars[i].type)
         {
             case VAR_STRING:
-            fprintf(stdout, "%s", vars[i].data);
+            if (vars[i].data_size) fprintf(stdout, "'%s'", vars[i].data);
+            else fprintf(stdout, "NULL");
             break;
 
             case VAR_BYTE:

@@ -4,19 +4,11 @@ unsigned long var_init(char *name, unsigned short type, void *value)
 {
     unsigned long i;
 
-    if (type == VAR_UNSET)
-    {
-        return 0;
-    }
+    // no necessity to do anything
+    if (type == VAR_UNSET) return 0;
 
     // find first empty
-    for (i = 1; i < vars_count; i++)
-    {
-        if (vars[i].type == VAR_UNSET)
-        {
-            goto OK;
-        }
-    }
+    for (i = 1; i < vars_count; i++) if (vars[i].type == VAR_UNSET) goto OK;
 
     larva_stop(ERR_NO_MEMORY);
 
@@ -42,6 +34,7 @@ unsigned long var_init(char *name, unsigned short type, void *value)
 
     strcpy(vars[i].name, name);
     vars[i].type = VAR_STRING;
+    vars[i].data = NULL;
 
     return i;
 }
