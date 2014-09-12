@@ -16,10 +16,10 @@ var parse(size_t *p_gl_pos)
 
     while (code[gl_pos])
     {
-    /*    if (code[gl_pos] == '"')
+        if (code[gl_pos] == '"')
         {
             quote_opened = quote_opened ? 0 : 1;
-        }*/
+        }
 
         if (code[gl_pos] == ';' && !quote_opened)
         {
