@@ -3,13 +3,13 @@
 var parse(char *str)
 {
     var result;
-    long val = 345;//atol(str);
+    unsigned long val = atol(str);
 
     // will try to guess further
-    result.type = VAR_GENERIC;
-    result.data = malloc(sizeof(long));
-    memcpy(result.data, &val, sizeof(long));
-    result.data_length = sizeof(long);
+    result.type = VAR_DWORD;
+    result.data = calloc(1, 4);
+    memcpy(result.data, &val, 4);
+    result.data_length = 4;
 
     return result;
 }

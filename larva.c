@@ -110,7 +110,7 @@ int larva_digest(char *code, size_t length)
                 if (!var_get_index(object))
                 {
                     fprintf(stdout, "Creating variable '%s'\n", object);
-                    var_add(object, VAR_GENERIC, 0);
+                    var_add(object, VAR_STRING, 0);
                 }
                 continue;
             }
@@ -146,7 +146,7 @@ int larva_digest(char *code, size_t length)
             else
             {
                 fprintf(stdout, "Creating variable '%s' as '%s'\n", object, expression);
-                var_set_by_index(var_add(object, VAR_GENERIC, 0), parse(expression), 0);
+                var_set_by_index(var_add(object, VAR_STRING, 0), parse(expression), 0);
             }
         }
         else if (index)
@@ -155,6 +155,12 @@ int larva_digest(char *code, size_t length)
             
             if (code[pos] == '(')
             {
+                // check if this is an internal function
+                if (0)
+                {
+                    continue;
+                }
+
                 size_t expression_start = pos;
                 size_t expression_size = read_until_token(code, (void *)&pos, ';');
                 if (expression) free(expression);
@@ -301,9 +307,9 @@ size_t read_until_not_token(char *code, size_t *pos, char token)
  */
 int larva_stop(int code)
 {
-    fputs("=============== DUMP =============\n", stdout);
+    fputs("=============== DUMP =============", stdout);
     larva_poo();
-    fputs("==================================\n", stdout);
+    fputs("\n==================================\n", stdout);
 
     unsigned long i = vars_count;
     while (--i) var_delete_by_index(i);
@@ -320,12 +326,41 @@ int larva_stop(int code)
 
 void larva_poo()
 {
+    char types[20][16];
+
+    strcpy(types[VAR_UNSET],    "UNSET");
+    strcpy(types[VAR_BYTE],     "BYTE");
+    strcpy(types[VAR_WORD],     "WORD");
+    strcpy(types[VAR_DWORD],    "DWORD");
+    strcpy(types[VAR_QWORD],    "QWORD");
+    strcpy(types[VAR_FLOAT],    "FLOAT");
+    strcpy(types[VAR_STRING],   "STRING");
+
     for (unsigned long i = 1; i < vars_count; i++)
     {
-        if (vars[i].type == VAR_UNSET) continue;
+        if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %lu] = ", vars[i].name, types[vars[i].type], vars[i].data_length);
 
-        if (vars[i].data) fprintf(stdout, "'%s' [type %d, size %lu] = %ld\n", vars[i].name, vars[i].type, vars[i].data_length, (long) &vars[i].data);
-        else fprintf(stdout, "'%s' [type %d, size %lu] = %s\n", vars[i].name, vars[i].type, vars[i].data_length, vars[i].data);
+        switch (vars[i].type)
+        {
+            case VAR_STRING:
+            fprintf(stdout, "%s", vars[i].data);
+            break;
+
+            case VAR_BYTE:
+            fprintf(stdout, "%d", vars[i].data[0]);
+            break;
+
+            case VAR_WORD:
+            fprintf(stdout, "%d", (unsigned) (vars[i].data[0] + 256 * vars[i].data[1]));
+            break;
+
+            case VAR_DWORD:
+            fprintf(stdout, "%lu", (unsigned long) (vars[i].data[0] + 256 * vars[i].data[1] + 65536 * vars[i].data[2] + 16777216 * vars[i].data[3]));
+            break;
+
+            default:
+            break;
+        }
     }
 }
 

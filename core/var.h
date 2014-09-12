@@ -6,18 +6,21 @@
 #include <string.h>
 
 #define VAR_UNSET       00
-#define VAR_GENERIC     01
-#define VAR_INTEGER     02
-#define VAR_STRING      03
-#define VAR_FUNCTION    10
-#define VAR_ARRAY       11
-#define VAR_OBJECT      12
+#define VAR_BYTE        01
+#define VAR_WORD        02      // 16 bit
+#define VAR_DWORD       03      // 32 bit
+#define VAR_QWORD       04      // 64 bit
+#define VAR_FLOAT       05      // 32 bit
+#define VAR_STRING      10
+#define VAR_FUNCTION    11
+#define VAR_ARRAY       12
+#define VAR_OBJECT      13
 
 typedef struct
 {
     unsigned short type;
     char *name;
-    void *data;
+    char *data;
     unsigned long data_length;
 } var;
 

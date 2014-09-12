@@ -50,21 +50,24 @@ unsigned long var_add(char *name, unsigned short type, void *value)
     }
 
     strcpy(vars[i].name, name);
-    vars[i].type = 1;
+    vars[i].type = VAR_STRING;
 
     return i;
 }
 
 int var_set_by_index(unsigned long i, var o, int OBSOLETE)
 {
-    fprintf(stdout, "setting var %lu to %ld\n", i, (long) &o.data);
+    if (!i || i >= vars_count || vars[i].type == VAR_UNSET) return 0;
 
-    if (!i || i <= vars_count || vars[i].type == VAR_UNSET) return 0;
+    unsigned long y = o.data[0] + o.data[1] * 256;
+ //   fprintf(stdout, "setting var #%lu to %lu\n", i, y);
 
     // deallocate memory of the old variable
-    var_delete_by_index(i);
+    if (vars[i].data) free(vars[i].data);
 
-    vars[i] = o;
+    vars[i].type = o.type;
+    vars[i].data = o.data;
+    vars[i].data_length = o.data_length;
 
     return 1;
 }
