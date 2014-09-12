@@ -16,7 +16,7 @@ var parse(size_t *p_gl_pos)
 
     while (code[gl_pos])
     {
-        if (code[gl_pos] == '"')
+        if (code[gl_pos] == '\'')
         {
             quote_opened = quote_opened ? 0 : 1;
         }
@@ -184,12 +184,12 @@ var parser_read_double(parser_data *pd)
 	if (c == '+' || c == '-') token[pos++] = parser_eat(pd);
 
 	// is a string?
-	if (c == '"')
+	if (c == '\'')
 	{
 	    parser_eat(pd);
 
 	    // read until closed
-        while (parser_peek(pd) != '"') token[pos++] = parser_eat(pd);
+        while (parser_peek(pd) != '\'') token[pos++] = parser_eat(pd);
         token[pos] = '\0';
 
         val = var_as_string(token);
