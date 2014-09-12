@@ -39,11 +39,13 @@ var var_subtract(var, var);
 var var_multiply(var, var);
 var var_divide(var, var);
 var var_invert(var);
-double var_to_double(var a);
-int var_is_more(var a, var b);
-int var_is_less(var a, var b);
-int var_is_more_equal(var a, var b);
-int var_is_less_equal(var a, var b);
+double var_to_double(var);
+unsigned int var_to_dword(var);
+var var_array_element(var, unsigned int);
+int var_is_more(var, var);
+int var_is_less(var, var);
+int var_is_more_equal(var, var);
+int var_is_less_equal(var, var);
 
 #include "../common.h"
 

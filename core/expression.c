@@ -350,13 +350,7 @@ var parser_read_builtin(parser_data *pd)
 				v1 = parser_read_argument(pd);
 				v0 = var_as_double(42);
 			}
-		/*	else if (strcmp(token, "pow") == 0)
-            {
-            	v0 = parser_read_argument(pd);
-             	v1 = parser_read_argument(pd);
-            	v0 = pow(v0, v1);
-            }
-			else if (strcmp(token, "sqrt") == 0)
+		/*	else if (strcmp(token, "sqrt") == 0)
             {
 				v0 = parser_read_argument(pd);
 				if (v0 < 0.0) parser_error(pd, "sqrt(x) undefined for x < 0!");
@@ -373,44 +367,6 @@ var parser_read_builtin(parser_data *pd)
 				v0 = parser_read_argument(pd);
 				v0 = exp(v0);
 			}
-			else if (strcmp(token, "sin") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = sin(v0);
-			}
-			else if (strcmp(token, "asin") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				if (fabs(v0) > 1.0) parser_error(pd, "asin(x) undefined for |x| > 1!");
-				v0 = asin(v0);
-			}
-			else if (strcmp(token, "cos") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = cos(v0);
-			}
-			else if (strcmp(token, "acos") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				if (fabs(v0) > 1.0) parser_error(pd, "acos(x) undefined for |x| > 1!");
-				v0 = acos(v0);
-			}
-			else if (strcmp(token, "tan") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = tan(v0);
-			}
-			else if (strcmp(token, "atan") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = atan(v0);
-			}
-			else if (strcmp(token, "atan2") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v1 = parser_read_argument(pd);
-				v0 = atan2(v0, v1);
-			}
 			else if (strcmp(token, "abs") == 0)
             {
 				v0 = parser_read_argument(pd);
@@ -420,16 +376,6 @@ var parser_read_builtin(parser_data *pd)
             {
 				v0 = parser_read_argument(pd);
 				v0 = fabs(v0);
-			}
-			else if (strcmp(token, "floor") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = floor(v0);
-			}
-			else if (strcmp(token, "ceil") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = floor(v0);
 			}
 			else if (strcmp(token, "round") == 0)
             {
@@ -445,12 +391,29 @@ var parser_read_builtin(parser_data *pd)
 				}
 				else
 				{
-					parser_error(pd, "Tried to call unknown built-in function!");
+					parser_error(pd, "Tried to call unknown built-in function.");
 				}
 			}
 
 			// eat closing bracket of function call
-			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in built-in call!");
+			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in function call.");
+		}
+		else if (parser_peek(pd) == '[')
+		{
+			// eat the bracket
+        	parser_eat(pd);
+
+        	unsigned long i = var_get_index(token);
+        	if (!i)
+        	{
+        	    parser_error(pd, "Variable not found");
+        	}
+
+            // array index
+        	v0 = var_array_element(vars[i], var_to_dword(parser_read_argument(pd)));
+
+			// eat closing bracket of function call
+			if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in the array access.");
 		}
 		else
 		{
@@ -461,7 +424,7 @@ var parser_read_builtin(parser_data *pd)
 			}
 			else
 			{
-				parser_error(pd, "Could not look up value for variable!");
+				parser_error(pd, "Could not look up value for variable.");
 			}
 		}
 	}

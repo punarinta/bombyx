@@ -67,6 +67,17 @@ var var_as_double(double a)
     return v;
 }
 
+var var_as_dword(double a)
+{
+    var v;
+    v.type = VAR_DWORD;
+    v.data = calloc(1, 4);
+    memcpy(v.data, &a, 4);
+    v.data_size = 4;
+
+    return v;
+}
+
 var var_as_string(char *a)
 {
     var v;
@@ -83,6 +94,13 @@ double var_to_double(var a)
 {
     double d;
     memcpy(&d, a.data, sizeof(double));
+    return d;
+}
+
+unsigned int var_to_dword(var a)
+{
+    unsigned int d;
+    memcpy(&d, a.data, 4);
     return d;
 }
 
@@ -168,6 +186,13 @@ int var_is_more_equal(var a, var b)
 int var_is_less_equal(var a, var b)
 {
     return (*a.data) <= (*b.data);
+}
+
+var var_array_element(var a, unsigned int i)
+{
+    // TODO
+    a = var_as_double(42);
+    return a;
 }
 
 unsigned long var_get_index(char *name)
