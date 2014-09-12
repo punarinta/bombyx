@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "core/var.h"
-#include "core/parser.h"
+#include "core/expression.h"
 
 #define MIN_VARIABLES       100
 #define MAX_VARIABLES       100000
@@ -15,6 +15,7 @@
 #define ERR_TOO_LONG        3
 
 var *vars;
+char *gl_code;
 unsigned long vars_count;
 
 void larva_grow(unsigned long);

@@ -9,4 +9,4 @@ var my_func;
 my_func("hello", "world");
 #my_func2();
 
-var b = 56;
+#var b = 56;

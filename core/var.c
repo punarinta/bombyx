@@ -1,6 +1,6 @@
 #include "var.h"
 
-unsigned long var_add(char *name, unsigned short type, void *value)
+unsigned long var_init(char *name, unsigned short type, void *value)
 {
     unsigned long i;
 
@@ -67,9 +67,97 @@ int var_set_by_index(unsigned long i, var o, int OBSOLETE)
 
     vars[i].type = o.type;
     vars[i].data = o.data;
-    vars[i].data_length = o.data_length;
+    vars[i].data_size = o.data_size;
 
     return 1;
+}
+
+var var_as_double(double a)
+{
+   // fprintf(stdout, "in %lf\n", a);
+
+    var v;
+    v.type = VAR_DOUBLE;
+    v.data = calloc(1, sizeof(double));
+    memcpy(v.data, &a, sizeof(double));
+    v.data_size = sizeof(double);
+
+  //  fprintf(stdout, "out %lf\n", &v.data);
+
+    return v;
+}
+
+double var_to_double(var a)
+{
+    double d;
+    memcpy(&d, a.data, sizeof(double));
+    return d;
+}
+
+var var_add(var a, var b)
+{
+    double xa, xb;
+    memcpy(&xa, a.data, sizeof(double));
+    memcpy(&xb, b.data, sizeof(double));
+
+    xa += xb;
+    free(b.data);
+
+    memcpy(a.data, &xa, sizeof(double));
+
+    return a;
+}
+
+var var_subtract(var a, var b)
+{
+    double x = *a.data - *b.data;
+    memcpy(a.data, &x, sizeof(double));
+
+    return a;
+}
+
+var var_multiply(var a, var b)
+{
+    double x = *a.data * *b.data;
+    memcpy(a.data, &x, sizeof(double));
+
+    return a;
+}
+
+var var_divide(var a, var b)
+{
+    double x = *a.data / *b.data;
+    memcpy(a.data, &x, sizeof(double));
+
+    return a;
+}
+
+var var_invert(var a)
+{
+    double x = -(*a.data);
+    memcpy(a.data, &x, sizeof(double));
+
+    return a;
+}
+
+int var_is_more(var a, var b)
+{
+    return (*a.data) > (*b.data);
+}
+
+int var_is_less(var a, var b)
+{
+    return (*a.data) < (*b.data);
+}
+
+int var_is_more_equal(var a, var b)
+{
+    return (*a.data) >= (*b.data);
+}
+
+int var_is_less_equal(var a, var b)
+{
+    return (*a.data) <= (*b.data);
 }
 
 unsigned long var_get_index(char *name)

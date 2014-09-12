@@ -1,8 +1,7 @@
 #include "common.h"
 #include "larva.h"
 
-char *gl_code = NULL;
-char *command = NULL, *object = NULL, *expression = NULL, *oper = NULL; // 'operator' can be reserved
+char *command = NULL, *object = NULL, *oper = NULL; // 'operator' can be reserved
 char gl_errmsg[256];
 
 size_t read_command(char *, size_t *);
@@ -16,6 +15,7 @@ void larva_init()
     vars_count = MIN_VARIABLES;
     vars = calloc(MIN_VARIABLES, sizeof(var));
     for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
+    gl_code = NULL;
 }
 
 
@@ -110,7 +110,7 @@ int larva_digest(char *code, size_t length)
                 if (!var_get_index(object))
                 {
                     fprintf(stdout, "Creating variable '%s'\n", object);
-                    var_add(object, VAR_STRING, 0);
+                    var_init(object, VAR_STRING, 0);
                 }
                 continue;
             }
@@ -130,23 +130,23 @@ int larva_digest(char *code, size_t length)
                 larva_error(pos);
             }
 
-            size_t expression_start = pos;
+        /*    size_t expression_start = pos;
             size_t expression_size = read_until_token(code, (void *)&pos, ';');
             if (expression) free(expression);
             expression = malloc(sizeof(char) * (expression_size + 1));
             memcpy(expression, (void *)&code[expression_start], expression_size);
             expression[expression_size] = 0;
-            trim(expression);
+            trim(expression);*/
 
             if (index)
             {
-                fprintf(stdout, "Assigning variable '%s' to '%s'\n", object, expression);
-                var_set_by_index(index, parse(expression), 0);
+            //    fprintf(stdout, "Assigning variable '%s' to '%s'\n", object, expression);
+                var_set_by_index(index, parse(&pos), 0);
             }
             else
             {
-                fprintf(stdout, "Creating variable '%s' as '%s'\n", object, expression);
-                var_set_by_index(var_add(object, VAR_STRING, 0), parse(expression), 0);
+            //    fprintf(stdout, "Creating variable '%s' as '%s'\n", object, expression);
+                var_set_by_index(var_init(object, VAR_STRING, 0), parse(&pos), 0);
             }
         }
         else if (index)
@@ -161,7 +161,7 @@ int larva_digest(char *code, size_t length)
                     continue;
                 }
 
-                size_t expression_start = pos;
+            /*    size_t expression_start = pos;
                 size_t expression_size = read_until_token(code, (void *)&pos, ';');
                 if (expression) free(expression);
                 expression = malloc(sizeof(char) * (expression_size + 1));
@@ -170,11 +170,13 @@ int larva_digest(char *code, size_t length)
                 expression[expression_size] = 0;
                 fprintf(stdout, "Parsing expression '%s' and executing function '%s' with it\n", expression, command);
 
-                var temp = parse(expression);
+                pos = command_start;*/
 
-                // call function 'command' with argument '*temp.data'
 
-                // free temp's data
+                // this will parse the function call as a part of an expression
+
+                pos = command_start;
+                parse(&pos);
 
                 continue;
             }
@@ -196,7 +198,7 @@ int larva_digest(char *code, size_t length)
             
             if (!strcmp(oper, "="))
             {
-                size_t expression_start = pos;
+            /*    size_t expression_start = pos;
                 size_t expression_size = read_until_token(code, (void *)&pos, ';');
                 if (expression) free(expression);
                 expression = malloc(sizeof(char) * (expression_size + 1));
@@ -204,9 +206,9 @@ int larva_digest(char *code, size_t length)
                 expression[expression_size] = 0;
                 trim(expression);
 
-                fprintf(stdout, "Parsing expression '%s'\n", expression);
+                fprintf(stdout, "Parsing expression '%s'\n", expression);*/
 
-                var_set_by_index(index, parse(expression), 0);
+                var_set_by_index(index, parse(&pos), 0);
             }
             else
             {
@@ -318,7 +320,7 @@ int larva_stop(int code)
     if (gl_code) free(gl_code);
     if (command) free(command);
     if (object) free(object);
-    if (expression) free(expression);
+  //  if (expression) free(expression);
     if (oper) free(oper);
 
     exit(code);
@@ -338,7 +340,7 @@ void larva_poo()
 
     for (unsigned long i = 1; i < vars_count; i++)
     {
-        if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %lu] = ", vars[i].name, types[vars[i].type], vars[i].data_length);
+        if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %lu] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
 
         switch (vars[i].type)
         {
@@ -362,17 +364,4 @@ void larva_poo()
             break;
         }
     }
-}
-
-
-int is_oper(char c)
-{
-    if (
-    c == '(' ||
-    c == ')' ||
-    c == '+' ||
-    c == '-'
-    ) return 1;
-
-    return 0;
 }
