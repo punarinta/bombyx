@@ -24,6 +24,5 @@ int larva_stop(int);
 size_t read_until_token(char *, size_t *, char);
 size_t read_until_not_token(char *, size_t *, char);
 char* itoa(int, char*, int);
-void echo_int(int);
 
 #endif

@@ -16,14 +16,13 @@ var parse(size_t *p_gl_pos)
 
     while (code[gl_pos])
     {
-        if (code[gl_pos] == '"')
+    /*    if (code[gl_pos] == '"')
         {
             quote_opened = quote_opened ? 0 : 1;
-        }
+        }*/
 
         if (code[gl_pos] == ';' && !quote_opened)
         {
-            gl_pos++;
             break;
         }
 
@@ -36,11 +35,11 @@ var parse(size_t *p_gl_pos)
     expression[expression_size] = 0;
     trim(expression);
 
-    fprintf(stdout, "expression '%s'\n", expression);
+  //  fprintf(stdout, "expression '%s'\n", expression);
 
-    var x = parse_expression("2+3");
+    result = parse_expression(expression);
 
-    fprintf(stdout, "%lf\n", var_to_double(x));
+    fprintf(stdout, ">> %lf\n", var_to_double(result));
 
     free(expression);
 
@@ -184,46 +183,59 @@ var parser_read_double(parser_data *pd)
 	c = parser_peek(pd);
 	if (c == '+' || c == '-') token[pos++] = parser_eat(pd);
 
-	// read optional digits leading the decimal point
-	while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
+	// is a string?
+	if (c == '"')
+	{
+	    // read until closed
+        while (parser_peek(pd) != '"') token[pos++] = parser_eat(pd);
+        token[pos] = '\0';
 
-	// read the optional decimal point
-	c = parser_peek(pd);
-	if (c == '.') token[pos++] = parser_eat(pd);
-
-	// read optional digits after the decimal point
-	while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
-
-	// read the exponent delimiter
-	c = parser_peek(pd);
-	if (c == 'e' || c == 'E')
-    {
-		token[pos++] = parser_eat(pd);
-
-		// check if the expoentn has a sign,
-		// if so, read it
-		c = parser_peek(pd);
-		if (c == '+' || c == '-')
-        {
-			token[pos++] = parser_eat(pd);
-		}
+        fprintf(stdout, "token = '%s'; l = %d\n", token, pos);
+        larva_stop(0);
 	}
+	else
+	{
+        // read optional digits leading the decimal point
+        while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
 
-	// read the exponent delimiter
-	while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
+        // read the optional decimal point
+        c = parser_peek(pd);
+        if (c == '.') token[pos++] = parser_eat(pd);
 
-	// remove any trailing whitespace
-	parser_eat_whitespace(pd);
+        // read optional digits after the decimal point
+        while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
 
-    // null-terminate the string
-  	token[pos] = '\0';
+        // read the exponent delimiter
+        c = parser_peek(pd);
+        if (c == 'e' || c == 'E')
+        {
+            token[pos++] = parser_eat(pd);
 
-  	double d_val = 0.0;
+            // check if the exponent has a sign,
+            // if so, read it
+            c = parser_peek(pd);
+            if (c == '+' || c == '-')
+            {
+                token[pos++] = parser_eat(pd);
+            }
+        }
 
-    // check that a double-precision was read, otherwise throw an error
-    if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read real number");
+        // read the exponent delimiter
+        while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
 
-    val = var_as_double(d_val);
+        // remove any trailing whitespace
+        parser_eat_whitespace(pd);
+
+        // null-terminate the string
+        token[pos] = '\0';
+
+        double d_val = 0.0;
+
+        // check that a double-precision was read, otherwise throw an error
+        if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read real number");
+
+        val = var_as_double(d_val);
+    }
 
     // return the parsed value
 	return val;
@@ -328,12 +340,18 @@ var parser_read_builtin(parser_data *pd)
 			parser_eat(pd);
 
 			// start handling the specific built-in functions
-		/*	if (strcmp(token, "pow") == 0)
+			if (strcmp(token, "hello") == 0)
             {
 				v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
-				v0 = pow(v0, v1);
+				v0 = var_as_double(42);
 			}
+		/*	else if (strcmp(token, "pow") == 0)
+            {
+            	v0 = parser_read_argument(pd);
+             	v1 = parser_read_argument(pd);
+            	v0 = pow(v0, v1);
+            }
 			else if (strcmp(token, "sqrt") == 0)
             {
 				v0 = parser_read_argument(pd);
@@ -413,7 +431,7 @@ var parser_read_builtin(parser_data *pd)
             {
 				v0 = parser_read_argument(pd);
 				v0 = round(v0);
-			}
+			}*/
 			else
 			{
 				parser_read_argument_list(pd, &num_args, args);
@@ -425,7 +443,7 @@ var parser_read_builtin(parser_data *pd)
 				{
 					parser_error(pd, "Tried to call unknown built-in function!");
 				}
-			}*/
+			}
 
 			// eat closing bracket of function call
 			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in built-in call!");

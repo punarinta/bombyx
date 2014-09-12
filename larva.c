@@ -336,6 +336,7 @@ void larva_poo()
     strcpy(types[VAR_DWORD],    "DWORD");
     strcpy(types[VAR_QWORD],    "QWORD");
     strcpy(types[VAR_FLOAT],    "FLOAT");
+    strcpy(types[VAR_DOUBLE],   "DOUBLE");
     strcpy(types[VAR_STRING],   "STRING");
 
     for (unsigned long i = 1; i < vars_count; i++)
@@ -349,15 +350,19 @@ void larva_poo()
             break;
 
             case VAR_BYTE:
-            fprintf(stdout, "%d", vars[i].data[0]);
+            fprintf(stdout, "%ud", vars[i].data[0]);
             break;
 
             case VAR_WORD:
-            fprintf(stdout, "%d", (unsigned) (vars[i].data[0] + 256 * vars[i].data[1]));
+            fprintf(stdout, "%ud", (unsigned) (vars[i].data[0] + 256 * vars[i].data[1]));
             break;
 
             case VAR_DWORD:
-            fprintf(stdout, "%lu", (unsigned long) (vars[i].data[0] + 256 * vars[i].data[1] + 65536 * vars[i].data[2] + 16777216 * vars[i].data[3]));
+            fprintf(stdout, "%ud", (unsigned) (vars[i].data[0] + 256 * vars[i].data[1] + 65536 * vars[i].data[2] + 16777216 * vars[i].data[3]));
+            break;
+
+            case VAR_DOUBLE:
+            fprintf(stdout, "%lf", var_to_double(vars[i]));
             break;
 
             default:

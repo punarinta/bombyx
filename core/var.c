@@ -110,24 +110,42 @@ var var_add(var a, var b)
 
 var var_subtract(var a, var b)
 {
-    double x = *a.data - *b.data;
-    memcpy(a.data, &x, sizeof(double));
+    double xa, xb;
+    memcpy(&xa, a.data, sizeof(double));
+    memcpy(&xb, b.data, sizeof(double));
+
+    xa -= xb;
+    free(b.data);
+
+    memcpy(a.data, &xa, sizeof(double));
 
     return a;
 }
 
 var var_multiply(var a, var b)
 {
-    double x = *a.data * *b.data;
-    memcpy(a.data, &x, sizeof(double));
+    double xa, xb;
+    memcpy(&xa, a.data, sizeof(double));
+    memcpy(&xb, b.data, sizeof(double));
+
+    xa *= xb;
+    free(b.data);
+
+    memcpy(a.data, &xa, sizeof(double));
 
     return a;
 }
 
 var var_divide(var a, var b)
 {
-    double x = *a.data / *b.data;
-    memcpy(a.data, &x, sizeof(double));
+    double xa, xb;
+    memcpy(&xa, a.data, sizeof(double));
+    memcpy(&xb, b.data, sizeof(double));
+
+    xa /= xb;
+    free(b.data);
+
+    memcpy(a.data, &xa, sizeof(double));
 
     return a;
 }
@@ -166,11 +184,6 @@ unsigned long var_get_index(char *name)
     {
         if (vars[i].type != VAR_UNSET && !strcmp(vars[i].name, name))
         {
-         /*   fputs("ID of var '", stdout);
-            fputs(name, stdout);
-            fputs("' = ", stdout);
-            echo_int(i);
-            fputs("\n", stdout);*/
             return i;
         }
     /*    if (vars[vars_count - i].type != VAR_UNSET && !strcmp(vars[vars_count - i - 1].name, name))

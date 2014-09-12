@@ -33,14 +33,6 @@ char* itoa(int value, char* result, int base)
     return result;
 }
 
-void echo_int(int i)
-{
-    char buf[32];
-    itoa(i, buf, 10);
-    fputs(buf, stdout);
-}
-
-
 /**
  *  Trim spaces here and there
  */
