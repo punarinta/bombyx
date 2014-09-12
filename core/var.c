@@ -74,15 +74,23 @@ int var_set_by_index(unsigned long i, var o, int OBSOLETE)
 
 var var_as_double(double a)
 {
-   // fprintf(stdout, "in %lf\n", a);
-
     var v;
     v.type = VAR_DOUBLE;
     v.data = calloc(1, sizeof(double));
     memcpy(v.data, &a, sizeof(double));
     v.data_size = sizeof(double);
 
-  //  fprintf(stdout, "out %lf\n", &v.data);
+    return v;
+}
+
+var var_as_string(char *a)
+{
+    var v;
+    v.type = VAR_STRING;
+    unsigned len = strlen(a) + 1;
+    v.data = calloc(len, sizeof(char));
+    memcpy(v.data, a, sizeof(char) * len);
+    v.data_size = sizeof(char) * len;
 
     return v;
 }

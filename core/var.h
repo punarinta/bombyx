@@ -33,6 +33,7 @@ void var_delete_by_index(unsigned long);
 char *trim(char *);
 
 var var_as_double(double);
+var var_as_string(char *);
 var var_add(var, var);
 var var_subtract(var, var);
 var var_multiply(var, var);

@@ -186,12 +186,22 @@ var parser_read_double(parser_data *pd)
 	// is a string?
 	if (c == '"')
 	{
+	    parser_eat(pd);
+
 	    // read until closed
         while (parser_peek(pd) != '"') token[pos++] = parser_eat(pd);
         token[pos] = '\0';
 
-        fprintf(stdout, "token = '%s'; l = %d\n", token, pos);
-        larva_stop(0);
+        val = var_as_string(token);
+
+        if (c != '"')
+        {
+            fputs("No closing quote\n", stderr);
+            larva_error(0);
+        }
+
+        // consume closing quote
+        parser_eat(pd);
 	}
 	else
 	{
