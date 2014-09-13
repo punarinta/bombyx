@@ -1,11 +1,7 @@
 #include "common.h"
 #include "larva.h"
 
-char *command = NULL, *object = NULL, *oper = NULL; // 'operator' can be reserved
 char gl_errmsg[256];
-
-size_t read_command(char *, size_t *);
-void larva_poo();
 
 /**
  *  Sets up the processor
@@ -43,6 +39,8 @@ int larva_digest(char *code, size_t length)
 {
     unsigned long index;
     size_t pos = 0;
+    char token[PARSER_MAX_TOKEN_SIZE];
+    char oper[PARSER_MAX_TOKEN_SIZE];
 
     // memorize
     gl_code = code;
@@ -66,56 +64,29 @@ int larva_digest(char *code, size_t length)
             continue;
         }
 
-        // collect garbage
-        if (command) free(command);
+        size_t line_start = pos;
+        read_token(code, (void *)&pos, token);
+        index = var_get_index(token);
 
-        size_t command_start = pos;
-        size_t command_size = read_command(code, (void *)&pos);
-        command = malloc(sizeof(char) * (command_size + 1));
-        memcpy(command, &code[command_start], command_size);
-        command[command_size] = 0;
-        trim(command);
-
-        index = var_get_index(command);
-
-        if (!strcmp(command, "var"))
+        if (!strcmp(token, "var"))
         {
-            // skip possible spaces
-            read_until_not_token(code, (void *)&pos, ' ');
+            read_token(code, (void *)&pos, token);
 
-            size_t object_start = pos;
-            size_t object_size = read_until_token(code, (void *)&pos, ' ');
-            if (object) free(object);
-            object = malloc(sizeof(char) * (object_size + 1));
-            memcpy(object, (void *)&code[object_start], object_size);
-            object[object_size] = 0;
-            trim(object);
-
-            if (var_get_index(object))
+            if (var_get_index(token))
             {
-                sprintf(gl_errmsg, "Variable '%s' already exists.", object);
+                sprintf(gl_errmsg, "Variable '%s' already exists.", token);
                 larva_error(pos);
             }
 
             // variable is just initialized, but not defined
             if (code[pos] == ';')
             {
-                if (!var_get_index(object))
-                {
-                    fprintf(stdout, "Creating variable '%s'\n", object);
-                    var_init(object, VAR_STRING, 0);
-                }
+                if (!var_get_index(token)) var_init(token, VAR_STRING, 0);
                 continue;
             }
             
             // expect operator '='
-            size_t oper_start = pos;
-            size_t oper_size = read_until_token(code, (void *)&pos, ' ');
-            if (oper) free(oper);
-            oper = malloc(sizeof(char) * (oper_size + 1));
-            memcpy(oper, (void *)&code[oper_start], oper_size);
-            oper[oper_size] = 0;
-            trim(oper);
+            read_token(code, (void *)&pos, oper);
 
             if (strcmp(oper, "="))
             {
@@ -124,53 +95,22 @@ int larva_digest(char *code, size_t length)
             }
 
             // no var -- create it
-            if (!index) index = var_init(object, VAR_STRING, 0);
+            if (!index) index = var_init(token, VAR_STRING, 0);
 
             // equalize
             var_set_by_index(index, parse(&pos), 0);
         }
         else if (index)
         {
-            // this is an object, find an operator
-            
-            if (code[pos] == '(')
-            {
-                // this will parse the function call as a part of an expression
-                pos = command_start;
-                parse(&pos);
-                continue;
-            }
-
-            size_t oper_start = pos;
-            size_t oper_size = read_until_token(code, (void *)&pos, ' ');
-            if (oper) free(oper);
-            oper = malloc(sizeof(char) * (oper_size + 1));
-            memcpy(oper, (void *)&code[oper_start], oper_size);
-            oper[oper_size] = 0;
-            trim(oper);
-
-            if (!strlen(oper))
-            {
-                // dummy
-                // TODO: add warnings
-                continue;
-            }
-            
-            if (!strcmp(oper, "="))
-            {
-                var_set_by_index(index, parse(&pos), 0);
-            }
-            else
-            {
-                sprintf(gl_errmsg, "Unknown operator '%s'", oper);
-                larva_error(pos);
-            }
+            pos = line_start;
+            parse(&pos);
         }
         else
         {
             if (pos == length - 1) return larva_stop(0);
 
-            strcpy(gl_errmsg, "Unknown token");
+            strcpy(gl_errmsg, "Unknown token: ");
+            strcat(gl_errmsg, token);
             larva_error(pos);
         }
     }
@@ -181,7 +121,7 @@ int larva_digest(char *code, size_t length)
 void larva_error(unsigned long pos)
 {
     int line = 1, sym = 0; size_t i = 0;
-    while (gl_code[i] != 0)
+    while (gl_code[i] != '\0')
     {
         i++;
         sym++;
@@ -194,65 +134,29 @@ void larva_error(unsigned long pos)
         if (i == pos) break;
     }
 
-    fprintf(stderr, "\nError: %s\nLast command is '%s' (line %d, sym %d).\n\n", gl_errmsg, command, line, sym);
+    fprintf(stderr, "\nError: %s on line %d, sym %d.\n\n", gl_errmsg, line, sym);
 
     larva_stop(ERR_SYNTAX);
 }
 
-size_t read_command(char *code, size_t *pos)
+size_t read_token(char *code, size_t *pos, char *token)
 {
     size_t start = *pos;
-    size_t length = strlen(code);
 
     // read until newline
-    while ((*pos) < length)
+    while (code[(*pos)] != '\0')
     {
+        token[(*pos) - start] = code[(*pos)];
         (*pos)++;
         // either it's a function call or just a command
         if (code[(*pos)] == '(' || code[(*pos)] == ';' || isspace(code[(*pos)])) break;
     }
 
-    return (*pos) - start;
-}
-
-
-/**
- *  Reads until token character is met or the expression is not closed
- */
-size_t read_until_token(char *code, size_t *pos, char token)
-{
-    size_t start = *pos;
-    size_t length = strlen(code);
-
-    // read until newline
-    while ((*pos) < length)
-    {
-        (*pos)++;
-        if (code[(*pos)] == token || code[(*pos)] == ';') break;
-    }
+    token[(*pos) - start] = '\0';
+    trim(token);
 
     return (*pos) - start;
 }
-
-
-/**
- *  Reads until token character stops meeting
- */
-size_t read_until_not_token(char *code, size_t *pos, char token)
-{
-    size_t start = *pos;
-    size_t length = strlen(code);
-
-    // read until newline
-    while ((*pos) < length)
-    {
-        (*pos)++;
-        if (code[(*pos)] != token) break;
-    }
-
-    return (*pos) - start;
-}
-
 
 /**
  *  Call to stop execution
@@ -263,14 +167,11 @@ int larva_stop(int code)
     larva_poo();
     fputs("\n==================================\n", stdout);
 
-    unsigned long i = vars_count;
+    unsigned int i = vars_count;
     while (--i) var_delete_by_index(i);
 
     if (vars) free(vars);
     if (gl_code) free(gl_code);
-    if (command) free(command);
-    if (object) free(object);
-    if (oper) free(oper);
 
     exit(code);
 }

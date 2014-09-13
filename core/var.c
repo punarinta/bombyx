@@ -1,8 +1,8 @@
 #include "var.h"
 
-unsigned long var_init(char *name, unsigned short type, void *value)
+unsigned int var_init(char *name, unsigned short type, void *value)
 {
-    unsigned long i;
+    unsigned int i;
 
     // no necessity to do anything
     if (type == VAR_UNSET) return 0;
@@ -39,12 +39,9 @@ unsigned long var_init(char *name, unsigned short type, void *value)
     return i;
 }
 
-int var_set_by_index(unsigned long i, var o, int OBSOLETE)
+int var_set_by_index(unsigned int i, var o, int OBSOLETE)
 {
     if (!i || i >= vars_count || vars[i].type == VAR_UNSET) return 0;
-
-    unsigned long y = o.data[0] + o.data[1] * 256;
- //   fprintf(stdout, "setting var #%lu to %lu\n", i, y);
 
     // deallocate memory of the old variable
     if (vars[i].data) free(vars[i].data);
@@ -82,7 +79,7 @@ var var_as_string(char *a)
 {
     var v;
     v.type = VAR_STRING;
-    unsigned len = strlen(a) + 1;
+    unsigned int len = strlen(a) + 1;
     v.data = calloc(len, sizeof(char));
     memcpy(v.data, a, sizeof(char) * len);
     v.data_size = sizeof(char) * len;
@@ -102,6 +99,18 @@ unsigned int var_to_dword(var a)
     unsigned int d;
     memcpy(&d, a.data, 4);
     return d;
+}
+
+var var_assign(var a, var b)
+{
+    // 'a' will be overwritten
+    if (a.data) free(a.data);
+
+    a.data = b.data;
+    a.type = b.type;
+    a.data_size = b.data_size;
+
+    return a;
 }
 
 var var_add(var a, var b)
@@ -195,30 +204,20 @@ var var_array_element(var a, unsigned int i)
     return a;
 }
 
-unsigned long var_get_index(char *name)
+unsigned int var_get_index(char *name)
 {
-    for (unsigned long i = 1; i < vars_count; i++)
+    for (unsigned int i = 1; i < vars_count; i++)
     {
         if (vars[i].type != VAR_UNSET && !strcmp(vars[i].name, name))
         {
             return i;
         }
-    /*    if (vars[vars_count - i].type != VAR_UNSET && !strcmp(vars[vars_count - i - 1].name, name))
-        {
-            return vars_count - i;
-        }*/
     }
 
-  //  fputs(" var not found ", stdout);
     return 0;
 }
 
-void var_delete(char *name)
-{
-    var_delete_by_index(var_get_index(name));
-}
-
-void var_delete_by_index(unsigned long index)
+void var_delete_by_index(unsigned int index)
 {
     if (index && index < vars_count)
     {

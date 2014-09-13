@@ -25,15 +25,15 @@ typedef struct
     unsigned long data_size;
 } var;
 
-unsigned long var_init(char *, unsigned short, void *);
-unsigned long var_get_index(char *);
-int var_set_by_index(unsigned long, var, int);
-void var_delete(char *);
-void var_delete_by_index(unsigned long);
+unsigned int var_init(char *, unsigned short, void *);
+unsigned int var_get_index(char *);
+int var_set_by_index(unsigned int, var, int);
+void var_delete_by_index(unsigned int);
 char *trim(char *);
 
 var var_as_double(double);
 var var_as_string(char *);
+var var_assign(var, var);
 var var_add(var, var);
 var var_subtract(var, var);
 var var_multiply(var, var);

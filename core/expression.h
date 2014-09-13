@@ -1,6 +1,8 @@
 #ifndef _EXPRESSION_H_
 #define _EXPRESSION_H_
 
+#include <math.h>
+#include <string.h>
 #include "../common.h"
 
 var parse(size_t *);

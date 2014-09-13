@@ -52,12 +52,6 @@ var parse(size_t *p_gl_pos)
         James Gregson (james.gregson@gmail.com)
  ******************************************************/
 
-#include <math.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
 var parse_expression(const char *expr)
 {
 	return parse_expression_with_callbacks(expr, NULL, NULL, NULL);
@@ -344,11 +338,25 @@ var parser_read_builtin(parser_data *pd)
 			parser_eat(pd);
 
 			// start handling the specific built-in functions
-			if (strcmp(token, "hello") == 0)
+			if (strcmp(token, "swap") == 0)
             {
 				v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
-				v0 = var_as_double(42);
+				unsigned int i0 = var_get_index(v0.name),
+				             i1 = var_get_index(v1.name);
+
+                // save names
+                char *n0 = v0.name, *n1 = v1.name;
+
+				var temp = vars[i0];
+				vars[i0] = vars[i1];
+				vars[i1] = temp;
+
+				// restore names
+				vars[i0].name = n0;
+				vars[i1].name = n1;
+
+				v0 = var_as_double(1);
 			}
 		/*	else if (strcmp(token, "sqrt") == 0)
             {
@@ -403,7 +411,7 @@ var parser_read_builtin(parser_data *pd)
 			// eat the bracket
         	parser_eat(pd);
 
-        	unsigned long i = var_get_index(token);
+        	unsigned int i = var_get_index(token);
         	if (!i)
         	{
         	    parser_error(pd, "Variable not found");
@@ -424,7 +432,15 @@ var parser_read_builtin(parser_data *pd)
 			}
 			else
 			{
-				parser_error(pd, "Could not look up value for variable.");
+			    unsigned int i = var_get_index(token);
+                if (i)
+              	{
+               	    v0 = vars[i];
+               	}
+               	else
+               	{
+                  	parser_error(pd, "Could not look up value for variable.");
+               	}
 			}
 		}
 	}
@@ -759,7 +775,21 @@ var parser_read_boolean_equality(parser_data *pd)
 			// try to match '=='
 			oper[0] = parser_eat(pd);
 			c = parser_peek(pd);
-			if (c != '=') parser_error(pd, "Expected a '=' for boolean '==' operator!");
+			if (c != '=')
+			{
+			    // parser_error(pd, "Expected a '=' for boolean '==' operator!");
+			    // it's a '=' operator
+			    v1 = parser_read_boolean_comparison(pd);
+
+			    unsigned int i = var_get_index(v0.name);
+
+                // v1 may not have a name ;)
+			    vars[i] = var_assign(vars[i], v1);
+
+			    parser_eat_whitespace(pd);
+
+			    return v0;
+			}
 			
 			oper[1] = parser_eat(pd);
 		}

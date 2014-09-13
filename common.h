@@ -21,8 +21,8 @@ unsigned long vars_count;
 void larva_grow(unsigned long);
 void larva_error(unsigned long);
 int larva_stop(int);
-size_t read_until_token(char *, size_t *, char);
-size_t read_until_not_token(char *, size_t *, char);
+size_t read_token(char *, size_t *, char *);
+void larva_poo();
 char* itoa(int, char*, int);
 
 #endif
