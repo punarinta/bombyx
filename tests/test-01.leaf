@@ -27,7 +27,7 @@ sayHello =                  # This will define a function body.
 object X =                  # Creates an object.
 {
     var a, b, c;
-    method count =          # Method is a synonym for function.
+    function count =        # Object's method.
     {
         return a + b - c;   # NB: 'this' keyword is not needed.
     };

@@ -46,6 +46,7 @@ int var_is_more(var, var);
 int var_is_less(var, var);
 int var_is_more_equal(var, var);
 int var_is_less_equal(var, var);
+void var_echo(var);
 
 #include "../common.h"
 

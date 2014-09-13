@@ -183,7 +183,8 @@ var parser_read_double(parser_data *pd)
 	    parser_eat(pd);
 
 	    // read until closed
-        while (parser_peek(pd) != '\'') token[pos++] = parser_eat(pd);
+	    // TODO: support escaping
+        while (parser_peek(pd) != /*'\''*/c) token[pos++] = parser_eat(pd);
         token[pos] = '\0';
 
         val = var_as_string(token);
@@ -357,6 +358,12 @@ var parser_read_builtin(parser_data *pd)
 				vars[i1].name = n1;
 
 				v0 = var_as_double(1);
+			}
+			else if (strcmp(token, "print") == 0)
+            {
+				v0 = parser_read_argument(pd);
+				var_echo(v0);
+				v0 = var_as_double(v0.data_size);
 			}
 		/*	else if (strcmp(token, "sqrt") == 0)
             {

@@ -51,8 +51,12 @@ int larva_digest(char *code, size_t length)
 
         if (code[pos] == '#')
         {
-            // read until newline
-            while (pos++ < length) if (code[pos] == 10 || code[pos] == 13) break;
+            if (pos < length - 1 && code[++pos] == '#')
+            {
+                // wait until '##' is met again
+                while (pos++ < length) if (code[pos - 1] == '#' && code[pos] == '#') break;
+            }
+            else while (pos++ < length) if (code[pos] == 10 || code[pos] == 13) break;
             continue;
         }
 
@@ -72,18 +76,19 @@ int larva_digest(char *code, size_t length)
         {
             read_token(code, (void *)&pos, token);
 
-            if (var_get_index(token))
+            if (index)
             {
                 sprintf(gl_errmsg, "Variable '%s' already exists.", token);
                 larva_error(pos);
             }
 
+            // TODO: check that token is not in the list of reserved words
+
+            // no var -- create it
+            if (!index) index = var_init(token, VAR_STRING, 0);
+
             // variable is just initialized, but not defined
-            if (code[pos] == ';')
-            {
-                if (!var_get_index(token)) var_init(token, VAR_STRING, 0);
-                continue;
-            }
+            if (code[pos] == ';') continue;
             
             // expect operator '='
             read_token(code, (void *)&pos, oper);
@@ -94,11 +99,37 @@ int larva_digest(char *code, size_t length)
                 larva_error(pos);
             }
 
-            // no var -- create it
-            if (!index) index = var_init(token, VAR_STRING, 0);
-
             // equalize
             var_set_by_index(index, parse(&pos), 0);
+        }
+        else if (!strcmp(token, "if"))
+        {
+            unsigned long expr_start = pos, level = 0;
+            // find expression
+            while (code[pos])
+            {
+                if (code[pos] == '(') level++;
+                if (code[pos] == ')')
+                {
+                    level--;
+                    if (level < 1) { pos++; break; }
+                }
+                pos++;
+            }
+
+            char *expr = calloc(pos - expr_start, sizeof(char));
+            memcpy(expr, &code[expr_start], pos - expr_start + 1);
+            expr[pos - expr_start] = '\0';
+
+            var x = parse_expression(expr);
+
+            if (var_to_double(x))
+            {
+                fputs("true\n", stdout);
+            }
+            else fputs("false\n", stdout);
+
+            free(expr);
         }
         else if (index)
         {
@@ -180,6 +211,7 @@ void larva_poo()
 {
     char types[20][16];
 
+    // TODO: get rid of this stupid copying :)
     strcpy(types[VAR_UNSET],    "UNSET");
     strcpy(types[VAR_BYTE],     "BYTE");
     strcpy(types[VAR_WORD],     "WORD");
@@ -189,35 +221,9 @@ void larva_poo()
     strcpy(types[VAR_DOUBLE],   "DOUBLE");
     strcpy(types[VAR_STRING],   "STRING");
 
-    for (unsigned long i = 1; i < vars_count; i++)
+    for (unsigned int i = 1; i < vars_count; i++)
     {
         if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %lu] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
-
-        switch (vars[i].type)
-        {
-            case VAR_STRING:
-            if (vars[i].data_size) fprintf(stdout, "'%s'", vars[i].data);
-            else fprintf(stdout, "NULL");
-            break;
-
-            case VAR_BYTE:
-            fprintf(stdout, "%ud", vars[i].data[0]);
-            break;
-
-            case VAR_WORD:
-            fprintf(stdout, "%ud", (unsigned) (vars[i].data[0] + 256 * vars[i].data[1]));
-            break;
-
-            case VAR_DWORD:
-            fprintf(stdout, "%ud", (unsigned) (vars[i].data[0] + 256 * vars[i].data[1] + 65536 * vars[i].data[2] + 16777216 * vars[i].data[3]));
-            break;
-
-            case VAR_DOUBLE:
-            fprintf(stdout, "%lf", var_to_double(vars[i]));
-            break;
-
-            default:
-            break;
-        }
+        var_echo(vars[i]);
     }
 }

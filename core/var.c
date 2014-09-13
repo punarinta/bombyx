@@ -226,3 +226,33 @@ void var_delete_by_index(unsigned int index)
         if (vars[index].data) free(vars[index].data);
     }
 }
+
+void var_echo(var a)
+{
+    switch (a.type)
+    {
+        case VAR_STRING:
+        if (a.data_size) fprintf(stdout, "'%s'", a.data);
+        else fprintf(stdout, "NULL");
+        break;
+
+        case VAR_BYTE:
+        fprintf(stdout, "%ud", a.data[0]);
+        break;
+
+        case VAR_WORD:
+        fprintf(stdout, "%ud", (unsigned) (a.data[0] + 256 * a.data[1]));
+        break;
+
+        case VAR_DWORD:
+        fprintf(stdout, "%ud", (unsigned) (a.data[0] + 256 * a.data[1] + 65536 * a.data[2] + 16777216 * a.data[3]));
+        break;
+
+        case VAR_DOUBLE:
+        fprintf(stdout, "%lf", var_to_double(a));
+        break;
+
+        default:
+        break;
+    }
+}

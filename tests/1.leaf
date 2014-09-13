@@ -1,16 +1,13 @@
 # dev tests
 
-var my_func;
-var swap;
-var hello = 'world';
-#var my_func2;
-var a = 8;
-a = 7;
-var b = 9;
-swap(a,b);
+var foo = 42;
+var bar;
 
-#hello('hue!', 2);
-#my_func('hello', 'world');
-#my_func2();
-
-var c = 56 + (2+3 ) *2;
+##if (foo == 42)
+{
+    bar = 5;
+}
+else
+{
+    bar = 6;
+}##
