@@ -1,17 +1,21 @@
 #include "common.h"
 #include "larva.h"
 
-char gl_errmsg[256];
 
 /**
  *  Sets up the processor
  */
-void larva_init()
+void larva_init(char *incoming_code, unsigned int len)
 {
     vars_count = MIN_VARIABLES;
     vars = calloc(MIN_VARIABLES, sizeof(var));
     for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
-    gl_code = NULL;
+    code = incoming_code;
+    code_pos = 0;
+    code_length = len;
+
+    // TODO: cut all the commented code
+    // TODO: include all the necessary files
 }
 
 
@@ -35,51 +39,51 @@ void larva_grow(unsigned long size)
 /**
  *  Processes code buffer
  */
-int larva_digest(char *code, size_t length)
+int larva_digest()
 {
-    unsigned long index;
-    size_t pos = 0;
+    unsigned int index;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
+    BYTE run_next_block;
 
     // memorize
-    gl_code = code;
 
-    while (pos < length)
+    while (code_pos < code_length)
     {
         index = 0;
+        run_next_block = 0;
 
-        if (code[pos] == '#')
+        if (code[code_pos] == '#')
         {
-            if (pos < length - 1 && code[++pos] == '#')
+            if (code_pos < code_length - 1 && code[++code_pos] == '#')
             {
                 // wait until '##' is met again
-                while (pos++ < length) if (code[pos - 1] == '#' && code[pos] == '#') break;
+                while (code_pos++ < code_length) if (code[code_pos - 1] == '#' && code[code_pos] == '#') break;
             }
-            else while (pos++ < length) if (code[pos] == 10 || code[pos] == 13) break;
+            else while (code_pos++ < code_length) if (code[code_pos] == '\n') break;
             continue;
         }
 
         // find first significant character
-        if (code[pos] == ';' || isspace(code[pos]))
+        if (isspace(code[code_pos]))
         {
             // next please
-            pos++;
+            code_pos++;
             continue;
         }
 
-        size_t line_start = pos;
-        read_token(code, (void *)&pos, token);
+        size_t line_start = code_pos;
+        read_token(token);
         index = var_get_index(token);
 
         if (!strcmp(token, "var"))
         {
-            read_token(code, (void *)&pos, token);
+            read_token(token);
 
             if (index)
             {
                 sprintf(gl_errmsg, "Variable '%s' already exists.", token);
-                larva_error(pos);
+                larva_error(code_pos);
             }
 
             // TODO: check that token is not in the list of reserved words
@@ -88,81 +92,109 @@ int larva_digest(char *code, size_t length)
             if (!index) index = var_init(token, VAR_STRING, 0);
 
             // variable is just initialized, but not defined
-            if (code[pos] == ';') continue;
+            if (code[code_pos] == '\n') continue;
             
             // expect operator '='
-            read_token(code, (void *)&pos, oper);
+            read_token(oper);
 
             if (strcmp(oper, "="))
             {
                 sprintf(gl_errmsg, "Operator '=' expected, found '%s'", oper);
-                larva_error(pos);
+                larva_error(code_pos);
             }
 
             // equalize
-            var_set_by_index(index, parse(&pos), 0);
+            var_set_by_index(index, parse(&code_pos), 0);
         }
         else if (!strcmp(token, "if"))
         {
-            unsigned long expr_start = pos, level = 0;
+            unsigned long expr_start = code_pos, level = 0;
             // find expression
-            while (code[pos])
+            while (code[code_pos])
             {
-                if (code[pos] == '(') level++;
-                if (code[pos] == ')')
+                if (code[code_pos] == '(') level++;
+                if (code[code_pos] == ')')
                 {
                     level--;
-                    if (level < 1) { pos++; break; }
+                    if (level < 1) { code_pos++; break; }
                 }
-                pos++;
+                code_pos++;
             }
 
-            char *expr = calloc(pos - expr_start, sizeof(char));
-            memcpy(expr, &code[expr_start], pos - expr_start + 1);
-            expr[pos - expr_start] = '\0';
+            char *expr = calloc(code_pos - expr_start, sizeof(char));
+            memcpy(expr, &code[expr_start], code_pos - expr_start + 1);
+            expr[code_pos - expr_start] = '\0';
 
             var x = parse_expression(expr);
 
             if (var_to_double(x))
             {
-                fputs("true\n", stdout);
+                run_next_block = 1;
             }
-            else fputs("false\n", stdout);
+            else
+            {
+                // skip the whole block
+                skip_block();
+            }
 
             free(expr);
         }
-        else if (index)
-        {
-            pos = line_start;
-            parse(&pos);
-        }
         else
         {
-            if (pos == length - 1) return larva_stop(0);
-
-            strcpy(gl_errmsg, "Unknown token: ");
-            strcat(gl_errmsg, token);
-            larva_error(pos);
+            code_pos = line_start;
+            parse(&code_pos);
         }
     }
 
     return larva_stop(0);
 }
 
-void larva_error(unsigned long pos)
+void read_token(char *token)
+{
+    size_t start = code_pos;
+
+    // read until newline
+    while (code[code_pos] != '\0')
+    {
+        token[code_pos - start] = code[code_pos];
+        code_pos++;
+        // either it's a function call or just a command
+        if (code[code_pos] == '(' || isspace(code[code_pos])) break;
+    }
+
+    token[code_pos - start] = '\0';
+    trim(token);
+}
+
+void skip_block()
+{
+    BYTE level = 0;
+    while (code[code_pos])
+    {
+        if (code[code_pos] == '{') level++;
+        if (code[code_pos] == '}') if (--level < 1)
+        {
+            code_pos++;
+            break;
+        }
+        code_pos++;
+    }
+}
+
+void larva_error()
 {
     int line = 1, sym = 0; size_t i = 0;
-    while (gl_code[i] != '\0')
+    while (code[i] != '\0')
     {
         i++;
         sym++;
-        if (gl_code[i] == 10 || gl_code[i] == 13)
+        if (code[i] == 10 || code[i] == 13)
         {
             line++;
             sym = 0;
         }
 
-        if (i == pos) break;
+        if (i == code_pos) break;
     }
 
     fprintf(stderr, "\nError: %s on line %d, sym %d.\n\n", gl_errmsg, line, sym);
@@ -170,29 +202,10 @@ void larva_error(unsigned long pos)
     larva_stop(ERR_SYNTAX);
 }
 
-size_t read_token(char *code, size_t *pos, char *token)
-{
-    size_t start = *pos;
-
-    // read until newline
-    while (code[(*pos)] != '\0')
-    {
-        token[(*pos) - start] = code[(*pos)];
-        (*pos)++;
-        // either it's a function call or just a command
-        if (code[(*pos)] == '(' || code[(*pos)] == ';' || isspace(code[(*pos)])) break;
-    }
-
-    token[(*pos) - start] = '\0';
-    trim(token);
-
-    return (*pos) - start;
-}
-
 /**
  *  Call to stop execution
  */
-int larva_stop(int code)
+int larva_stop(int exit_code)
 {
     fputs("=============== DUMP =============", stdout);
     larva_poo();
@@ -202,9 +215,9 @@ int larva_stop(int code)
     while (--i) var_delete_by_index(i);
 
     if (vars) free(vars);
-    if (gl_code) free(gl_code);
+    if (code) free(code);
 
-    exit(code);
+    exit(exit_code);
 }
 
 void larva_poo()
@@ -223,7 +236,7 @@ void larva_poo()
 
     for (unsigned int i = 1; i < vars_count; i++)
     {
-        if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %lu] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
+        if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %u] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
         var_echo(vars[i]);
     }
 }

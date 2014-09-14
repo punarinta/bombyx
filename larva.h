@@ -2,9 +2,12 @@
 #define _LARVA_H_ 1
 
 void larva_init();
-size_t read_until_token(char *, size_t *, char);
-size_t read_until_not_token(char *, size_t *, char);
-int larva_digest(char *, size_t);
-int larva_stop(int);
+int larva_digest();
+void larva_grow(unsigned long);
+void larva_error();
+void larva_poo();
+
+void read_token(char *);
+void skip_block();
 
 #endif

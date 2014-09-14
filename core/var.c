@@ -110,21 +110,26 @@ var var_assign(var a, var b)
     a.type = b.type;
     a.data_size = b.data_size;
 
+    if (a.name) vars[var_get_index(a.name)] = a;
+
     return a;
 }
 
 var var_add(var a, var b)
 {
+    var r = a;
     double xa, xb;
     memcpy(&xa, a.data, sizeof(double));
     memcpy(&xb, b.data, sizeof(double));
 
     xa += xb;
-    free(b.data);
+    if (!a.name) free(a.data);
+    if (!b.name) free(b.data);
 
-    memcpy(a.data, &xa, sizeof(double));
+    r.data = calloc(1, sizeof(double));
+    memcpy(r.data, &xa, sizeof(double));
 
-    return a;
+    return r;
 }
 
 var var_subtract(var a, var b)
@@ -143,16 +148,19 @@ var var_subtract(var a, var b)
 
 var var_multiply(var a, var b)
 {
+    var r = a;
     double xa, xb;
     memcpy(&xa, a.data, sizeof(double));
     memcpy(&xb, b.data, sizeof(double));
 
     xa *= xb;
-    free(b.data);
+    if (!a.name) free(a.data);
+    if (!b.name) free(b.data);
 
-    memcpy(a.data, &xa, sizeof(double));
+    r.data = calloc(1, sizeof(double));
+    memcpy(r.data, &xa, sizeof(double));
 
-    return a;
+    return r;
 }
 
 var var_divide(var a, var b)
@@ -171,28 +179,35 @@ var var_divide(var a, var b)
 
 var var_invert(var a)
 {
-    double x = -(*a.data);
-    memcpy(a.data, &x, sizeof(double));
+    var r = a;
+    double xa;
+    memcpy(&xa, a.data, sizeof(double));
 
-    return a;
+    xa = -xa;
+    if (!a.name) free(a.data);
+
+    r.data = calloc(1, sizeof(double));
+    memcpy(r.data, &xa, sizeof(double));
+
+    return r;
 }
 
-int var_is_more(var a, var b)
+BYTE var_is_more(var a, var b)
 {
     return (*a.data) > (*b.data);
 }
 
-int var_is_less(var a, var b)
+BYTE var_is_less(var a, var b)
 {
     return (*a.data) < (*b.data);
 }
 
-int var_is_more_equal(var a, var b)
+BYTE var_is_more_equal(var a, var b)
 {
     return (*a.data) >= (*b.data);
 }
 
-int var_is_less_equal(var a, var b)
+BYTE var_is_less_equal(var a, var b)
 {
     return (*a.data) <= (*b.data);
 }

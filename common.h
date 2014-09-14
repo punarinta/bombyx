@@ -15,14 +15,13 @@
 #define ERR_TOO_LONG        3
 
 var *vars;
-char *gl_code;
-unsigned long vars_count;
+unsigned int vars_count;
 
-void larva_grow(unsigned long);
-void larva_error(unsigned long);
+char *code;
+unsigned int code_pos;
+unsigned int code_length;
+char gl_errmsg[256];
+
 int larva_stop(int);
-size_t read_token(char *, size_t *, char *);
-void larva_poo();
-char* itoa(int, char*, int);
 
 #endif

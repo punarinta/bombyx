@@ -1,41 +1,29 @@
 #include "expression.h"
 
-#define gl_pos (*p_gl_pos)
-
-var parse(size_t *p_gl_pos)
+var parse()
 {
     var result;
-    char *code = gl_code;
 
-    // get expression
+    BYTE quote_opened = 0;
+    char *expression;
+    size_t expression_size;
+    size_t expression_start = code_pos;
 
-    int quote_opened = 0;
-    char *expression = NULL;
-    size_t expression_size = 0;
-    size_t expression_start = gl_pos;
-
-    while (code[gl_pos])
+    // find expression end, note that newline does don count if it's inside a string
+    while (code[code_pos])
     {
-        if (code[gl_pos] == '\'')
-        {
-            quote_opened = quote_opened ? 0 : 1;
-        }
-
-        if (code[gl_pos] == ';' && !quote_opened)
-        {
-            break;
-        }
-
-        gl_pos++;
+        if (code[code_pos] == '\'') quote_opened = !quote_opened;
+        if (code[code_pos] == '\n' && !quote_opened) break;
+        code_pos++;
     }
 
-    expression_size = gl_pos - expression_start;
+    expression_size = code_pos - expression_start;
     expression = malloc(sizeof(char) * (expression_size + 1));
     memcpy(expression, (void *)&code[expression_start], expression_size);
-    expression[expression_size] = 0;
+    expression[expression_size] = '\0';
     trim(expression);
 
-  //  fprintf(stdout, "expression '%s'\n", expression);
+    fprintf(stdout, "expression '%s'\n", expression);
 
     result = parse_expression(expression);
 
@@ -110,11 +98,11 @@ var parser_parse(parser_data *pd)
 	// set the jump position and launch the parser
 	if (!setjmp(pd->err_jmp_buf))
     {
-        #if !defined(PARSER_EXCLUDE_BOOLEAN_OPS)
+    //    #if !defined(PARSER_EXCLUDE_BOOLEAN_OPS)
 		    result = parser_read_boolean_or(pd);
-        #else
-		    result = parser_read_expr(pd);
-        #endif
+    //    #else
+	//	    result = parser_read_expr(pd);
+    //    #endif
 
         parser_eat_whitespace(pd);
         if (pd->pos < pd->len-1)
@@ -361,42 +349,10 @@ var parser_read_builtin(parser_data *pd)
 			}
 			else if (strcmp(token, "print") == 0)
             {
-				v0 = parser_read_argument(pd);
+				v0 = parser_read_boolean_or(pd);
 				var_echo(v0);
-				v0 = var_as_double(v0.data_size);
+			//	v0 = var_as_double(v0.data_size);		// TODO: return something more relevant
 			}
-		/*	else if (strcmp(token, "sqrt") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				if (v0 < 0.0) parser_error(pd, "sqrt(x) undefined for x < 0!");
-				v0 = sqrt(v0);
-			}
-			else if (strcmp(token, "log") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				if (v0 <= 0) parser_error(pd, "log(x) undefined for x <= 0!");
-				v0 = log(v0);
-			}
-			else if (strcmp(token, "exp") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = exp(v0);
-			}
-			else if (strcmp(token, "abs") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = abs((int)v0);
-			}
-			else if (strcmp(token, "fabs") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = fabs(v0);
-			}
-			else if (strcmp(token, "round") == 0)
-            {
-				v0 = parser_read_argument(pd);
-				v0 = round(v0);
-			}*/
 			else
 			{
 				parser_read_argument_list(pd, &num_args, args);
@@ -406,12 +362,12 @@ var parser_read_builtin(parser_data *pd)
 				}
 				else
 				{
-					parser_error(pd, "Tried to call unknown built-in function.");
+					parser_error(pd, "Tried to call unknown function.");
 				}
 			}
-
+char zzz;
 			// eat closing bracket of function call
-			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in function call.");
+			if ((zzz=parser_eat(pd)) != ')') {fprintf(stderr, "\n\n%c\n\n",zzz);larva_stop(0); parser_error(pd, "Expected ')' in function call.");}
 		}
 		else if (parser_peek(pd) == '[')
 		{
@@ -684,7 +640,7 @@ var parser_read_boolean_comparison(parser_data *pd)
 {
 	char c, oper[] = { '\0', '\0', '\0' };
 	var v0, v1;
-	int val;
+	BYTE val;
 
 	// eat whitespace
 	parser_eat_whitespace(pd);
@@ -718,26 +674,26 @@ var parser_read_boolean_comparison(parser_data *pd)
 		// perform the boolean operations
 		if (strcmp(oper, "<") == 0)
         {
-			val = var_is_less(v0, v1) ? 1.0 : 0.0;
+			val = var_is_less(v0, v1);
 		}
 		else if (strcmp(oper, ">") == 0)
         {
-			val = var_is_more(v0, v1) ? 1.0 : 0.0;
+			val = var_is_more(v0, v1);
 		}
 		else if (strcmp(oper, "<=") == 0)
         {
-			val = var_is_less_equal(v0, v1) ? 1.0 : 0.0;
+			val = var_is_less_equal(v0, v1);
 		}
 		else if (strcmp(oper, ">=") == 0)
         {
-			val = var_is_more_equal(v0, v1) ? 1.0 : 0.0;
+			val = var_is_more_equal(v0, v1);
 		}
 		else
 		{
-			parser_error(pd, "Unknown operation!");
+			parser_error(pd, "Unknown comparison operation.");
 		}
 
-		v0 = var_as_double(val);
+		v0 = var_as_double(val * 1.0);
 
 		// read trailing whitespace
 		parser_eat_whitespace(pd);
@@ -782,24 +738,13 @@ var parser_read_boolean_equality(parser_data *pd)
 			// try to match '=='
 			oper[0] = parser_eat(pd);
 			c = parser_peek(pd);
-			if (c != '=')
+			if (c == '=')
 			{
-			    // parser_error(pd, "Expected a '=' for boolean '==' operator!");
-			    // it's a '=' operator
-			    v1 = parser_read_boolean_comparison(pd);
-
-			    unsigned int i = var_get_index(v0.name);
-
-                // v1 may not have a name ;)
-			    vars[i] = var_assign(vars[i], v1);
-
-			    parser_eat_whitespace(pd);
-
-			    return v0;
-			}
-			
-			oper[1] = parser_eat(pd);
+				oper[1] = parser_eat(pd);
+				if (oper[1] != '=') parser_error(pd, "Expected a '=' for boolean '==' operator!");
+			}			
 		}
+
 		// eat trailing whitespace
 		parser_eat_whitespace(pd);
 
@@ -814,6 +759,10 @@ var parser_read_boolean_equality(parser_data *pd)
 		else if (strcmp(oper, "!=") == 0)
         {
 			v0 = var_as_double((fabs(var_to_double(v0) - var_to_double(v1)) > PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		}
+		else if (strcmp(oper, "=") == 0)
+        {
+			v0 = var_assign(v0, v1);
 		}
 		else
 		{
@@ -920,5 +869,3 @@ var parser_read_boolean_or(parser_data *pd)
 	// return the resulting value
 	return v0;
 }
-
-#undef gl_pos

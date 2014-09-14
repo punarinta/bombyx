@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void larva_init();
-int larva_digest(char *, size_t);
+void larva_init(char *, unsigned int);
+int larva_digest();
 
 int main(int argc, char *argv[])
 {
@@ -46,8 +46,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        larva_init();
-        larva_digest(source, newLen);
+        larva_init(source, newLen);
+        larva_digest();
 
         fclose(fp);
     }

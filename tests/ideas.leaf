@@ -1,0 +1,48 @@
+use core.files
+use core.math
+
+include 'my-lib.leaf'
+
+var a = 0, b = 1
+
+while (foo == 42)
+{
+    a = sqrt(foo++)
+}
+meanwhile
+{
+    
+}
+
+
+block myBlock
+{
+	param x, y
+	return x + y + 42
+}
+
+block myBlock2
+{
+	param a, b
+	var some_var
+	a = sin(a)
+	b = cos(b)
+
+	block internalBlock
+	{
+		param z
+		return sqrt(abs(z) + 1)
+	}
+
+	return myBlock(a, b)
+}
+
+# block can be called as a function
+myBlock(5, 7)
+
+# block within some block is not visible until you do not call it through any visible block
+myBlock.internalBlock(-15)
+
+# block's parameters and internal variables can be also accessed through the block name
+print(myBlock.internalBlock.z)
+

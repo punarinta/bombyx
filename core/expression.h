@@ -5,7 +5,7 @@
 #include <string.h>
 #include "../common.h"
 
-var parse(size_t *);
+var parse();
 
 /**
  @mainpage

@@ -1,13 +1,13 @@
 # dev tests
 
-var foo = 42;
-var bar;
+var foo = 42
+var bar = 'hello'
 
-##if (foo == 42)
+##if (foo == 43)
 {
-    bar = 5;
+    bar = 5
 }
 else
 {
-    bar = 6;
+    bar = 6
 }##

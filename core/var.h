@@ -17,36 +17,43 @@
 #define VAR_ARRAY       12
 #define VAR_OBJECT      13
 
+typedef unsigned char BYTE;
+
+char *trim(char *);
+
 typedef struct
 {
-    unsigned short type;
+    unsigned char type;
     char *name;
     char *data;
-    unsigned long data_size;
+    unsigned int data_size;
+    unsigned int parent;
 } var;
 
 unsigned int var_init(char *, unsigned short, void *);
 unsigned int var_get_index(char *);
 int var_set_by_index(unsigned int, var, int);
 void var_delete_by_index(unsigned int);
-char *trim(char *);
+var var_array_element(var, unsigned int);
+void var_echo(var);
 
 var var_as_double(double);
 var var_as_string(char *);
+
 var var_assign(var, var);
 var var_add(var, var);
 var var_subtract(var, var);
 var var_multiply(var, var);
 var var_divide(var, var);
 var var_invert(var);
+
 double var_to_double(var);
 unsigned int var_to_dword(var);
-var var_array_element(var, unsigned int);
-int var_is_more(var, var);
-int var_is_less(var, var);
-int var_is_more_equal(var, var);
-int var_is_less_equal(var, var);
-void var_echo(var);
+
+BYTE var_is_more(var, var);
+BYTE var_is_less(var, var);
+BYTE var_is_more_equal(var, var);
+BYTE var_is_less_equal(var, var);
 
 #include "../common.h"
 
