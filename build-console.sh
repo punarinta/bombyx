@@ -6,4 +6,4 @@ larva.c \
 console.c \
 \
 -std=c99 \
--o bombyx
+-g -o bombyx

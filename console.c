@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <mcheck.h>
 
 void larva_init(char *, unsigned int);
 int larva_digest();
@@ -14,6 +15,8 @@ int main(int argc, char *argv[])
         fputs("Usage: bombyx [FILENAME]\n\n", stderr);
         return 1;
     }
+
+    mtrace();
 
     FILE *fp = fopen(argv[1], "rt");
 
@@ -46,13 +49,14 @@ int main(int argc, char *argv[])
             }
         }
 
+        fclose(fp);
+
         larva_init(source, newLen);
         larva_digest();
-
-        fclose(fp);
     }
 
     free(source);
+    muntrace();
 
     return 0;
 }

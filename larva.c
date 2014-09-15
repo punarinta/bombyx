@@ -217,6 +217,8 @@ int larva_stop(int exit_code)
     if (vars) free(vars);
     if (code) free(code);
 
+    muntrace();
+
     exit(exit_code);
 }
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <mcheck.h>
 #include "core/var.h"
 #include "core/expression.h"
 
