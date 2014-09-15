@@ -18,6 +18,7 @@
 #define VAR_OBJECT      13
 
 typedef unsigned char BYTE;
+typedef unsigned int  DWORD;
 
 char *trim(char *);
 
