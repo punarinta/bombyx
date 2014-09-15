@@ -27,7 +27,9 @@ var parse()
 
     result = parse_expression(expression);
 
-    fprintf(stdout, ">> %lf\n", var_to_double(result));
+    fprintf(stdout, ">> ");
+    var_echo(result);
+    fprintf(stdout, "\n");
 
     free(expression);
 

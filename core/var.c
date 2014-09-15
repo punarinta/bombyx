@@ -90,13 +90,16 @@ var var_as_string(char *a)
 double var_to_double(var a)
 {
     double d;
-    memcpy(&d, a.data, sizeof(double));
+
+    if (a.type == VAR_DOUBLE) memcpy(&d, a.data, sizeof(double));
+    if (a.type == VAR_STRING) d = atof(a.data);
+
     return d;
 }
 
 unsigned int var_to_dword(var a)
 {
-    unsigned int d;
+    DWORD d;
     memcpy(&d, a.data, 4);
     return d;
 }
@@ -118,16 +121,27 @@ var var_assign(var a, var b)
 var var_add(var a, var b)
 {
     var r = a;
-    double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
 
-    xa += xb;
-    if (!a.name) free(a.data);
-    if (!b.name) free(b.data);
+    if (a.type == VAR_STRING && b.type == VAR_STRING)
+    {
+        r.data = calloc(1, sizeof(char));
+        strcat(r.data, a.data);
+        strcat(r.data, b.data);
+    }
+    if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
+    {
+        double xa, xb;
+        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xb, b.data, sizeof(double));
 
-    r.data = calloc(1, sizeof(double));
-    memcpy(r.data, &xa, sizeof(double));
+        xa += xb;
+
+        r.data = calloc(1, sizeof(double));
+        memcpy(r.data, &xa, sizeof(double));
+    }
+
+//    if (!a.name) free(a.data);
+//    if (!b.name) free(b.data);
 
     return r;
 }

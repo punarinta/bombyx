@@ -1,7 +1,7 @@
 # dev tests
 
 var foo = 42
-var bar = 'hello'
+var bar = 'hello' + ', ' + 'world'
 
 ##if (foo == 43)
 {
