@@ -33,6 +33,7 @@ void larva_grow(unsigned long size)
     vars = realloc(vars, sizeof(var) * (vars_count + size));
 
     if (!vars) larva_stop(ERR_NO_MEMORY);
+    vars_count += size;
 }
 
 
