@@ -9,7 +9,7 @@ var parse()
     size_t expression_size;
     size_t expression_start = code_pos;
 
-    // find expression end, note that newline does don count if it's inside a string
+    // find expression end, note that newline does don't count if it's inside a string
     while (code[code_pos])
     {
         if (code[code_pos] == '\'') quote_opened = !quote_opened;
@@ -23,11 +23,11 @@ var parse()
     expression[expression_size] = '\0';
     trim(expression);
 
-    fprintf(stdout, "expression '%s'\n", expression);
+    fprintf(stdout, "expression '%s' {", expression);
 
     result = parse_expression(expression);
 
-    fprintf(stdout, ">> ");
+    fprintf(stdout, "} -> ");
     var_echo(result);
     fprintf(stdout, "\n");
 
@@ -367,9 +367,9 @@ var parser_read_builtin(parser_data *pd)
 					parser_error(pd, "Tried to call unknown function.");
 				}
 			}
-char zzz;
+
 			// eat closing bracket of function call
-			if ((zzz=parser_eat(pd)) != ')') {fprintf(stderr, "\n\n%c\n\n",zzz);larva_stop(0); parser_error(pd, "Expected ')' in function call.");}
+			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in function call.");
 		}
 		else if (parser_peek(pd) == '[')
 		{

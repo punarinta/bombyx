@@ -57,7 +57,7 @@ var var_as_double(double a)
 {
     var v;
     v.type = VAR_DOUBLE;
-    v.data = calloc(1, sizeof(double));
+    v.data = malloc(sizeof(double));
     memcpy(v.data, &a, sizeof(double));
     v.data_size = sizeof(double);
 
@@ -68,7 +68,7 @@ var var_as_dword(double a)
 {
     var v;
     v.type = VAR_DWORD;
-    v.data = calloc(1, 4);
+    v.data = malloc(4);
     memcpy(v.data, &a, 4);
     v.data_size = 4;
 
@@ -97,140 +97,12 @@ double var_to_double(var a)
     return d;
 }
 
+// not sure if ever used
 unsigned int var_to_dword(var a)
 {
     DWORD d;
     memcpy(&d, a.data, 4);
     return d;
-}
-
-var var_assign(var a, var b)
-{
-    // 'a' will be overwritten
-    if (a.data) free(a.data);
-
-    a.data = b.data;
-    a.type = b.type;
-    a.data_size = b.data_size;
-
-    if (a.name) vars[var_get_index(a.name)] = a;
-
-    return a;
-}
-
-var var_add(var a, var b)
-{
-    var r = a;
-
-    if (a.type == VAR_STRING && b.type == VAR_STRING)
-    {
-        r.data = calloc(1, sizeof(char));
-        strcat(r.data, a.data);
-        strcat(r.data, b.data);
-    }
-    if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
-    {
-        double xa, xb;
-        memcpy(&xa, a.data, sizeof(double));
-        memcpy(&xb, b.data, sizeof(double));
-
-        xa += xb;
-
-        r.data = calloc(1, sizeof(double));
-        memcpy(r.data, &xa, sizeof(double));
-    }
-
-//    if (!a.name) free(a.data);
-//    if (!b.name) free(b.data);
-
-    return r;
-}
-
-var var_subtract(var a, var b)
-{
-    double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
-
-    xa -= xb;
-    free(b.data);
-
-    memcpy(a.data, &xa, sizeof(double));
-
-    return a;
-}
-
-var var_multiply(var a, var b)
-{
-    var r = a;
-    double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
-
-    xa *= xb;
-    if (!a.name) free(a.data);
-    if (!b.name) free(b.data);
-
-    r.data = calloc(1, sizeof(double));
-    memcpy(r.data, &xa, sizeof(double));
-
-    return r;
-}
-
-var var_divide(var a, var b)
-{
-    double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
-
-    xa /= xb;
-    free(b.data);
-
-    memcpy(a.data, &xa, sizeof(double));
-
-    return a;
-}
-
-var var_invert(var a)
-{
-    var r = a;
-    double xa;
-    memcpy(&xa, a.data, sizeof(double));
-
-    xa = -xa;
-    if (!a.name) free(a.data);
-
-    r.data = calloc(1, sizeof(double));
-    memcpy(r.data, &xa, sizeof(double));
-
-    return r;
-}
-
-BYTE var_is_more(var a, var b)
-{
-    return (*a.data) > (*b.data);
-}
-
-BYTE var_is_less(var a, var b)
-{
-    return (*a.data) < (*b.data);
-}
-
-BYTE var_is_more_equal(var a, var b)
-{
-    return (*a.data) >= (*b.data);
-}
-
-BYTE var_is_less_equal(var a, var b)
-{
-    return (*a.data) <= (*b.data);
-}
-
-var var_array_element(var a, unsigned int i)
-{
-    // TODO
-    a = var_as_double(42);
-    return a;
 }
 
 unsigned int var_get_index(char *name)
@@ -278,7 +150,7 @@ void var_echo(var a)
         break;
 
         case VAR_DOUBLE:
-        fprintf(stdout, "%lf", var_to_double(a));
+        fprintf(stdout, "%.6g", var_to_double(a));
         break;
 
         default:
