@@ -129,7 +129,7 @@ var var_invert(var a)
         // revert a string
 
         char *end = a.data + strlen(a.data) - 1;
-        #define XOR_SWAP(a,b) do\
+        #define XOR_SWAP(a, b) do\
         {\
             a ^= b;\
             b ^= a;\

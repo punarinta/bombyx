@@ -46,8 +46,13 @@ int larva_digest()
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
     BYTE run_next_block;
+    gl_error = 0;
 
-    // memorize
+    setjmp(error_exit);
+    if (gl_error)
+    {
+        return larva_stop(gl_error);
+    }
 
     while (code_pos < code_length)
     {
@@ -83,7 +88,7 @@ int larva_digest()
 
             if (index)
             {
-                sprintf(gl_errmsg, "Variable '%s' already exists.", token);
+                fprintf(stderr, "Variable '%s' already exists.", token);
                 larva_error(code_pos);
             }
 
@@ -100,7 +105,7 @@ int larva_digest()
 
             if (strcmp(oper, "="))
             {
-                sprintf(gl_errmsg, "Operator '=' expected, found '%s'", oper);
+                fprintf(stderr, "Operator '=' expected, found '%s'", oper);
                 larva_error(code_pos);
             }
 
@@ -198,15 +203,16 @@ void larva_error()
         if (i == code_pos) break;
     }
 
-    fprintf(stderr, "\nError: %s on line %d, sym %d.\n\n", gl_errmsg, line, sym);
+    fprintf(stderr, "\nError on line %d, sym %d.\n\n", line, sym);
 
-    larva_stop(ERR_SYNTAX);
+    gl_error = 1;
+    longjmp(error_exit, 1);
 }
 
 /**
  *  Call to stop execution
  */
-int larva_stop(int exit_code)
+int larva_stop(int ret_code)
 {
     fputs("=============== DUMP =============", stdout);
     larva_poo();
@@ -216,13 +222,12 @@ int larva_stop(int exit_code)
     while (--i) var_delete_by_index(i);
 
     if (vars) free(vars);
-    if (code) free(code);
 
 #ifndef __APPLE__
     muntrace();
 #endif
 
-    exit(exit_code);
+    return ret_code;
 }
 
 void larva_poo()

@@ -1,5 +1,7 @@
 #include "expression.h"
 
+char temp_error[256];
+
 var parse()
 {
     var result;
@@ -23,10 +25,9 @@ var parse()
     expression[expression_size] = '\0';
     trim(expression);
 
-    fprintf(stdout, "expression '%s' {", expression);
-
     result = parse_expression(expression);
 
+	fprintf(stdout, "expression '%s' {", expression);
     fprintf(stdout, "} -> ");
     var_echo(result);
     fprintf(stdout, "\n");
@@ -55,8 +56,9 @@ var parse_expression_with_callbacks(const char *expr, parser_variable_callback v
 	val = parser_parse(&pd);
 	if (pd.error)
     {
-		printf("Error: %s\n", pd.error);
-		printf("Expression '%s' failed to parse, returning NaN\n", expr);
+		fprintf(stderr, "Failed to parse expression '%s'. ", expr);
+		fprintf(stderr, "%s", pd.error);
+		larva_error();
 	}
 
 	return val;
@@ -100,26 +102,24 @@ var parser_parse(parser_data *pd)
 	// set the jump position and launch the parser
 	if (!setjmp(pd->err_jmp_buf))
     {
-    //    #if !defined(PARSER_EXCLUDE_BOOLEAN_OPS)
-		    result = parser_read_boolean_or(pd);
-    //    #else
-	//	    result = parser_read_expr(pd);
-    //    #endif
+	    result = parser_read_boolean_or(pd);
 
         parser_eat_whitespace(pd);
-        if (pd->pos < pd->len-1)
+
+        if (pd->pos < pd->len - 1)
         {
             parser_error(pd, "Failed to reach end of input expression, likely malformed input");
+
+            // this is just to shut the compiler, in fact this line is never reached
+            return vars[0];
         }
         else return result;
 	}
 	else
 	{
 		// error was returned, output a nan silently
-		return vars[0];//sqrt(-1.0);
+		return vars[0]; //sqrt(-1.0);
 	}
-
-    return vars[0];//sqrt(-1.0);
 }
 
 void parser_error(parser_data *pd, const char *err)
@@ -364,7 +364,8 @@ var parser_read_builtin(parser_data *pd)
 				}
 				else
 				{
-					parser_error(pd, "Tried to call unknown function.");
+					sprintf(temp_error, "Unknown function '%s'.", token);
+                	parser_error(pd, temp_error);
 				}
 			}
 
@@ -379,7 +380,8 @@ var parser_read_builtin(parser_data *pd)
         	unsigned int i = var_get_index(token);
         	if (!i)
         	{
-        	    parser_error(pd, "Variable not found");
+        	    sprintf(temp_error, "Unknown variable '%s'.", token);
+                parser_error(pd, temp_error);
         	}
 
             // array index
@@ -404,7 +406,8 @@ var parser_read_builtin(parser_data *pd)
                	}
                	else
                	{
-                  	parser_error(pd, "Could not look up value for variable.");
+               		sprintf(temp_error, "Unknown variable '%s'.", token);
+                  	parser_error(pd, temp_error);
                	}
 			}
 		}
