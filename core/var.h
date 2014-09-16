@@ -39,7 +39,9 @@ var var_array_element(var, unsigned int);
 void var_echo(var);
 
 var var_as_double(double);
+var var_set_double(var, double);
 var var_as_string(char *);
+var var_set_string(var, char *);
 
 var var_assign(var, var);
 var var_add(var, var);

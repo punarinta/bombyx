@@ -7,3 +7,5 @@ console.c \
 \
 -std=c99 \
 -g -o bombyx
+
+# valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all ./bombyx tests/1.leaf -v

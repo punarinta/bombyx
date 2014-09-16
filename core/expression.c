@@ -102,12 +102,10 @@ void parser_data_free(parser_data *pd)
 
 var parser_parse(parser_data *pd)
 {
-    var result = var_as_double(0.0);
-
 	// set the jump position and launch the parser
 	if (!setjmp(pd->err_jmp_buf))
     {
-	    result = parser_read_boolean_or(pd);
+	    var result = parser_read_boolean_or(pd);
 
         parser_eat_whitespace(pd);
 
@@ -182,7 +180,7 @@ var parser_read_double(parser_data *pd)
         while (parser_peek(pd) != /*'\''*/c) token[pos++] = parser_eat(pd);
         token[pos] = '\0';
 
-        val = var_as_string(token);
+        val = var_set_string(val, token);
 
         // the closing quote
         parser_eat(pd);
@@ -228,7 +226,7 @@ var parser_read_double(parser_data *pd)
         // check that a double-precision was read, otherwise throw an error
         if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read real number");
 
-        val = var_as_double(d_val);
+        val = var_set_double(val, d_val);
     }
 
     // return the parsed value
@@ -404,14 +402,14 @@ var parser_read_builtin(parser_data *pd)
 			// no opening bracket, indicates a variable lookup
 			if (pd->variable_cb != NULL && pd->variable_cb(pd->user_data, token, &v1))
             {
-				v0 = v1;
+				v0 = var_assign(v0, v1);
 			}
 			else
 			{
 			    unsigned int i = var_get_index(token);
                 if (i)
               	{
-               	    v0 = vars[i];
+               	    v0 = var_assign(v0, vars[i]);
                	}
                	else
                	{
@@ -424,7 +422,7 @@ var parser_read_builtin(parser_data *pd)
 	else
 	{
 		// not a built-in function call, just read a literal double
-		v0 = parser_read_double(pd);
+		v0 = var_assign(v0, parser_read_double(pd));
 	}
 
 	// consume whitespace
@@ -555,12 +553,12 @@ var parser_read_power(parser_data *pd)
 		if (parser_peek(pd) == '-')
         {
 			parser_eat(pd);
-			s = var_as_double(-1.0);
+			s = var_as_double(-1.0);    // <- memory leak
 			parser_eat_whitespace(pd);
 		}
 
 		// read the second operand
-		v1 = var_multiply(s, parser_read_power(pd));
+		v1 = var_assign(v1, var_multiply(s, parser_read_power(pd)));
 
 		// perform the exponentiation
 		// TODO:
@@ -576,11 +574,10 @@ var parser_read_power(parser_data *pd)
 
 var parser_read_term(parser_data *pd)
 {
-	var v0;
 	char c;
 
 	// read the first operand
-	v0 = parser_read_power(pd);
+	var v0 = parser_read_power(pd);
 
 	// eat remaining whitespace
 	parser_eat_whitespace(pd);
@@ -632,8 +629,9 @@ var parser_read_expr(parser_data *pd)
 	}
 	else
 	{
-		v0 = parser_read_term(pd);
+		v0 = var_assign(v0, parser_read_term(pd));
 	}
+
 	parser_eat_whitespace(pd);
 
 	// check if there is an addition or
@@ -725,7 +723,7 @@ var parser_read_boolean_comparison(parser_data *pd)
 			parser_error(pd, "Unknown comparison operation.");
 		}
 
-		v0 = var_as_double(val * 1.0);
+		v0 = var_set_double(v0, val * 1.0);
 
 		// read trailing whitespace
 		parser_eat_whitespace(pd);
@@ -786,11 +784,11 @@ var parser_read_boolean_equality(parser_data *pd)
 		// perform the boolean operations
 		if (strcmp(oper, "==") == 0)
         {
-			v0 = var_as_double((fabs(var_to_double(v0) - var_to_double(v1)) < PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+			v0 = var_set_double(v0, (fabs(var_to_double(v0) - var_to_double(v1)) < PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
 		}
 		else if (strcmp(oper, "!=") == 0)
         {
-			v0 = var_as_double((fabs(var_to_double(v0) - var_to_double(v1)) > PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+			v0 = var_set_double(v0, (fabs(var_to_double(v0) - var_to_double(v1)) > PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
 		}
 		else if (strcmp(oper, "=") == 0)
         {
@@ -843,7 +841,7 @@ var parser_read_boolean_and(parser_data *pd)
 		v1 = parser_read_boolean_equality(pd);
 
 		// perform the operation, returning 1.0 for TRUE and 0.0 for FALSE
-		v0 = var_as_double((fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(var_to_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		v0 = var_set_double(v0, (fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(var_to_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
 
 		// eat any following whitespace
 		parser_eat_whitespace(pd);
@@ -888,7 +886,7 @@ var parser_read_boolean_or(parser_data *pd)
 		v1 = parser_read_boolean_and(pd);
 
 		// perform the 'or' operation
-		v0 = var_as_double((fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(var_to_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		v0 = var_set_double(v0, (fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(var_to_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
 
 		// eat any following whitespace
 		parser_eat_whitespace(pd);

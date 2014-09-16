@@ -64,6 +64,17 @@ var var_as_double(double a)
     return v;
 }
 
+var var_set_double(var v, double a)
+{
+    if (v.data) free(v.data);
+    v.type = VAR_DOUBLE;
+    v.data = malloc(sizeof(double));
+    memcpy(v.data, &a, sizeof(double));
+    v.data_size = sizeof(double);
+
+    return v;
+}
+
 var var_as_dword(double a)
 {
     var v;
@@ -78,6 +89,18 @@ var var_as_dword(double a)
 var var_as_string(char *a)
 {
     var v;
+    v.type = VAR_STRING;
+    unsigned int len = strlen(a) + 1;
+    v.data = calloc(len, sizeof(char));
+    memcpy(v.data, a, sizeof(char) * len);
+    v.data_size = sizeof(char) * len;
+
+    return v;
+}
+
+var var_set_string(var v, char *a)
+{
+    if (v.data) free(v.data);
     v.type = VAR_STRING;
     unsigned int len = strlen(a) + 1;
     v.data = calloc(len, sizeof(char));

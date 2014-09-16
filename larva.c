@@ -121,6 +121,8 @@ int larva_digest()
             // expect operator '='
             read_token(oper);
 
+            if (!strlen(oper)) continue;
+
             if (strcmp(oper, "="))
             {
                 fprintf(stderr, "Operator '=' expected, found '%s'", oper);

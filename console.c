@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     for (int i = 2; i < argc; i++)
     {
-        if (!strcmp(argv[i], "-v=1"))
+        if (!strcmp(argv[i], "-v"))
         {
             verbose = 1;
         }
@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
             if (bufsize == -1)
             {
                 fputs("Where's the file end?\n", stderr);
+                return -1;
             }
 
             source = malloc(sizeof(char) * (bufsize + 1));
