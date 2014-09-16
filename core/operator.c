@@ -187,6 +187,42 @@ var var_invert(var a)
     return r;
 }
 
+var var_increment(var a)
+{
+    if (a.type == VAR_DOUBLE)
+    {
+        double xa;
+        memcpy(&xa, a.data, sizeof(double));
+        xa++;
+        memcpy(a.data, &xa, sizeof(double));
+    }
+    else
+    {
+        fprintf(stderr, "Operator '++' is not defined for given operands.");
+        larva_error();
+    }
+
+    return a;
+}
+
+var var_decrement(var a)
+{
+    if (a.type == VAR_DOUBLE)
+    {
+        double xa;
+        memcpy(&xa, a.data, sizeof(double));
+        xa--;
+        memcpy(a.data, &xa, sizeof(double));
+    }
+    else
+    {
+        fprintf(stderr, "Operator '++' is not defined for given operands.");
+        larva_error();
+    }
+
+    return a;
+}
+
 BYTE var_is_more(var a, var b)
 {
     return (*a.data) > (*b.data);

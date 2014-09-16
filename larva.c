@@ -22,7 +22,8 @@ void larva_init(char *incoming_code, unsigned int len)
         if (i < len - 1 && incoming_code[i] == '\\')
         {
             if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
-            if (incoming_code[i + 1] == 't') code[code_length] = '\t';
+            else if (incoming_code[i + 1] == 't') code[code_length] = '\t';
+            else code_length--;
             i++;
         }
         else if (incoming_code[i] == '#')

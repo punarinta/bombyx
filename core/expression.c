@@ -491,17 +491,35 @@ var parser_read_unary(parser_data *pd)
 	}
 	else if (c == '-')
     {
-		// perform unary negation
-		parser_eat(pd);
-		parser_eat_whitespace(pd);
-		v0 = var_invert(parser_read_paren(pd));
+    	if (parser_peek(pd) == '-')
+    	{
+			parser_eat(pd);
+			v0 = parser_read_term(pd);
+			v0 = var_decrement(v0);
+    	}
+    	else
+    	{
+			// perform unary negation
+			parser_eat(pd);
+			parser_eat_whitespace(pd);
+			v0 = var_invert(parser_read_paren(pd));
+		}
 	}
 	else if (c == '+')
     {
-		// consume extra '+' sign and continue reading
-		parser_eat(pd);
-		parser_eat_whitespace(pd);
-		v0 = parser_read_paren(pd);
+    	if (parser_peek(pd) == '+')
+    	{
+			parser_eat(pd);
+			v0 = parser_read_term(pd);
+			v0 = var_increment(v0);
+    	}
+    	else
+    	{
+			// consume extra '+' sign and continue reading
+			parser_eat(pd);
+			parser_eat_whitespace(pd);
+			v0 = parser_read_paren(pd);
+    	}
 	}
 	else
 	{

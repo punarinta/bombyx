@@ -47,6 +47,8 @@ var var_subtract(var, var);
 var var_multiply(var, var);
 var var_divide(var, var);
 var var_invert(var);
+var var_increment(var);
+var var_decrement(var);
 
 double var_to_double(var);
 unsigned int var_to_dword(var);

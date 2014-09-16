@@ -15,4 +15,6 @@ else
     bar = 6
 }##
 
-print('Execution took ' + (microtime() - t1) + ' us')
+++bar
+
+print('Execution took ' + (microtime() - t1) + ' us\n')
