@@ -8,6 +8,10 @@
 #include "core/var.h"
 #include "core/expression.h"
 
+#ifndef __APPLE__
+    #include <mcheck.h>
+#endif
+
 #define MIN_VARIABLES       100
 #define MAX_VARIABLES       100000
 
