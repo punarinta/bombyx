@@ -214,9 +214,12 @@ void larva_error()
  */
 int larva_stop(int ret_code)
 {
-    fputs("=============== DUMP =============", stdout);
-    larva_poo();
-    fputs("\n==================================\n", stdout);
+    if (verbose)
+    {
+        fputs("=============== DUMP =============", stdout);
+        larva_poo();
+        fputs("\n==================================\n", stdout);
+    }
 
     unsigned int i = vars_count;
     while (--i) var_delete_by_index(i);

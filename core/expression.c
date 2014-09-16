@@ -27,10 +27,13 @@ var parse()
 
     result = parse_expression(expression);
 
-	fprintf(stdout, "expression '%s' {", expression);
-    fprintf(stdout, "} -> ");
-    var_echo(result);
-    fprintf(stdout, "\n");
+    if (verbose)
+    {
+		fprintf(stdout, "expression '%s' {", expression);
+	    fprintf(stdout, "} -> ");
+	    var_echo(result);
+	    fprintf(stdout, "\n");
+	}
 
     free(expression);
 

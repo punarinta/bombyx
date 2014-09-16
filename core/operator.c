@@ -24,7 +24,7 @@ var var_add(var a, var b)
         strcat(r.data, a.data);
         strcat(r.data, b.data);
     }
-    if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
+    else if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
     {
         double xa, xb;
         memcpy(&xa, a.data, sizeof(double));
@@ -35,7 +35,7 @@ var var_add(var a, var b)
         r.data = malloc(sizeof(double));
         memcpy(r.data, &xa, sizeof(double));
     }
-    if (a.type == VAR_STRING && b.type == VAR_DOUBLE)
+    else if (a.type == VAR_STRING && b.type == VAR_DOUBLE)
     {
         r.data = calloc(1, sizeof(char));
         strcat(r.data, a.data);
@@ -47,6 +47,11 @@ var var_add(var a, var b)
         strcat(r.data, converted);
 
         free(converted);
+    }
+    else
+    {
+        fprintf(stderr, "Operator '+' is not defined for given operands.");
+        larva_error();
     }
 
 
@@ -124,7 +129,7 @@ var var_invert(var a)
         r.data = malloc(sizeof(double));
         memcpy(r.data, &xa, sizeof(double));
     }
-    if (a.type == VAR_STRING)
+    else if (a.type == VAR_STRING)
     {
         // revert a string
 
@@ -145,6 +150,11 @@ var var_invert(var a)
             end--;
         }
         #undef XOR_SWAP
+    }
+    else
+    {
+        fprintf(stderr, "Inversion operator is not defined for the given operand.");
+        larva_error();
     }
 
     return r;

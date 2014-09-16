@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "common.h"
 
 void larva_init(char *, unsigned int);
 int larva_digest();
@@ -8,12 +9,23 @@ int main(int argc, char *argv[])
 {
     char *source = NULL;
     size_t newLen = 0;
+    verbose = 0;
 
     if (argc < 2)
     {
-        fputs("Usage: bombyx [FILENAME]\n\n", stderr);
+        fputs("Usage: bombyx [FILENAME] [OPTIONS]\n\n", stderr);
         return 1;
     }
+
+    for (int i = 2; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "-v=1"))
+        {
+            verbose = 1;
+        }
+    }
+
+    // TODO: save argc/argv into vars
 
 #ifndef __APPLE__
     mtrace();

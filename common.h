@@ -19,6 +19,7 @@ var *vars;
 unsigned int vars_count;
 unsigned int gl_error;
 jmp_buf error_exit;
+BYTE verbose;
 
 char *code;
 unsigned int code_pos;
