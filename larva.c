@@ -10,14 +10,40 @@ void larva_init(char *incoming_code, unsigned int len)
     vars_count = MIN_VARIABLES;
     vars = calloc(MIN_VARIABLES, sizeof(var));
     for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
-    code = incoming_code;
+    // code = incoming_code;
     code_pos = 0;
-    code_length = len;
+    code_length = 0;
+    code = malloc(len * sizeof(char));
+
+    // TODO: include all the necessary files
+
+    for (unsigned int i = 0; i < len; i++)
+    {
+        if (i < len - 1 && incoming_code[i] == '\\')
+        {
+            if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
+            if (incoming_code[i + 1] == 't') code[code_length] = '\t';
+            i++;
+        }
+        else if (incoming_code[i] == '#')
+        {
+            if (i < len - 1 && incoming_code[i + 1] == '#')
+            {
+                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') {i++; break;}
+            }
+            else while (i++ < len) if (incoming_code[i] == '\n') break;
+            
+            continue;
+        }
+        else
+        {
+            code[code_length] = incoming_code[i];
+        }
+
+        code_length++;
+    }
 
     started_at = get_microtime();
-
-    // TODO: cut all the commented code
-    // TODO: include all the necessary files
 }
 
 
@@ -51,6 +77,7 @@ int larva_digest()
     gl_error = 0;
 
     setjmp(error_exit);
+
     if (gl_error)
     {
         return larva_stop(gl_error);
@@ -58,27 +85,15 @@ int larva_digest()
 
     while (code[code_pos])
     {
-        index = 0;
-        run_next_block = 0;
-
-        if (code[code_pos] == '#')
-        {
-            if (code_pos < code_length - 1 && code[++code_pos] == '#')
-            {
-                // wait until '##' is met again
-                while (code_pos++ < code_length) if (code[code_pos - 1] == '#' && code[code_pos] == '#') break;
-            }
-            else while (code_pos++ < code_length) if (code[code_pos] == '\n') break;
-            continue;
-        }
-
         // find first significant character
         if (isspace(code[code_pos]))
         {
-            // next please
             code_pos++;
             continue;
         }
+
+        index = 0;
+        run_next_block = 0;
 
         size_t line_start = code_pos;
         read_token(token);
@@ -218,15 +233,16 @@ int larva_stop(int ret_code)
 {
     if (verbose)
     {
-        fputs("=============== DUMP =============", stdout);
+        fputs("================= DUMP ===============", stdout);
         larva_poo();
-        fputs("\n==================================\n", stdout);
+        fputs("\n======================================\n", stdout);
     }
 
     unsigned int i = vars_count;
     while (--i) var_delete_by_index(i);
 
     if (vars) free(vars);
+    if (code) free(code);
 
 #ifndef __APPLE__
     muntrace();
