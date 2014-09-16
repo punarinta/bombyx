@@ -216,7 +216,7 @@ var var_decrement(var a)
     }
     else
     {
-        fprintf(stderr, "Operator '++' is not defined for given operands.");
+        fprintf(stderr, "Operator '--' is not defined for given operands.");
         larva_error();
     }
 
