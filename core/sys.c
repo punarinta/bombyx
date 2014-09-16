@@ -1,3 +1,4 @@
+#include <sys/time.h>
 #include "../common.h"
 
 /**
@@ -40,4 +41,11 @@ char *trim(char *str)
     }
 
     return str;
+}
+
+double get_microtime()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000000L + tv.tv_usec;
 }

@@ -133,7 +133,7 @@ void var_echo(var a)
     switch (a.type)
     {
         case VAR_STRING:
-        if (a.data_size) fprintf(stdout, "'%s'", a.data);
+        if (a.data_size) fprintf(stdout, "%s", a.data);
         else fprintf(stdout, "NULL");
         break;
 

@@ -1,7 +1,10 @@
 # dev tests
 
+var t1 = microtime()
+
 var foo = 42
-var bar = 'hello' + ', ' + 'world'
+var bar = 44
+#var bar = 'hello' + ', ' + 'world'
 
 ##if (foo == 43)
 {
@@ -11,3 +14,5 @@ else
 {
     bar = 6
 }##
+
+print('Execution took ' + (microtime() - t1) + ' us')

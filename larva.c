@@ -14,6 +14,8 @@ void larva_init(char *incoming_code, unsigned int len)
     code_pos = 0;
     code_length = len;
 
+    started_at = get_microtime();
+
     // TODO: cut all the commented code
     // TODO: include all the necessary files
 }
@@ -54,7 +56,7 @@ int larva_digest()
         return larva_stop(gl_error);
     }
 
-    while (code_pos < code_length)
+    while (code[code_pos])
     {
         index = 0;
         run_next_block = 0;

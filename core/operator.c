@@ -20,8 +20,8 @@ var var_add(var a, var b)
 
     if (a.type == VAR_STRING && b.type == VAR_STRING)
     {
-        r.data = calloc(1, sizeof(char));
-        strcat(r.data, a.data);
+        r.data = malloc(sizeof(char) * (a.data_size + b.data_size - 1));
+        strcpy(r.data, a.data);
         strcat(r.data, b.data);
     }
     else if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
@@ -37,14 +37,32 @@ var var_add(var a, var b)
     }
     else if (a.type == VAR_STRING && b.type == VAR_DOUBLE)
     {
-        r.data = calloc(1, sizeof(char));
-        strcat(r.data, a.data);
-
         double xb;
         char *converted = calloc(256, sizeof(char));        // the length is doubtful
         memcpy(&xb, b.data, sizeof(double));
         sprintf(converted, "%.6g", xb);
-        strcat(r.data, converted);
+
+        r.data = malloc(sizeof(char) * (a.data_size + strlen(converted) - 1));
+        r.data = strcpy(r.data, a.data);
+        r.data = strcat(r.data, converted);
+
+        r.data_size = strlen(r.data);
+
+        free(converted);
+    }
+    else if (a.type == VAR_DOUBLE && b.type == VAR_STRING)
+    {
+        double xa;
+        char *converted = calloc(256, sizeof(char));        // the length is doubtful
+        memcpy(&xa, a.data, sizeof(double));
+        sprintf(converted, "%.6g", xa);
+
+        r.data = malloc(sizeof(char) + (b.data_size + strlen(converted) - 1));
+        strcpy(r.data, converted);
+        strcat(r.data, b.data);
+
+        r.type = VAR_STRING;
+        r.data_size = strlen(r.data);
 
         free(converted);
     }
@@ -66,18 +84,27 @@ var var_add(var a, var b)
 var var_subtract(var a, var b)
 {
     var r = a;
-    double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
-    if (!a.name) free(a.data);
-    if (!b.name) free(b.data);
 
-    xa -= xb;
+    if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
+    {
+        double xa, xb;
+        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xb, b.data, sizeof(double));
+        if (!a.name) free(a.data);
+        if (!b.name) free(b.data);
 
-    r.data = calloc(1, sizeof(double));
-    memcpy(r.data, &xa, sizeof(double));
+        xa = xa - xb;
 
-    return a;
+        r.data = malloc(sizeof(double));
+        memcpy(r.data, &xa, sizeof(double));
+    }
+    else
+    {
+        fprintf(stderr, "Operator '-' is not defined for given operands.");
+        larva_error();
+    }
+
+    return r;
 }
 
 var var_multiply(var a, var b)
@@ -91,7 +118,7 @@ var var_multiply(var a, var b)
 
     xa *= xb;
 
-    r.data = calloc(1, sizeof(double));
+    r.data = malloc(sizeof(double));
     memcpy(r.data, &xa, sizeof(double));
 
     return r;
@@ -108,10 +135,10 @@ var var_divide(var a, var b)
 
     xa /= xb;
 
-    r.data = calloc(1, sizeof(double));
+    r.data = malloc(sizeof(double));
     memcpy(a.data, &xa, sizeof(double));
 
-    return a;
+    return r;
 }
 
 var var_invert(var a)

@@ -53,6 +53,8 @@ var parse_expression(const char *expr)
 
 var parse_expression_with_callbacks(const char *expr, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data)
 {
+	if (!strlen(expr)) return vars[0];
+
 	var val;
 	parser_data pd;
 	parser_data_init(&pd, expr, variable_cb, function_cb, user_data);
@@ -355,8 +357,12 @@ var parser_read_builtin(parser_data *pd)
 			else if (strcmp(token, "print") == 0)
             {
 				v0 = parser_read_boolean_or(pd);
+
 				var_echo(v0);
-			//	v0 = var_as_double(v0.data_size);		// TODO: return something more relevant
+			}
+			else if (strcmp(token, "microtime") == 0)
+            {
+				v0 = var_as_double(get_microtime());
 			}
 			else
 			{
