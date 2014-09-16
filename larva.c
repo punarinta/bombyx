@@ -218,7 +218,9 @@ int larva_stop(int exit_code)
     if (vars) free(vars);
     if (code) free(code);
 
+#ifndef __APPLE__
     muntrace();
+#endif
 
     exit(exit_code);
 }

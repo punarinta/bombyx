@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <mcheck.h>
 
 void larva_init(char *, unsigned int);
 int larva_digest();
@@ -16,7 +15,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+#ifndef __APPLE__
     mtrace();
+#endif
 
     FILE *fp = fopen(argv[1], "rt");
 
@@ -56,7 +57,10 @@ int main(int argc, char *argv[])
     }
 
     free(source);
+
+#ifndef __APPLE__
     muntrace();
+#endif
 
     return 0;
 }
