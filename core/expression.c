@@ -354,13 +354,12 @@ var parser_read_builtin(parser_data *pd)
 			}
 			else if (strcmp(token, "print") == 0)
             {
-				v0 = parser_read_boolean_or(pd);
-
+				v0 = var_assign(v0, parser_read_boolean_or(pd));
 				var_echo(v0);
 			}
 			else if (strcmp(token, "microtime") == 0)
             {
-				v0 = var_as_double(get_microtime());
+				v0 = var_set_double(v0, get_microtime());
 			}
 			else
 			{

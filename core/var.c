@@ -117,6 +117,8 @@ double var_to_double(var a)
     if (a.type == VAR_DOUBLE) memcpy(&d, a.data, sizeof(double));
     if (a.type == VAR_STRING) d = atof(a.data);
 
+  //  if (!a.name) free(a.data);
+
     return d;
 }
 
@@ -156,7 +158,7 @@ void var_echo(var a)
     switch (a.type)
     {
         case VAR_STRING:
-        if (a.data_size) fprintf(stdout, "%s", a.data);
+        if (a.data && a.data_size) fprintf(stdout, "%s", a.data);
         else fprintf(stdout, "NULL");
         break;
 

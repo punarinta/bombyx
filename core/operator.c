@@ -5,11 +5,25 @@ var var_assign(var a, var b)
     // 'a' will be overwritten in any case
     if (a.data) free(a.data);
 
-    a.data = b.data;
+    a.data = malloc(b.data_size);
+    memcpy(a.data, b.data, b.data_size);
+
     a.type = b.type;
     a.data_size = b.data_size;
 
-    if (a.name) vars[var_get_index(a.name)] = a;
+ /*   if (a.name)
+    {
+        unsigned int i = var_get_index(a.name);
+
+        vars[i].type = a.type;
+        vars[i].data_size = a.data_size;
+
+        if (vars[i].data) free(vars[i].data);
+        vars[i].data = malloc(a.data_size);
+        memcpy(vars[i].data, a.data, a.data_size);
+    }*/
+
+    if (!b.name) free(b.data);
 
     return a;
 }
