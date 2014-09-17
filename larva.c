@@ -10,7 +10,8 @@ void larva_init(char *incoming_code, unsigned int len)
     vars_count = MIN_VARIABLES;
     vars = calloc(MIN_VARIABLES, sizeof(var));
     for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
-    // code = incoming_code;
+    gl_save_names = 0;
+    
     code_pos = 0;
     code_length = 0;
     code = malloc(len * sizeof(char));
@@ -103,6 +104,9 @@ int larva_digest()
         if (!strcmp(token, "var"))
         {
             read_token(token);
+
+            // check what's the status of this var
+            index = var_get_index(token);
 
             if (index)
             {

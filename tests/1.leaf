@@ -1,11 +1,11 @@
 # dev tests
 
-var a = 5
+#var a = 5
 
 #var t1 = microtime()
 
-#var foo = 42
-#var bar = 44
+var foo = 42
+var bar = 44
 #var bar = 'hello' + ', ' + 'world'
 
 ##if (foo == 43)
@@ -17,6 +17,8 @@ else
     bar = 6
 }##
 
-#++bar
+#swap(foo,bar)
+
+++bar
 
 #print('Execution took ' + (microtime() - t1) + ' us\n')

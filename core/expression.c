@@ -334,8 +334,11 @@ var parser_read_builtin(parser_data *pd)
 			// start handling the specific built-in functions
 			if (strcmp(token, "swap") == 0)
             {
+            	gl_save_names = 1;
 				v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
+				gl_save_names = 0;
+
 				unsigned int i0 = var_get_index(v0.name),
 				             i1 = var_get_index(v1.name);
 
@@ -350,7 +353,7 @@ var parser_read_builtin(parser_data *pd)
 				vars[i0].name = n0;
 				vars[i1].name = n1;
 
-				v0 = var_as_double(1);
+				v0 = var_set_double(v0, 1);
 			}
 			else if (strcmp(token, "print") == 0)
             {
@@ -408,6 +411,8 @@ var parser_read_builtin(parser_data *pd)
 			    unsigned int i = var_get_index(token);
                 if (i)
               	{
+              		// NB: no sync!
+              		// You just copy vars[i] to a temporary var.
                	    v0 = var_assign(v0, vars[i]);
                	}
                	else
@@ -507,8 +512,11 @@ var parser_read_unary(parser_data *pd)
     	if (parser_peek(pd) == '+')
     	{
 			parser_eat(pd);
+			gl_save_names = 1;
 			v0 = parser_read_term(pd);
+			gl_save_names = 0;
 			v0 = var_increment(v0);
+			var_sync(v0);
     	}
     	else
     	{
@@ -739,8 +747,13 @@ var parser_read_boolean_equality(parser_data *pd)
 	// eat whitespace
 	parser_eat_whitespace(pd);
 
+	// force to memorize names
+	gl_save_names = 1;
+
 	// read the first value
 	v0 = parser_read_boolean_comparison(pd);
+
+	gl_save_names = 0;
 
 	// eat trailing whitespace
 	parser_eat_whitespace(pd);
@@ -791,7 +804,9 @@ var parser_read_boolean_equality(parser_data *pd)
 		}
 		else if (strcmp(oper, "=") == 0)
         {
+        	// v0 MUST have a name
 			v0 = var_assign(v0, v1);
+			var_sync(v0);
 		}
 		else
 		{

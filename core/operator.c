@@ -11,7 +11,25 @@ var var_assign(var a, var b)
     a.type = b.type;
     a.data_size = b.data_size;
 
- /*   if (a.name)
+    if (!b.name) free(b.data);
+
+    if (gl_save_names && b.name)
+    {
+        if (a.name) free(a.name);
+        a.name = malloc(strlen(b.name) + 1);
+        memcpy(a.name, b.name, strlen(b.name));
+        a.name[strlen(b.name)] = '\0';
+    }
+
+    return a;
+}
+
+/*
+    Synchronizes 'a' with vars[] if necessary
+*/
+void var_sync(var a)
+{
+    if (a.name)
     {
         unsigned int i = var_get_index(a.name);
 
@@ -21,22 +39,20 @@ var var_assign(var a, var b)
         if (vars[i].data) free(vars[i].data);
         vars[i].data = malloc(a.data_size);
         memcpy(vars[i].data, a.data, a.data_size);
-    }*/
-
-    if (!b.name) free(b.data);
-
-    return a;
+    }
 }
 
 var var_add(var a, var b)
 {
-    var r = a;
+    var r;
 
     if (a.type == VAR_STRING && b.type == VAR_STRING)
     {
-        r.data = malloc(sizeof(char) * (a.data_size + b.data_size - 1));
+        r.data_size = a.data_size + b.data_size - 1;
+        r.data = malloc(sizeof(char) * r.data_size);
         strcpy(r.data, a.data);
         strcat(r.data, b.data);
+        r.type = VAR_STRING;
     }
     else if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
     {
@@ -48,6 +64,8 @@ var var_add(var a, var b)
 
         r.data = malloc(sizeof(double));
         memcpy(r.data, &xa, sizeof(double));
+        r.type = VAR_DOUBLE;
+        r.data_size = sizeof(double);
     }
     else if (a.type == VAR_STRING && b.type == VAR_DOUBLE)
     {
@@ -61,6 +79,7 @@ var var_add(var a, var b)
         r.data = strcat(r.data, converted);
 
         r.data_size = strlen(r.data);
+        r.type = VAR_STRING;
 
         free(converted);
     }
@@ -215,6 +234,8 @@ var var_increment(var a)
         fprintf(stderr, "Operator '++' is not defined for given operands.");
         larva_error();
     }
+
+    var_sync(a);
 
     return a;
 }

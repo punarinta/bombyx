@@ -43,6 +43,7 @@ var var_set_double(var, double);
 var var_as_string(char *);
 var var_set_string(var, char *);
 
+void var_sync(var);
 var var_assign(var, var);
 var var_add(var, var);
 var var_subtract(var, var);
