@@ -78,7 +78,9 @@ int larva_digest_start()
 
     if (gl_error) return larva_stop(gl_error);
 
-    larva_digest();
+    var r = larva_digest();
+    if (r.name) free(r.name);
+    if (r.data) free(r.data);
 
     return larva_stop(0);
 }
@@ -91,6 +93,7 @@ var larva_digest()
     unsigned int index;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
+    var r;
 
     while (code[code_pos])
     {
@@ -157,15 +160,15 @@ var larva_digest()
         }
         else if (!strcmp(token, "return"))
         {
-            var a = parse();
+            r = parse();
 
             // this var CANNOT have a name
-            if (a.name) free(a.name);
+            if (r.name) { free(r.name); r.name = NULL; }
 
             gl_level--;
             code_pos = ret_point[gl_level];
 
-            return a;
+            return r;
         }
         else if (!strcmp(token, "block"))
         {
@@ -173,11 +176,6 @@ var larva_digest()
 
             // check what's the status of this var
             index = block_get_index(token);
-
-        /*    while (code[code_pos])
-            {
-                if (code[code_pos++] == '{') break;
-            }*/
 
             if (index)
             {
@@ -237,7 +235,8 @@ var larva_digest()
         else
         {
             code_pos = line_start;
-            parse(&code_pos);
+            // result is not fed anywhere, free it
+            var_free(parse());
         }
     }
 

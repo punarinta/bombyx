@@ -37,6 +37,7 @@ int var_set_by_index(unsigned int, var, int);
 void var_delete_by_index(unsigned int);
 var var_array_element(var, unsigned int);
 void var_echo(var);
+void var_free(var);
 
 var var_as_double(double);
 var var_set_double(var, double);

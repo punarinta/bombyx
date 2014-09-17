@@ -386,7 +386,7 @@ var parser_read_builtin(parser_data *pd)
 		        	}
 					else
 					{
-						fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
+					//	fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
 						ret_point[gl_level] = code_pos;
 						gl_level++;
 						code_pos = blocks[i].pos;
@@ -448,6 +448,8 @@ var parser_read_builtin(parser_data *pd)
 
 	// consume whitespace
 	parser_eat_whitespace(pd);
+
+	free(v1.data);
 
 	// return the value
 	return v0;
@@ -577,7 +579,7 @@ var parser_read_power(parser_data *pd)
 		if (parser_peek(pd) == '-')
         {
 			parser_eat(pd);
-			s = var_as_double(-1.0);    // <- memory leak
+			s = var_set_double(s, -1.0);
 			parser_eat_whitespace(pd);
 		}
 
@@ -591,6 +593,9 @@ var parser_read_power(parser_data *pd)
 		// eat remaining whitespace
 		parser_eat_whitespace(pd);
 	}
+
+	free(s.data);
+	free(v1.data);
 
 	// return the result
 	return v0;
@@ -639,13 +644,14 @@ var parser_read_term(parser_data *pd)
 
 var parser_read_expr(parser_data *pd)
 {
-	var v0 = var_as_double(0.0);
+	var v0;
 	char c;
 
 	// handle unary minus
 	c = parser_peek(pd);
 	if (c == '+' || c == '-')
     {
+        v0 = var_as_double(0.0);
 		parser_eat(pd);
 		parser_eat_whitespace(pd);
 		if (c == '+') v0 = var_add(v0, parser_read_term(pd));
@@ -653,7 +659,7 @@ var parser_read_expr(parser_data *pd)
 	}
 	else
 	{
-		v0 = var_assign(v0, parser_read_term(pd));
+		v0 = parser_read_term(pd);
 	}
 
 	parser_eat_whitespace(pd);

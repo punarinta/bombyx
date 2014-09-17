@@ -125,7 +125,7 @@ double var_to_double(var a)
     if (a.type == VAR_DOUBLE) memcpy(&d, a.data, sizeof(double));
     if (a.type == VAR_STRING) d = atof(a.data);
 
-    //if (!a.name && a.data) free(a.data);
+    if (!a.name && a.data) free(a.data);
 
     return d;
 }
@@ -152,12 +152,18 @@ unsigned int var_get_index(char *name)
     return 0;
 }
 
+void var_free(var a)
+{
+    if (a.name) free(a.name);
+    if (a.data) free(a.data);
+}
+
 void var_delete_by_index(unsigned int index)
 {
     if (index && index < vars_count)
     {
-        if (vars[index].name) free(vars[index].name);
-        if (vars[index].data) free(vars[index].data);
+        if (vars[index].name) { free(vars[index].name); vars[index].name = NULL; }
+        if (vars[index].data) { free(vars[index].data); vars[index].data = NULL; }
         vars[index].type = VAR_UNSET;
     }
 }
