@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     // TODO: save argc/argv into vars
 
-#ifndef __APPLE__
+#ifdef __linux__
     mtrace();
 #endif
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
     free(source);
 
-#ifndef __APPLE__
+#ifdef __linux__
     muntrace();
 #endif
 

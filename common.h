@@ -9,7 +9,7 @@
 #include "core/block.h"
 #include "core/expression.h"
 
-#ifndef __APPLE__
+#ifdef __linux__
     #include <mcheck.h>
 #endif
 

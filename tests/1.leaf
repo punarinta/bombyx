@@ -1,6 +1,6 @@
 # LEAKS! FFFFUUUUUU~~~~~~
 
-var starting_time = microtime()
+#var starting_time = microtime()
 
 #print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')
 
