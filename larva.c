@@ -103,6 +103,8 @@ int larva_digest()
 
         if (!strcmp(token, "var"))
         {
+            re_read_var:
+
             read_token(token);
 
             // check what's the status of this var
@@ -135,6 +137,13 @@ int larva_digest()
 
             // equalize
             var_set_by_index(index, parse(&code_pos), 0);
+
+            // we have one more var to init
+            if (code[code_pos] == ',')
+            {
+                code_pos++;
+                goto re_read_var;
+            }
         }
         else if (!strcmp(token, "if"))
         {
@@ -203,7 +212,7 @@ void read_token(char *token)
         token[code_pos - start] = code[code_pos];
         code_pos++;
         // either it's a function call or just a command
-        if (code[code_pos] == '(' || isspace(code[code_pos])) break;
+        if (code[code_pos] == '(' || code[code_pos] == ',' || isspace(code[code_pos])) break;
     }
 
     token[code_pos - start] = '\0';

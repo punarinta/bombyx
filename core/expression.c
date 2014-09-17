@@ -7,6 +7,7 @@ var parse()
     var result;
 
     BYTE quote_opened = 0;
+    BYTE br_level = 0;
     char *expression;
     size_t expression_size;
     size_t expression_start = code_pos;
@@ -14,8 +15,12 @@ var parse()
     // find expression end, note that newline does don't count if it's inside a string
     while (code[code_pos])
     {
+        if (code[code_pos] == '(') br_level++;
+        if (code[code_pos] == ')') br_level--;
         if (code[code_pos] == '\'') quote_opened = !quote_opened;
         if (code[code_pos] == '\n' && !quote_opened) break;
+
+        if (code[code_pos] == ',' && !br_level) break;
         code_pos++;
     }
 
@@ -224,7 +229,7 @@ var parser_read_double(parser_data *pd)
         double d_val = 0.0;
 
         // check that a double-precision was read, otherwise throw an error
-        if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read real number");
+        if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read operand");
 
         val = var_set_double(val, d_val);
     }

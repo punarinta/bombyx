@@ -222,6 +222,11 @@ var var_invert(var a)
 
 var var_increment(var a)
 {
+    if (!a.name)
+    {
+        fprintf(stderr, "Operator '++' requires a variable.");
+        larva_error();
+    }
     if (a.type == VAR_DOUBLE)
     {
         double xa;
@@ -242,6 +247,11 @@ var var_increment(var a)
 
 var var_decrement(var a)
 {
+    if (!a.name)
+    {
+        fprintf(stderr, "Operator '--' requires a variable.");
+        larva_error();
+    }
     if (a.type == VAR_DOUBLE)
     {
         double xa;
@@ -254,6 +264,8 @@ var var_decrement(var a)
         fprintf(stderr, "Operator '--' is not defined for given operands.");
         larva_error();
     }
+
+    var_sync(a);
 
     return a;
 }
