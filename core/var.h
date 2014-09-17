@@ -33,7 +33,7 @@ typedef struct
 
 unsigned int var_init(char *, unsigned short, void *);
 unsigned int var_get_index(char *);
-int var_set_by_index(unsigned int, var, int);
+int var_set_by_index(unsigned int, var);
 void var_delete_by_index(unsigned int);
 var var_array_element(var, unsigned int);
 void var_echo(var);

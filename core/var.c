@@ -39,7 +39,7 @@ unsigned int var_init(char *name, unsigned short type, void *value)
     return i;
 }
 
-int var_set_by_index(unsigned int i, var o, int OBSOLETE)
+int var_set_by_index(unsigned int i, var o)
 {
     if (!i || i >= vars_count || vars[i].type == VAR_UNSET) return 0;
 

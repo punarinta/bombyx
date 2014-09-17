@@ -1,15 +1,7 @@
-# dev tests
+# LEAKS! FFFFUUUUUU~~~~~~
 
-print('start\n')
+var starting_time = microtime()
 
-block f
-{
-	print('function called\n')
-	return 1
-}
+#print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')
 
-f()
-
-print('done\n')
-
-#return 42
+print('str' + 'wer')

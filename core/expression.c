@@ -536,6 +536,10 @@ var parser_read_unary(parser_data *pd)
 			gl_save_names = 0;
 			v0 = var_increment(v0);
 			var_sync(v0);
+
+            // sync done, free the name
+			free(v0.name);
+			v0.name = NULL;
     	}
     	else
     	{
@@ -835,6 +839,8 @@ var parser_read_boolean_equality(parser_data *pd)
 		{
 			parser_error(pd, "Unknown operation!");
 		}
+
+		var_free(v1);
 
 		// read trailing whitespace
 		parser_eat_whitespace(pd);

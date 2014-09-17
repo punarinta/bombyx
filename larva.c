@@ -149,7 +149,8 @@ var larva_digest()
             }
 
             // equalize
-            var_set_by_index(index, parse(&code_pos), 0);
+        //    vars[index] = var_assign(vars[index], parse());
+            var_set_by_index(index, parse());
 
             // we have one more var to init
             if (code[code_pos] == ',')
@@ -218,7 +219,9 @@ var larva_digest()
             {
                 // start running this block
                 run_flag[gl_level] = 0;  // RUN_NONE
-            }            
+            }
+
+            var_free(x);
         }
         else if (!strcmp(token, "{"))
         {
