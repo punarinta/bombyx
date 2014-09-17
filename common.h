@@ -25,6 +25,7 @@ unsigned int gl_error;
 jmp_buf error_exit;
 BYTE verbose;
 BYTE gl_save_names;
+BYTE gl_level;
 
 char *code;
 unsigned int code_pos;

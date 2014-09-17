@@ -75,8 +75,9 @@ int larva_digest()
     unsigned int index;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
-    BYTE run_next_block;
+    BYTE run_flag[256];
     gl_error = 0;
+    gl_level = 0;
 
     setjmp(error_exit);
 
@@ -95,7 +96,6 @@ int larva_digest()
         }
 
         index = 0;
-        run_next_block = 0;
 
         size_t line_start = code_pos;
         read_token(token);
@@ -151,23 +151,37 @@ int larva_digest()
                 code_pos++;
             }
 
-            char *expr = calloc(code_pos - expr_start, sizeof(char));
+            char *expr = calloc(code_pos - expr_start + 1, sizeof(char));
             memcpy(expr, &code[expr_start], code_pos - expr_start + 1);
             expr[code_pos - expr_start] = '\0';
 
             var x = parse_expression(expr);
+            free(expr);
 
-            if (var_to_double(x))
+            //var_echo(x);
+
+            if (!var_to_double(x))
             {
-                run_next_block = 1;
+                run_flag[gl_level] = 1;  // RUN_ELSE
+                skip_block();
             }
             else
             {
-                // skip the whole block
-                skip_block();
-            }
-
-            free(expr);
+                // start running this block
+                run_flag[gl_level] = 0;  // RUN_NONE
+            }            
+        }
+        else if (!strcmp(token, "{"))
+        {
+            gl_level++;
+        }
+        else if (!strcmp(token, "}"))
+        {
+            gl_level--;
+        }
+        else if (!strcmp(token, "else"))
+        {
+            if (!run_flag[gl_level]) skip_block();
         }
         else
         {

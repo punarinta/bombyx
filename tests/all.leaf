@@ -1,0 +1,70 @@
+var starting_time = microtime()
+
+# =========================================
+
+print('IF-clause test: ')
+
+if (2 + 2 == 4)
+{
+	print('OK\n')
+}
+else
+{
+	print('not OK\n')
+}
+
+# =========================================
+
+print('ELSE-clause test: ')
+
+if (2 + 2 == 5)
+{
+	print('not OK\n')
+}
+else
+{
+	print('OK\n')
+}
+
+# =========================================
+
+print('Assigning variable: ')
+
+var a = 42
+
+if (a != 42)
+{
+	print('not ')
+}
+
+print('OK\n')
+
+# =========================================
+
+print('Reassigning variable: ')
+
+a = 43
+
+if (a != 43)
+{
+	print('not ')
+}
+
+print('OK\n')
+
+# =========================================
+
+print('Increment: ')
+
+++a
+
+if (a != 44)
+{
+	print('not ')
+}
+
+print('OK\n')
+
+# =========================================
+
+print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')
