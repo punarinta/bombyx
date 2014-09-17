@@ -378,8 +378,20 @@ var parser_read_builtin(parser_data *pd)
 				}
 				else
 				{
-					sprintf(temp_error, "Unknown function '%s'.", token);
-                	parser_error(pd, temp_error);
+					unsigned int i = block_get_index(token);
+		        	if (!i)
+		        	{
+		        	    sprintf(temp_error, "Unknown function '%s'.", token);
+		                parser_error(pd, temp_error);
+		        	}
+					else
+					{
+						fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
+						ret_point[gl_level] = code_pos;
+						gl_level++;
+						code_pos = blocks[i].pos;
+						v0 = var_assign(v0, larva_digest());
+					}
 				}
 			}
 

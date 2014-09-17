@@ -3,7 +3,7 @@
 #include "common.h"
 
 void larva_init(char *, unsigned int);
-int larva_digest();
+int larva_digest_start();
 
 int main(int argc, char *argv[])
 {
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         fclose(fp);
 
         larva_init(source, newLen);
-        larva_digest();
+        larva_digest_start();
     }
 
     free(source);

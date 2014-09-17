@@ -1,24 +1,15 @@
 # dev tests
 
-#var a = 5
+print('start\n')
 
-#var t1 = microtime()
-
-var foo = 42
-var bar = 44
-#var bar = 'hello' + ', ' + 'world'
-
-##if (foo == 43)
+block f
 {
-    bar = 5
+	print('function called\n')
+	return 1
 }
-else
-{
-    bar = 6
-}##
 
-#swap(foo,bar)
+f()
 
-++bar
+print('done\n')
 
-#print('Execution took ' + (microtime() - t1) + ' us\n')
+#return 42

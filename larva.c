@@ -9,9 +9,11 @@ void larva_init(char *incoming_code, unsigned int len)
 {
     vars_count = MIN_VARIABLES;
     vars = calloc(MIN_VARIABLES, sizeof(var));
-    for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
-    gl_save_names = 0;
-    
+    //for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
+        
+    blocks_count = MIN_BLOCKS;
+    blocks = calloc(MIN_BLOCKS, sizeof(block));
+
     code_pos = 0;
     code_length = 0;
     code = malloc(len * sizeof(char));
@@ -66,25 +68,29 @@ void larva_grow(unsigned long size)
     vars_count += size;
 }
 
+int larva_digest_start()
+{
+    gl_error = 0;
+    gl_level = 0;
+    gl_save_names = 0;
+
+    setjmp(error_exit);
+
+    if (gl_error) return larva_stop(gl_error);
+
+    larva_digest();
+
+    return larva_stop(0);
+}
 
 /**
  *  Processes code buffer
  */
-int larva_digest()
+var larva_digest()
 {
     unsigned int index;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
-    BYTE run_flag[256];
-    gl_error = 0;
-    gl_level = 0;
-
-    setjmp(error_exit);
-
-    if (gl_error)
-    {
-        return larva_stop(gl_error);
-    }
 
     while (code[code_pos])
     {
@@ -118,8 +124,8 @@ int larva_digest()
 
             // TODO: check that token is not in the list of reserved words
 
-            // no var -- create it
-            if (!index) index = var_init(token, VAR_STRING, 0);
+            // should be no var -- create it
+            index = var_init(token, VAR_STRING, 0);
 
             // variable is just initialized, but not defined
             if (code[code_pos] == '\n') continue;
@@ -129,7 +135,11 @@ int larva_digest()
 
             if (!strlen(oper)) continue;
 
-            if (strcmp(oper, "="))
+            if (!strcmp(oper, ","))
+            {
+                goto re_read_var;
+            }
+            else if (strcmp(oper, "="))
             {
                 fprintf(stderr, "Operator '=' expected, found '%s'", oper);
                 larva_error(code_pos);
@@ -144,6 +154,40 @@ int larva_digest()
                 code_pos++;
                 goto re_read_var;
             }
+        }
+        else if (!strcmp(token, "return"))
+        {
+            var a = parse();
+
+            // this var CANNOT have a name
+            if (a.name) free(a.name);
+
+            gl_level--;
+            code_pos = ret_point[gl_level];
+
+            return a;
+        }
+        else if (!strcmp(token, "block"))
+        {
+            read_token(token);
+
+            // check what's the status of this var
+            index = block_get_index(token);
+
+        /*    while (code[code_pos])
+            {
+                if (code[code_pos++] == '{') break;
+            }*/
+
+            if (index)
+            {
+                fprintf(stderr, "Block '%s' already exists.", token);
+                larva_error(code_pos);
+            }
+
+            index = block_init(code_pos, token);
+
+            skip_block();
         }
         else if (!strcmp(token, "if"))
         {
@@ -167,8 +211,6 @@ int larva_digest()
             var x = parse_expression(expr);
             free(expr);
 
-            //var_echo(x);
-
             if (!var_to_double(x))
             {
                 run_flag[gl_level] = 1;  // RUN_ELSE
@@ -182,11 +224,11 @@ int larva_digest()
         }
         else if (!strcmp(token, "{"))
         {
-            gl_level++;
+            //gl_level++;
         }
         else if (!strcmp(token, "}"))
         {
-            gl_level--;
+            //gl_level--;
         }
         else if (!strcmp(token, "else"))
         {
@@ -199,7 +241,7 @@ int larva_digest()
         }
     }
 
-    return larva_stop(0);
+    return vars[0];
 }
 
 void read_token(char *token)
@@ -271,7 +313,11 @@ int larva_stop(int ret_code)
     unsigned int i = vars_count;
     while (--i) var_delete_by_index(i);
 
+    i = blocks_count;
+    while (--i) block_delete_by_index(i);
+
     if (vars) free(vars);
+    if (blocks) free(blocks);
     if (code) free(code);
 
 #ifndef __APPLE__
@@ -283,21 +329,16 @@ int larva_stop(int ret_code)
 
 void larva_poo()
 {
-    char types[20][16];
+    unsigned int i;
+    char types[][20] = {"UNSET", "BYTE", "WORD", "DWORD", "QWORD", "FLOAT", "DOUBLE", "STRING", "BLOCK", "ARRAY"};
 
-    // TODO: get rid of this stupid copying :)
-    strcpy(types[VAR_UNSET],    "UNSET");
-    strcpy(types[VAR_BYTE],     "BYTE");
-    strcpy(types[VAR_WORD],     "WORD");
-    strcpy(types[VAR_DWORD],    "DWORD");
-    strcpy(types[VAR_QWORD],    "QWORD");
-    strcpy(types[VAR_FLOAT],    "FLOAT");
-    strcpy(types[VAR_DOUBLE],   "DOUBLE");
-    strcpy(types[VAR_STRING],   "STRING");
-
-    for (unsigned int i = 1; i < vars_count; i++)
+    for (i = 1; i < vars_count; i++)
     {
         if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %u] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
         var_echo(vars[i]);
+    }
+    for (i = 1; i < blocks_count; i++)
+    {
+        if (blocks[i].pos) fprintf(stdout, "\nBlock '%s' at pos %u", blocks[i].name, blocks[i].pos);
     }
 }

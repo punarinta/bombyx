@@ -12,10 +12,10 @@
 #define VAR_QWORD       04      // 64 bit
 #define VAR_FLOAT       05      // 32 bit
 #define VAR_DOUBLE      06      // 64 bit
-#define VAR_STRING      10
-#define VAR_FUNCTION    11
-#define VAR_ARRAY       12
-#define VAR_OBJECT      13
+#define VAR_STRING      07
+#define VAR_BLOCK    	08
+#define VAR_ARRAY       09
+
 
 typedef unsigned char BYTE;
 typedef unsigned int  DWORD;
