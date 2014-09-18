@@ -1,0 +1,7 @@
+# LEAKS! FFFFUUUUUU~~~~~~
+
+#var starting_time = microtime()
+
+#print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')
+
+print('str' + 'wer')

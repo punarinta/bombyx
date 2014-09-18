@@ -3,7 +3,7 @@
 var var_assign(var a, var b)
 {
     // 'a' will be overwritten in any case
-    if (a.data) free(a.data);
+    if (has_data(a)) free(a.data);
 
     a.data = malloc(b.data_size);
     memcpy(a.data, b.data, b.data_size);
@@ -11,9 +11,11 @@ var var_assign(var a, var b)
     a.type = b.type;
     a.data_size = b.data_size;
 
-    if (!b.name) free(b.data);
-
-    if (gl_save_names && b.name)
+    if (!b.name)
+    {
+        if (has_data(b)) free(b.data);
+    }
+    else if (gl_save_names)
     {
         if (a.name) free(a.name);
         a.name = malloc(strlen(b.name) + 1);

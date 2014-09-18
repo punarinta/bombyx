@@ -4,8 +4,6 @@ char temp_error[256];
 
 var parse()
 {
-    var result;
-
     BYTE quote_opened = 0;
     BYTE br_level = 0;
     char *expression;
@@ -26,18 +24,18 @@ var parse()
 
     expression_size = code_pos - expression_start;
     expression = malloc(sizeof(char) * (expression_size + 1));
-    memcpy(expression, (void *)&code[expression_start], expression_size);
+    memcpy(expression, code + expression_start, expression_size);
     expression[expression_size] = '\0';
     trim(expression);
 
-    result = parse_expression(expression);
+    var result = parse_expression(expression);
 
     if (verbose)
     {
 		fprintf(stdout, "expression '%s' {", expression);
-	    fprintf(stdout, "} -> ");
+	    fprintf(stdout, "} -> [");
 	    var_echo(result);
-	    fprintf(stdout, "\n");
+	    fprintf(stdout, "]\n");
 	}
 
     free(expression);
@@ -386,11 +384,11 @@ var parser_read_builtin(parser_data *pd)
 		        	}
 					else
 					{
-					//	fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
+						fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
 						ret_point[gl_level] = code_pos;
 						gl_level++;
 						code_pos = blocks[i].pos;
-						v0 = var_assign(v0, larva_digest());
+						v0 = var_assign(v0, /*larva_digest()*/var_as_double(42));
 					}
 				}
 			}
@@ -411,7 +409,7 @@ var parser_read_builtin(parser_data *pd)
         	}
 
             // array index
-        	v0 = var_array_element(vars[i], var_to_dword(parser_read_argument(pd)));
+        	v0 = var_array_element(vars[i], var_to_double(parser_read_argument(pd)));
 
 			// eat closing bracket of function call
 			if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in the array access.");

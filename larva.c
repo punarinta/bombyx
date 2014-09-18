@@ -7,11 +7,9 @@
  */
 void larva_init(char *incoming_code, unsigned int len)
 {
-    vars_count = MIN_VARIABLES;
-    vars = calloc(MIN_VARIABLES, sizeof(var));
-    //for (unsigned long i = 0; i < MIN_VARIABLES; i++) vars[i].type = VAR_UNSET;
-        
+    vars_count   = MIN_VARIABLES;
     blocks_count = MIN_BLOCKS;
+    vars   = calloc(MIN_VARIABLES, sizeof(var));
     blocks = calloc(MIN_BLOCKS, sizeof(block));
 
     code_pos = 0;
@@ -78,9 +76,9 @@ int larva_digest_start()
 
     if (gl_error) return larva_stop(gl_error);
 
+    // no vars need to leave to the outer world
     var r = larva_digest();
-    if (r.name) free(r.name);
-    if (r.data) free(r.data);
+    var_free(r);
 
     return larva_stop(0);
 }
@@ -103,8 +101,6 @@ var larva_digest()
             code_pos++;
             continue;
         }
-
-        index = 0;
 
         size_t line_start = code_pos;
         read_token(token);
@@ -149,7 +145,6 @@ var larva_digest()
             }
 
             // equalize
-        //    vars[index] = var_assign(vars[index], parse());
             var_set_by_index(index, parse());
 
             // we have one more var to init
@@ -161,6 +156,12 @@ var larva_digest()
         }
         else if (!strcmp(token, "return"))
         {
+            if (gl_level == 0)
+            {
+                fprintf(stdout, "zero level\n");
+                return vars[0];
+            }
+
             r = parse();
 
             // this var CANNOT have a name
@@ -169,6 +170,7 @@ var larva_digest()
             gl_level--;
             code_pos = ret_point[gl_level];
 
+            fprintf(stdout, "returning...\n");
             return r;
         }
         else if (!strcmp(token, "block"))
@@ -184,7 +186,15 @@ var larva_digest()
                 larva_error(code_pos);
             }
 
-            index = block_init(code_pos, token);
+            unsigned int startpos = code_pos;
+
+            // move to the first symbol after '{'
+            while (code[startpos])
+            {
+                if (code[startpos++] == '{') break;
+            }
+
+            index = block_init(startpos, token);
 
             skip_block();
         }
@@ -210,7 +220,7 @@ var larva_digest()
             var x = parse_expression(expr);
             free(expr);
 
-            if (!var_to_double(x))
+            if (!var_extract_double(x))
             {
                 run_flag[gl_level] = 1;  // RUN_ELSE
                 skip_block();
@@ -318,9 +328,9 @@ int larva_stop(int ret_code)
     i = blocks_count;
     while (--i) block_delete_by_index(i);
 
-    if (vars) free(vars);
-    if (blocks) free(blocks);
-    if (code) free(code);
+//    if (vars) free(vars);
+//    if (blocks) free(blocks);
+//    if (code) free(code);
 
 #ifndef __APPLE__
     muntrace();
@@ -334,9 +344,9 @@ void larva_poo()
     unsigned int i;
     char types[][20] = {"UNSET", "BYTE", "WORD", "DWORD", "QWORD", "FLOAT", "DOUBLE", "STRING", "BLOCK", "ARRAY"};
 
-    for (i = 1; i < vars_count; i++)
+    for (i = 1; i < vars_count; i++) if (vars[i].type) 
     {
-        if (vars[i].type) fprintf(stdout, "\n'%s' [%s of size %u] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
+        fprintf(stdout, "\n'%s' [%s of size %u] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
         var_echo(vars[i]);
     }
     for (i = 1; i < blocks_count; i++)

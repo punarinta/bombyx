@@ -1,7 +1,11 @@
-# LEAKS! FFFFUUUUUU~~~~~~
+# dev
 
-#var starting_time = microtime()
+var a = 55
 
-#print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')
+block f
+{
+	print('Im in da block\n')
+	return 1
+}
 
-print('str' + 'wer')
+f()

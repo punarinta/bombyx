@@ -23,6 +23,8 @@
 #define ERR_SYNTAX          2
 #define ERR_TOO_LONG        3
 
+#define VAR_SIGNATURE		6
+
 var *vars;
 unsigned int vars_count;
 

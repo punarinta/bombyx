@@ -5,16 +5,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define VAR_UNSET       00
-#define VAR_BYTE        01
-#define VAR_WORD        02      // 16 bit
-#define VAR_DWORD       03      // 32 bit
-#define VAR_QWORD       04      // 64 bit
-#define VAR_FLOAT       05      // 32 bit
-#define VAR_DOUBLE      06      // 64 bit
-#define VAR_STRING      07
-#define VAR_BLOCK    	08
-#define VAR_ARRAY       09
+#define VAR_UNSET       0
+#define VAR_BYTE        1
+#define VAR_WORD        2      // 16 bit
+#define VAR_DWORD       3      // 32 bit
+#define VAR_QWORD       4      // 64 bit
+#define VAR_FLOAT       5      // 32 bit
+#define VAR_DOUBLE      6      // 64 bit
+#define VAR_STRING      7
+#define VAR_BLOCK    	8
+#define VAR_ARRAY       9
 
 
 typedef unsigned char BYTE;
@@ -38,6 +38,7 @@ void var_delete_by_index(unsigned int);
 var var_array_element(var, unsigned int);
 void var_echo(var);
 void var_free(var);
+BYTE has_data(var);
 
 var var_as_double(double);
 var var_set_double(var, double);
@@ -55,6 +56,7 @@ var var_increment(var);
 var var_decrement(var);
 
 double var_to_double(var);
+double var_extract_double(var);
 unsigned int var_to_dword(var);
 
 BYTE var_is_more(var, var);
