@@ -5,7 +5,6 @@ var var_assign(var a, var b)
     // 'a' will be overwritten in any case
     if (has_data(a)) free(a.data);
 
-    a.name = NULL;
     a.data = malloc(b.data_size);
     memcpy(a.data, b.data, b.data_size);
 
@@ -16,13 +15,18 @@ var var_assign(var a, var b)
     {
         if (has_data(b)) free(b.data);
     }
-    /*else if (gl_save_names)
+    if (gl_save_names && b.name)
     {
         if (a.name) free(a.name);
         a.name = malloc(strlen(b.name) + 1);
         memcpy(a.name, b.name, strlen(b.name));
         a.name[strlen(b.name)] = '\0';
-    }*/
+    }
+
+    if (!b.name && !gl_save_names)
+    {
+        a.name = NULL;
+    }
 
     return a;
 }
@@ -136,15 +140,15 @@ var var_subtract(var a, var b)
     if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
     {
         double xa, xb;
-        memcpy(&xa, a.data, sizeof(double));
-        memcpy(&xb, b.data, sizeof(double));
+        memcpy(&xa, a.data + 1, sizeof(double));
+        memcpy(&xb, b.data + 1, sizeof(double));
         if (!a.name) free(a.data);
         if (!b.name) free(b.data);
 
         xa = xa - xb;
 
-        r.data = malloc(sizeof(double));
-        memcpy(r.data, &xa, sizeof(double));
+        r.data = malloc(sizeof(double) + 1);
+        memcpy(r.data + 1, &xa, sizeof(double));
     }
     else
     {
@@ -159,15 +163,15 @@ var var_multiply(var a, var b)
 {
     var r = a;
     double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
+    memcpy(&xa, a.data + 1, sizeof(double));
+    memcpy(&xb, b.data + 1, sizeof(double));
     if (!a.name) free(a.data);
     if (!b.name) free(b.data);
 
     xa *= xb;
 
-    r.data = malloc(sizeof(double));
-    memcpy(r.data, &xa, sizeof(double));
+    r.data = malloc(sizeof(double) + 1);
+    memcpy(r.data + 1, &xa, sizeof(double));
 
     return r;
 }
@@ -176,15 +180,15 @@ var var_divide(var a, var b)
 {
     var r = a;
     double xa, xb;
-    memcpy(&xa, a.data, sizeof(double));
-    memcpy(&xb, b.data, sizeof(double));
+    memcpy(&xa, a.data + 1, sizeof(double));
+    memcpy(&xb, b.data + 1, sizeof(double));
     if (!a.name) free(a.data);
     if (!b.name) free(b.data);
 
     xa /= xb;
 
-    r.data = malloc(sizeof(double));
-    memcpy(a.data, &xa, sizeof(double));
+    r.data = malloc(sizeof(double) + 1);
+    memcpy(a.data + 1, &xa, sizeof(double));
 
     return r;
 }
@@ -196,16 +200,17 @@ var var_invert(var a)
     if (a.type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xa, a.data + 1, sizeof(double));
         if (!a.name) free(a.data);
 
         xa = -xa;
 
-        r.data = malloc(sizeof(double));
-        memcpy(r.data, &xa, sizeof(double));
+        r.data = malloc(sizeof(double) + 1);
+        memcpy(r.data + 1, &xa, sizeof(double));
     }
     else if (a.type == VAR_STRING)
     {
+        // TODO: debug
         // revert a string
 
         char *end = a.data + strlen(a.data) - 1;
@@ -235,19 +240,19 @@ var var_invert(var a)
     return r;
 }
 
-var var_increment()
+var var_increment(var a)
 {
-    if (!pass_by_ref)
+    if (!a.name)
     {
         fprintf(stderr, "Operator '++' requires a variable.");
         larva_error();
     }
-    if (vars[pass_by_ref].type == VAR_DOUBLE)
+    if (a.type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, vars[pass_by_ref].data + 1, sizeof(double));
+        memcpy(&xa, a.data + 1, sizeof(double));
         xa++;
-        memcpy(vars[pass_by_ref].data + 1, &xa, sizeof(double));
+        memcpy(a.data + 1, &xa, sizeof(double));
     }
     else
     {
@@ -255,18 +260,14 @@ var var_increment()
         larva_error();
     }
 
-    var a;
-    a.name = NULL;
-    a.data = NULL;
-    a = var_assign(a, vars[pass_by_ref]);
-    pass_by_ref = 0;
+    var_sync(a);
 
     return a;
 }
 
-var var_decrement()
+var var_decrement(var a)
 {
-/*    if (!a.name)
+    if (!a.name)
     {
         fprintf(stderr, "Operator '--' requires a variable.");
         larva_error();
@@ -280,13 +281,11 @@ var var_decrement()
     }
     else
     {
-        fprintf(stderr, "Operator '--' is not defined for given operands.");
+        fprintf(stderr, "Operator '--' is not defined for given operand type.");
         larva_error();
     }
 
-    var_sync(a);*/
-
-    var a;
+    var_sync(a);
 
     return a;
 }

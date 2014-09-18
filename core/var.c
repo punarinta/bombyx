@@ -52,6 +52,7 @@ int var_set_by_index(unsigned int i, var o)
     {
         vars[i].data = malloc(o.data_size);
         memcpy(vars[i].data, o.data, o.data_size);
+        free(o.data);
     }
     else vars[i].data = NULL;
 

@@ -11,7 +11,6 @@ void larva_init(char *incoming_code, unsigned int len)
     blocks_count = MIN_BLOCKS;
     vars   = calloc(MIN_VARIABLES, sizeof(var));
     blocks = calloc(MIN_BLOCKS, sizeof(block));
-    pass_by_ref = 0;
 
     code_pos = 0;
     code_length = 0;
@@ -71,6 +70,7 @@ int larva_digest_start()
 {
     gl_error = 0;
     gl_level = 0;
+    gl_save_names = 0;
 
     setjmp(error_exit);
 
