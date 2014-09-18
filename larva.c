@@ -240,7 +240,11 @@ var larva_digest()
         else if (!strcmp(token, "}"))
         {
             gl_level--;
-            if (!run_flag[gl_level] && ret_point[gl_level]) code_pos = ret_point[gl_level];
+            if (!run_flag[gl_level] && ret_point[gl_level])
+            {
+                code_pos = ret_point[gl_level];
+                return vars[0];
+            }
         }
         else if (!strcmp(token, "else"))
         {
