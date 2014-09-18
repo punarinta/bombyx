@@ -337,10 +337,8 @@ var parser_read_builtin(parser_data *pd)
 			// start handling the specific built-in functions
 			if (strcmp(token, "swap") == 0)
             {
-            	gl_save_names = 1;
 				v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
-				gl_save_names = 0;
 
 				unsigned int i0 = var_get_index(v0.name),
 				             i1 = var_get_index(v1.name);
@@ -384,11 +382,11 @@ var parser_read_builtin(parser_data *pd)
 		        	}
 					else
 					{
-						fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
+						if (verbose) fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
 						ret_point[gl_level] = code_pos;
 						gl_level++;
 						code_pos = blocks[i].pos;
-						v0 = var_assign(v0, /*larva_digest()*/var_as_double(42));
+						v0 = var_assign(v0, larva_digest());
 					}
 				}
 			}
@@ -428,6 +426,12 @@ var parser_read_builtin(parser_data *pd)
               	{
               		// NB: no sync!
               		// You just copy vars[i] to a temporary var.
+              		if (!vars[i].data_size)
+              		{
+              			sprintf(temp_error, "Variable '%s' was not set.", token);
+                  		parser_error(pd, temp_error);
+              		}
+              		pass_by_ref = i;
                	    v0 = var_assign(v0, vars[i]);
                	}
                	else
@@ -493,7 +497,7 @@ var parser_read_paren(parser_data *pd)
 var parser_read_unary(parser_data *pd)
 {
 	char c;
-	var v0;
+	var v0 = var_as_double(0.0);
 	c = parser_peek(pd);
 	
 	if (c == '!')
@@ -513,8 +517,8 @@ var parser_read_unary(parser_data *pd)
     	if (parser_peek(pd) == '-')
     	{
 			parser_eat(pd);
-			v0 = parser_read_term(pd);
-			v0 = var_decrement(v0);
+			parser_read_term(pd);
+			v0 = var_decrement();
     	}
     	else
     	{
@@ -529,15 +533,8 @@ var parser_read_unary(parser_data *pd)
     	if (parser_peek(pd) == '+')
     	{
 			parser_eat(pd);
-			gl_save_names = 1;
-			v0 = parser_read_term(pd);
-			gl_save_names = 0;
-			v0 = var_increment(v0);
-			var_sync(v0);
-
-            // sync done, free the name
-			free(v0.name);
-			v0.name = NULL;
+			parser_read_term(pd);
+			v0 = var_increment();
     	}
     	else
     	{
@@ -773,12 +770,8 @@ var parser_read_boolean_equality(parser_data *pd)
 	parser_eat_whitespace(pd);
 
 	// force to memorize names
-	gl_save_names = 1;
-
 	// read the first value
 	v0 = parser_read_boolean_comparison(pd);
-
-	gl_save_names = 0;
 
 	// eat trailing whitespace
 	parser_eat_whitespace(pd);
@@ -829,9 +822,13 @@ var parser_read_boolean_equality(parser_data *pd)
 		}
 		else if (strcmp(oper, "=") == 0)
         {
+        	if (!pass_by_ref)
+        	{
+        		parser_error(pd, "Schnieblie operations are not allowed.");
+        	}
         	// v0 MUST have a name
 			v0 = var_assign(v0, v1);
-			var_sync(v0);
+			var_set_by_index(pass_by_ref, v0);
 		}
 		else
 		{

@@ -5,6 +5,7 @@ var var_assign(var a, var b)
     // 'a' will be overwritten in any case
     if (has_data(a)) free(a.data);
 
+    a.name = NULL;
     a.data = malloc(b.data_size);
     memcpy(a.data, b.data, b.data_size);
 
@@ -15,13 +16,13 @@ var var_assign(var a, var b)
     {
         if (has_data(b)) free(b.data);
     }
-    else if (gl_save_names)
+    /*else if (gl_save_names)
     {
         if (a.name) free(a.name);
         a.name = malloc(strlen(b.name) + 1);
         memcpy(a.name, b.name, strlen(b.name));
         a.name[strlen(b.name)] = '\0';
-    }
+    }*/
 
     return a;
 }
@@ -50,37 +51,44 @@ var var_add(var a, var b)
 
     if (a.type == VAR_STRING && b.type == VAR_STRING)
     {
-        r.data_size = a.data_size + b.data_size - 1;
-        r.data = malloc(sizeof(char) * r.data_size);
-        strcpy(r.data, a.data);
-        strcat(r.data, b.data);
+        r.data_size = a.data_size + b.data_size - 2;
+        r.data = malloc(r.data_size);
+        r.data[0] = VAR_SIGNATURE;
+        memcpy(r.data + 1, a.data + 1, a.data_size - 2);
+        memcpy(r.data + a.data_size - 1, b.data + 1, b.data_size - 2);
+
+        r.data[r.data_size - 1] = '\0';
         r.type = VAR_STRING;
     }
     else if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
     {
         double xa, xb;
-        memcpy(&xa, a.data, sizeof(double));
-        memcpy(&xb, b.data, sizeof(double));
+        memcpy(&xa, a.data + 1, sizeof(double));
+        memcpy(&xb, b.data + 1, sizeof(double));
 
         xa += xb;
 
-        r.data = malloc(sizeof(double));
-        memcpy(r.data, &xa, sizeof(double));
+        r.data = malloc(sizeof(double) + 1);
+        r.data[0] = VAR_SIGNATURE;
+        memcpy(r.data + 1, &xa, sizeof(double));
         r.type = VAR_DOUBLE;
-        r.data_size = sizeof(double);
+        r.data_size = sizeof(double) + 1;
     }
     else if (a.type == VAR_STRING && b.type == VAR_DOUBLE)
     {
         double xb;
         char *converted = calloc(256, sizeof(char));        // the length is doubtful
-        memcpy(&xb, b.data, sizeof(double));
+        memcpy(&xb, b.data + 1, sizeof(double));
         sprintf(converted, "%.6g", xb);
+        unsigned int len = strlen(converted);
 
-        r.data = malloc(sizeof(char) * (a.data_size + strlen(converted) - 1));
-        r.data = strcpy(r.data, a.data);
-        r.data = strcat(r.data, converted);
+        r.data = malloc(a.data_size + len);
+        memcpy(r.data + 1, a.data + 1, a.data_size - 2);
+        memcpy(r.data + a.data_size - 1, converted, len);
 
-        r.data_size = strlen(r.data);
+        r.data[0] = VAR_SIGNATURE;
+        r.data_size = a.data_size + len;
+        r.data[r.data_size - 1] = '\0';
         r.type = VAR_STRING;
 
         free(converted);
@@ -89,15 +97,18 @@ var var_add(var a, var b)
     {
         double xa;
         char *converted = calloc(256, sizeof(char));        // the length is doubtful
-        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xa, a.data + 1, sizeof(double));
         sprintf(converted, "%.6g", xa);
+        unsigned int len = strlen(converted);
 
-        r.data = malloc(sizeof(char) + (b.data_size + strlen(converted) - 1));
-        strcpy(r.data, converted);
-        strcat(r.data, b.data);
+        r.data = malloc(a.data_size + len);
+        memcpy(r.data + 1, converted, len);
+        memcpy(r.data + len + 1, converted, a.data_size - 2);
 
+        r.data[0] = VAR_SIGNATURE;
+        r.data_size = a.data_size + len;
+        r.data[r.data_size - 1] = '\0';
         r.type = VAR_STRING;
-        r.data_size = strlen(r.data);
 
         free(converted);
     }
@@ -112,6 +123,8 @@ var var_add(var a, var b)
     // var itself is static, but its payload is dynamic, kill it with fire!
     if (!a.name) free(a.data);
     if (!b.name) free(b.data);
+
+    r.name = NULL;
 
     return r;
 }
@@ -222,34 +235,38 @@ var var_invert(var a)
     return r;
 }
 
-var var_increment(var a)
+var var_increment()
 {
-    if (!a.name)
+    if (!pass_by_ref)
     {
         fprintf(stderr, "Operator '++' requires a variable.");
         larva_error();
     }
-    if (a.type == VAR_DOUBLE)
+    if (vars[pass_by_ref].type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xa, vars[pass_by_ref].data + 1, sizeof(double));
         xa++;
-        memcpy(a.data, &xa, sizeof(double));
+        memcpy(vars[pass_by_ref].data + 1, &xa, sizeof(double));
     }
     else
     {
-        fprintf(stderr, "Operator '++' is not defined for given operands.");
+        fprintf(stderr, "Operator '++' is not defined for the given operand type.");
         larva_error();
     }
 
-    var_sync(a);
+    var a;
+    a.name = NULL;
+    a.data = NULL;
+    a = var_assign(a, vars[pass_by_ref]);
+    pass_by_ref = 0;
 
     return a;
 }
 
-var var_decrement(var a)
+var var_decrement()
 {
-    if (!a.name)
+/*    if (!a.name)
     {
         fprintf(stderr, "Operator '--' requires a variable.");
         larva_error();
@@ -257,9 +274,9 @@ var var_decrement(var a)
     if (a.type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xa, a.data + 1, sizeof(double));
         xa--;
-        memcpy(a.data, &xa, sizeof(double));
+        memcpy(a.data + 1, &xa, sizeof(double));
     }
     else
     {
@@ -267,7 +284,9 @@ var var_decrement(var a)
         larva_error();
     }
 
-    var_sync(a);
+    var_sync(a);*/
+
+    var a;
 
     return a;
 }

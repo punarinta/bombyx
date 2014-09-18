@@ -64,21 +64,21 @@ var var_as_double(double a)
     v.name = NULL;
     v.type = VAR_DOUBLE;
     v.data = malloc(sizeof(double) + 1);
+    v.data[0] = VAR_SIGNATURE;
     memcpy(v.data + 1, &a, sizeof(double));
     v.data_size = sizeof(double) + 1;
-    v.data[0] = VAR_SIGNATURE;
 
     return v;
 }
 
 var var_set_double(var v, double a)
 {
-    if (v.data) free(v.data);
+    if (has_data(v)) free(v.data);
     v.type = VAR_DOUBLE;
     v.data = malloc(sizeof(double) + 1);
+    v.data[0] = VAR_SIGNATURE;
     memcpy(v.data + 1, &a, sizeof(double));
     v.data_size = sizeof(double) + 1;
-    v.data[0] = VAR_SIGNATURE;
 
     return v;
 }
@@ -94,8 +94,8 @@ var var_as_string(char *a)
     memcpy(v.data + 1, a, sizeof(char) * len);
     v.data[0] = VAR_SIGNATURE;
 
-    len += 2;
-    v.data[len] = '\0';
+    len++;
+    v.data[len++] = '\0';
     v.data_size = len;
 
     return v;
@@ -103,15 +103,15 @@ var var_as_string(char *a)
 
 var var_set_string(var v, char *a)
 {
-    if (v.data) free(v.data);
+    if (has_data(v)) free(v.data);
     v.type = VAR_STRING;
     unsigned int len = strlen(a);
     v.data = malloc(sizeof(char) * (len + 2));
     memcpy(v.data + 1, a, sizeof(char) * len);
     v.data[0] = VAR_SIGNATURE;
 
-    len += 2;
-    v.data[len] = '\0';
+    len++;
+    v.data[len++] = '\0';
     v.data_size = len;
 
     return v;
@@ -183,7 +183,7 @@ void var_echo(var a)
     else switch (a.type)
     {
         case VAR_STRING:
-        if (a.data && a.data_size) fprintf(stdout, "%s", a.data);
+        if (a.data && a.data_size) fprintf(stdout, "%s", a.data + 1);
         else fprintf(stdout, "NULL");
         break;
 

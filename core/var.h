@@ -52,8 +52,8 @@ var var_subtract(var, var);
 var var_multiply(var, var);
 var var_divide(var, var);
 var var_invert(var);
-var var_increment(var);
-var var_decrement(var);
+var var_increment();
+var var_decrement();
 
 double var_to_double(var);
 double var_extract_double(var);

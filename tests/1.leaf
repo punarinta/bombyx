@@ -5,7 +5,10 @@ var a = 55
 block f
 {
 	print('Im in da block\n')
-	return 1
+	return 42
 }
 
 f()
+
+
+print('ok')

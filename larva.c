@@ -11,6 +11,7 @@ void larva_init(char *incoming_code, unsigned int len)
     blocks_count = MIN_BLOCKS;
     vars   = calloc(MIN_VARIABLES, sizeof(var));
     blocks = calloc(MIN_BLOCKS, sizeof(block));
+    pass_by_ref = 0;
 
     code_pos = 0;
     code_length = 0;
@@ -70,7 +71,6 @@ int larva_digest_start()
 {
     gl_error = 0;
     gl_level = 0;
-    gl_save_names = 0;
 
     setjmp(error_exit);
 
@@ -170,7 +170,7 @@ var larva_digest()
             gl_level--;
             code_pos = ret_point[gl_level];
 
-            fprintf(stdout, "returning...\n");
+            if (verbose) fprintf(stdout, "returning...\n");
             return r;
         }
         else if (!strcmp(token, "block"))
@@ -230,20 +230,21 @@ var larva_digest()
                 // start running this block
                 run_flag[gl_level] = 0;  // RUN_NONE
             }
-
+            x.name = NULL;
             var_free(x);
         }
         else if (!strcmp(token, "{"))
         {
-            //gl_level++;
+            gl_level++;
         }
         else if (!strcmp(token, "}"))
         {
-            //gl_level--;
+            gl_level--;
+            if (!run_flag[gl_level] && ret_point[gl_level]) code_pos = ret_point[gl_level];
         }
         else if (!strcmp(token, "else"))
         {
-            if (!run_flag[gl_level]) skip_block();
+            if (run_flag[gl_level] == 0) skip_block();
         }
         else
         {
@@ -328,9 +329,9 @@ int larva_stop(int ret_code)
     i = blocks_count;
     while (--i) block_delete_by_index(i);
 
-//    if (vars) free(vars);
-//    if (blocks) free(blocks);
-//    if (code) free(code);
+    if (vars) free(vars);
+    if (blocks) free(blocks);
+    if (code) free(code);
 
 #ifndef __APPLE__
     muntrace();
