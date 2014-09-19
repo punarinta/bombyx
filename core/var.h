@@ -33,31 +33,29 @@ typedef struct
 
 unsigned int var_init(char *, unsigned short, void *);
 unsigned int var_get_index(char *);
-int var_set_by_index(unsigned int, var);
+BYTE var_set_by_index(unsigned int, var *);
 void var_delete_by_index(unsigned int);
 var var_array_element(var, unsigned int);
 void var_echo(var);
-void var_free(var);
-BYTE has_data(var);
+void var_free(var *);
 
 var var_as_double(double);
-var var_set_double(var, double);
 var var_as_string(char *);
-var var_set_string(var, char *);
+void var_set_double(var *, double);
+void var_set_string(var *, char *);
 
 void var_sync(var);
-var var_assign(var, var);
-var var_add(var, var);
-var var_subtract(var, var);
-var var_multiply(var, var);
-var var_divide(var, var);
+void var_assign(var *, var *);
+var var_add(var *, var *);
+var var_subtract(var*, var*);
+var var_multiply(var*, var*);
+var var_divide(var*, var*);
 var var_invert(var);
 var var_increment(var);
 var var_decrement(var);
 
-double var_to_double(var);
+double var_to_double(var *);
 double var_extract_double(var);
-unsigned int var_to_dword(var);
 
 BYTE var_is_more(var, var);
 BYTE var_is_less(var, var);

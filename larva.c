@@ -78,7 +78,7 @@ int larva_digest_start()
 
     // no vars need to leave to the outer world
     var r = larva_digest();
-    var_free(r);
+    var_free(&r);
 
     return larva_stop(0);
 }
@@ -145,7 +145,8 @@ var larva_digest()
             }
 
             // equalize
-            var_set_by_index(index, parse());
+            var parse_result = parse();
+            var_set_by_index(index, &parse_result);
 
             // we have one more var to init
             if (code[code_pos] == ',')
@@ -230,8 +231,8 @@ var larva_digest()
                 // start running this block
                 run_flag[gl_level] = 0;  // RUN_NONE
             }
-            x.name = NULL;
-            var_free(x);
+
+            var_free(&x);
         }
         else if (!strcmp(token, "{"))
         {
@@ -254,7 +255,8 @@ var larva_digest()
         {
             code_pos = line_start;
             // result is not fed anywhere, free it
-            var_free(parse());
+            var parse_result = parse();
+            var_free(&parse_result);
         }
     }
 

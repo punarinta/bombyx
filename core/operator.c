@@ -1,38 +1,39 @@
 #include "var.h"
 
-var var_assign(var a, var b)
+void var_assign(var *a, var *b)
 {
     // 'a' will be overwritten in any case
-    if (has_data(a)) free(a.data);
+    if (a->data) free(a->data);
 
-    a.data = malloc(b.data_size);
-    memcpy(a.data, b.data, b.data_size);
+    a->data = malloc(b->data_size);
+    memcpy(a->data, b->data, b->data_size);
 
-    a.type = b.type;
-    a.data_size = b.data_size;
+    a->type = b->type;
+    a->data_size = b->data_size;
 
-    if (!b.name)
+    if (!b->name && b->data)
     {
-        if (has_data(b)) free(b.data);
-    }
-    if (gl_save_names && b.name)
-    {
-        if (a.name) free(a.name);
-        a.name = malloc(strlen(b.name) + 1);
-        memcpy(a.name, b.name, strlen(b.name));
-        a.name[strlen(b.name)] = '\0';
+        free(b->data);
+        b->data = NULL;
     }
 
-    if (!b.name && !gl_save_names)
+    if (gl_save_names && b->name)
     {
-        a.name = NULL;
+        if (a->name) free(a->name);
+        a->name = malloc(strlen(b->name) + 1);
+        memcpy(a->name, b->name, strlen(b->name));
+        a->name[strlen(b->name)] = '\0';
     }
 
-    return a;
+    if (!b->name && !gl_save_names)
+    {
+        a->name = NULL;
+    }
 }
 
 /*
-    Synchronizes 'a' with vars[] if necessary
+    Synchronizes var with vars[] if necessary
+    Var is NOT modified
 */
 void var_sync(var a)
 {
@@ -49,68 +50,64 @@ void var_sync(var a)
     }
 }
 
-var var_add(var a, var b)
+var var_add(var *a, var *b)
 {
     var r;
 
-    if (a.type == VAR_STRING && b.type == VAR_STRING)
+    if (a->type == VAR_STRING && b->type == VAR_STRING)
     {
-        r.data_size = a.data_size + b.data_size - 2;
+        r.data_size = a->data_size + b->data_size - 2;
         r.data = malloc(r.data_size);
-        r.data[0] = VAR_SIGNATURE;
-        memcpy(r.data + 1, a.data + 1, a.data_size - 2);
-        memcpy(r.data + a.data_size - 1, b.data + 1, b.data_size - 2);
+        memcpy(r.data, a->data, a->data_size - 1);
+        memcpy(r.data + a->data_size - 1, b->data, b->data_size - 1);
 
-        r.data[r.data_size - 1] = '\0';
+        r.data[r.data_size++] = '\0';
         r.type = VAR_STRING;
     }
-    else if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
+    else if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
         double xa, xb;
-        memcpy(&xa, a.data + 1, sizeof(double));
-        memcpy(&xb, b.data + 1, sizeof(double));
+        memcpy(&xa, a->data, sizeof(double));
+        memcpy(&xb, b->data, sizeof(double));
 
         xa += xb;
 
-        r.data = malloc(sizeof(double) + 1);
-        r.data[0] = VAR_SIGNATURE;
-        memcpy(r.data + 1, &xa, sizeof(double));
+        r.data = malloc(sizeof(double));
         r.type = VAR_DOUBLE;
-        r.data_size = sizeof(double) + 1;
+        r.data_size = sizeof(double);
+        memcpy(r.data, &xa, sizeof(double));
     }
-    else if (a.type == VAR_STRING && b.type == VAR_DOUBLE)
+    else if (a->type == VAR_STRING && b->type == VAR_DOUBLE)
     {
         double xb;
         char *converted = calloc(256, sizeof(char));        // the length is doubtful
-        memcpy(&xb, b.data + 1, sizeof(double));
+        memcpy(&xb, b->data, sizeof(double));
         sprintf(converted, "%.6g", xb);
         unsigned int len = strlen(converted);
 
-        r.data = malloc(a.data_size + len);
-        memcpy(r.data + 1, a.data + 1, a.data_size - 2);
-        memcpy(r.data + a.data_size - 1, converted, len);
+        r.data = malloc(a->data_size + len);
+        memcpy(r.data, a->data, a->data_size - 1);
+        memcpy(r.data + a->data_size - 1, converted, len);
 
-        r.data[0] = VAR_SIGNATURE;
-        r.data_size = a.data_size + len;
+        r.data_size = a->data_size + len;
         r.data[r.data_size - 1] = '\0';
         r.type = VAR_STRING;
 
         free(converted);
     }
-    else if (a.type == VAR_DOUBLE && b.type == VAR_STRING)
+    else if (a->type == VAR_DOUBLE && b->type == VAR_STRING)
     {
         double xa;
         char *converted = calloc(256, sizeof(char));        // the length is doubtful
-        memcpy(&xa, a.data + 1, sizeof(double));
+        memcpy(&xa, a->data, sizeof(double));
         sprintf(converted, "%.6g", xa);
         unsigned int len = strlen(converted);
 
-        r.data = malloc(a.data_size + len);
-        memcpy(r.data + 1, converted, len);
-        memcpy(r.data + len + 1, converted, a.data_size - 2);
+        r.data = malloc(a->data_size + len);
+        memcpy(r.data, converted, len);
+        memcpy(r.data + len, converted, a->data_size - 1);
 
-        r.data[0] = VAR_SIGNATURE;
-        r.data_size = a.data_size + len;
+        r.data_size = a->data_size + len;
         r.data[r.data_size - 1] = '\0';
         r.type = VAR_STRING;
 
@@ -125,30 +122,30 @@ var var_add(var a, var b)
 
     // if there's no name it means that operations with that var are done
     // var itself is static, but its payload is dynamic, kill it with fire!
-    if (!a.name) free(a.data);
-    if (!b.name) free(b.data);
+    if (!a->name && a->data) { free(a->data); a->data = NULL; }
+    if (!b->name && b->data) { free(b->data); b->data = NULL; }
 
     r.name = NULL;
 
     return r;
 }
 
-var var_subtract(var a, var b)
+var var_subtract(var *a, var *b)
 {
-    var r = a;
+    var r;
 
-    if (a.type == VAR_DOUBLE && b.type == VAR_DOUBLE)
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
         double xa, xb;
-        memcpy(&xa, a.data + 1, sizeof(double));
-        memcpy(&xb, b.data + 1, sizeof(double));
-        if (!a.name) free(a.data);
-        if (!b.name) free(b.data);
+        memcpy(&xa, a->data, sizeof(double));
+        memcpy(&xb, b->data, sizeof(double));
 
         xa = xa - xb;
 
-        r.data = malloc(sizeof(double) + 1);
-        memcpy(r.data + 1, &xa, sizeof(double));
+        r.type = VAR_DOUBLE;
+        r.data_size = sizeof(double);
+        r.data = malloc(sizeof(double));
+        memcpy(r.data, &xa, sizeof(double));
     }
     else
     {
@@ -156,43 +153,56 @@ var var_subtract(var a, var b)
         larva_error();
     }
 
+    if (!a->name && a->data) { free(a->data); a->data = NULL; }
+    if (!b->name && b->data) { free(b->data); b->data = NULL; }
+
     return r;
 }
 
-var var_multiply(var a, var b)
+var var_multiply(var *a, var *b)
 {
-    var r = a;
+    var r;
     double xa, xb;
-    memcpy(&xa, a.data + 1, sizeof(double));
-    memcpy(&xb, b.data + 1, sizeof(double));
-    if (!a.name) free(a.data);
-    if (!b.name) free(b.data);
+    memcpy(&xa, a->data, sizeof(double));
+    memcpy(&xb, b->data, sizeof(double));
 
     xa *= xb;
 
-    r.data = malloc(sizeof(double) + 1);
-    memcpy(r.data + 1, &xa, sizeof(double));
+    r.type = VAR_DOUBLE;
+    r.data_size = sizeof(double);
+    r.data = malloc(sizeof(double));
+    memcpy(r.data, &xa, sizeof(double));
+
+    if (!a->name && a->data) { free(a->data); a->data = NULL; }
+    if (!b->name && b->data) { free(b->data); b->data = NULL; }
 
     return r;
 }
 
-var var_divide(var a, var b)
+var var_divide(var *a, var *b)
 {
-    var r = a;
+    var r;
     double xa, xb;
-    memcpy(&xa, a.data + 1, sizeof(double));
-    memcpy(&xb, b.data + 1, sizeof(double));
-    if (!a.name) free(a.data);
-    if (!b.name) free(b.data);
+    memcpy(&xa, a->data, sizeof(double));
+    memcpy(&xb, b->data, sizeof(double));
 
     xa /= xb;
 
-    r.data = malloc(sizeof(double) + 1);
-    memcpy(a.data + 1, &xa, sizeof(double));
+    r.type = VAR_DOUBLE;
+    r.data_size = sizeof(double);
+    r.data = malloc(sizeof(double));
+    memcpy(a->data, &xa, sizeof(double));
+
+    if (!a->name && a->data) { free(a->data); a->data = NULL; }
+    if (!b->name && b->data) { free(b->data); b->data = NULL; }
 
     return r;
 }
 
+/*
+    Inverts the var.
+    Var is MODIFIED.
+*/
 var var_invert(var a)
 {
     var r = a;
@@ -240,6 +250,10 @@ var var_invert(var a)
     return r;
 }
 
+/*
+    Increments the variable
+    Returns its value back
+*/
 var var_increment(var a)
 {
     if (!a.name)
@@ -250,9 +264,9 @@ var var_increment(var a)
     if (a.type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data + 1, sizeof(double));
+        memcpy(&xa, a.data, sizeof(double));
         xa++;
-        memcpy(a.data + 1, &xa, sizeof(double));
+        memcpy(a.data, &xa, sizeof(double));
     }
     else
     {
@@ -275,9 +289,9 @@ var var_decrement(var a)
     if (a.type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data + 1, sizeof(double));
+        memcpy(&xa, a.data, sizeof(double));
         xa--;
-        memcpy(a.data + 1, &xa, sizeof(double));
+        memcpy(a.data, &xa, sizeof(double));
     }
     else
     {
