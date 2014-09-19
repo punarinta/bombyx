@@ -67,4 +67,17 @@ print('OK\n')
 
 # =========================================
 
+print('Floating point ops: ')
+
+a = 5.56 + 7.62
+
+if (a != 13.18)
+{
+	print('not ')
+}
+
+print('OK\n')
+
+# =========================================
+
 print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')

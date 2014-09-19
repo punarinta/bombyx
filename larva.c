@@ -71,6 +71,9 @@ int larva_digest_start()
     gl_error = 0;
     gl_level = 0;
     gl_save_names = 0;
+    run_flag[0] = 0;
+
+    larva_map_blocks();
 
     setjmp(error_exit);
 
@@ -81,6 +84,67 @@ int larva_digest_start()
     var_free(&r);
 
     return larva_stop(0);
+}
+
+void larva_map_blocks()
+{
+    // TODO: make this shit dynamic
+    char token[PARSER_MAX_TOKEN_SIZE];
+    unsigned int parent_block = 0;
+    unsigned int not_allowed = 0;
+
+    while (code[code_pos])
+    {
+        if (isspace(code[code_pos])) { code_pos++; continue; }
+
+        read_token(token);
+
+        if (!strcmp(token, "block"))
+        {
+            read_token(token);
+
+            if (not_allowed)
+            {
+                fprintf(stderr, "Block '%s' is declared within control statement.", token);
+                larva_error(code_pos);
+            }
+
+            // if this block haz parents, copy parent_name before own name
+            if (parent_block)
+            {
+                size_t tl = strlen(token);
+                char *parent_name = blocks[parent_block].name;
+                memcpy(token + strlen(parent_name) + 1, token, tl);
+                memcpy(token, parent_name, strlen(parent_name));
+                token[strlen(parent_name)] = '.';
+                token[strlen(parent_name) + 1 + tl] = '\0';
+            }
+
+            // check what's the status of this var
+            if (block_get_index(token))
+            {
+                fprintf(stderr, "Block '%s' already exists.", token);
+                larva_error(code_pos);
+            }
+
+            // scan for '{'
+            while (code[code_pos]) if (code[code_pos++] == '{') break;
+
+            parent_block = block_init(code_pos, token, parent_block);
+        }
+        else if (!strcmp(token, "if") || !strcmp(token, "else") )
+        {
+            not_allowed++;
+            while (code[code_pos]) if (code[code_pos++] == '{') break;
+        }
+        else if (!strcmp(token, "}"))
+        {
+            if (not_allowed) not_allowed--;
+            else parent_block = blocks[parent_block].parent;
+        }
+    }
+
+    code_pos = 0;
 }
 
 /**
@@ -104,6 +168,8 @@ var larva_digest()
 
         size_t line_start = code_pos;
         read_token(token);
+
+        // TODO: not needed for all the keywords, move into IFs ;)
         index = var_get_index(token);
 
         if (!strcmp(token, "var"))
@@ -159,22 +225,25 @@ var larva_digest()
         {
             if (gl_level == 0)
             {
-                fprintf(stdout, "zero level\n");
+                if (verbose) fprintf(stdout, "Returning from zero level. Bye-bye!\n");
                 return vars[0];
             }
 
             r = parse();
 
             // this var CANNOT have a name
-            if (r.name) { free(r.name); r.name = NULL; }
+            if (r.name)
+            {
+                free(r.name);
+                r.name = NULL;
+            }
 
-            gl_level--;
-            code_pos = ret_point[gl_level];
+            if (verbose) fprintf(stdout, "Returning from level %u...\n", gl_level);
 
-            if (verbose) fprintf(stdout, "returning...\n");
             return r;
         }
-        else if (!strcmp(token, "block"))
+        else if (!strcmp(token, "block")) skip_block();
+        /*else if (!strcmp(token, "block"))
         {
             read_token(token);
 
@@ -198,7 +267,7 @@ var larva_digest()
             index = block_init(startpos, token);
 
             skip_block();
-        }
+        }*/
         else if (!strcmp(token, "if"))
         {
             unsigned long expr_start = code_pos, level = 0;
@@ -221,35 +290,44 @@ var larva_digest()
             var x = parse_expression(expr);
             free(expr);
 
-            if (!var_extract_double(x))
+            // compare and unset 'x'
+            if (!var_to_double(&x))
             {
-                run_flag[gl_level] = 1;  // RUN_ELSE
+                run_flag[gl_level + 1] = 2;  // RUN_ELSE
                 skip_block();
             }
             else
             {
-                // start running this block
-                run_flag[gl_level] = 0;  // RUN_NONE
-            }
+                // find where if-block begins
+                while (code[code_pos]) if (code[code_pos++] == '{') break;
 
-            var_free(&x);
+                // start running this block
+                run_flag[++gl_level] = 1;  // RUN_THIS
+            }
         }
         else if (!strcmp(token, "{"))
         {
-            gl_level++;
+            fprintf(stderr, "Blocks should be named or preceeded by control statements.");
+            larva_error(code_pos);
         }
         else if (!strcmp(token, "}"))
         {
-            gl_level--;
-            if (!run_flag[gl_level] && ret_point[gl_level])
+            // if you met a bracket and 'run_flag' on this level is zero, then this is a function end
+            if (!run_flag[gl_level])
             {
-                code_pos = ret_point[gl_level];
                 return vars[0];
             }
+            else gl_level--;
         }
         else if (!strcmp(token, "else"))
         {
-            if (run_flag[gl_level] == 0) skip_block();
+            if (run_flag[gl_level + 1] == 1) skip_block();
+            else
+            {
+                // find where else-block begins
+                while (code[code_pos]) if (code[code_pos++] == '{') break;
+                run_flag[++gl_level] = 1;
+            }
         }
         else
         {

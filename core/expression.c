@@ -317,11 +317,11 @@ var parser_read_builtin(parser_data *pd)
 	int num_args, pos = 0;
 
 	c = parser_peek(pd);
-	if (isalpha(c) || c == '_')
+	if (isalpha(c) || c == '_' || c == '.')
     {
 		// alphabetic character or underscore, indicates that either a function
 		// call or variable follows
-		while (isalpha(c) || isdigit(c) || c == '_')
+		while (isalpha(c) || isdigit(c) || c == '_' || c == '.')
         {
 			token[pos++] = parser_eat(pd);
 			c = parser_peek(pd);
@@ -386,10 +386,17 @@ var parser_read_builtin(parser_data *pd)
 					else
 					{
 						if (verbose) fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
-						ret_point[gl_level] = code_pos;
-						gl_level++;
+
+						// memorize
+						ret_point[gl_level++] = code_pos;
+
+						// step into
+						run_flag[gl_level] = 0;
 						code_pos = blocks[i].pos;
 						var digest = larva_digest();
+
+						// get back
+						code_pos = ret_point[--gl_level];
 						var_assign(&v0, &digest);
 					}
 				}

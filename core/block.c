@@ -1,6 +1,6 @@
 #include "block.h"
 
-unsigned int block_init(unsigned int pos, char *name)
+unsigned int block_init(unsigned int pos, char *name, unsigned int parent)
 {
 	unsigned int i;
 
@@ -26,6 +26,7 @@ unsigned int block_init(unsigned int pos, char *name)
 
     strcpy(blocks[i].name, name);
     blocks[i].pos = pos;
+    blocks[i].parent = parent;
 
     return i;
 }

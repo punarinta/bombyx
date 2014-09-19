@@ -9,18 +9,23 @@ block f
         print('Point 2\n')
     	return 43
     }
+
+	if (0)
+	{
+		print('Point 6\n')
+	}
+	else
+	{
+		print('Point 7\n')
+	}
+
     print('Point 3\n')
 	return 42
 }
 
-if (1)
-{
-}
-else
-{
-}
+
 
 print('Point 4\n')
 f()
+f.g()
 print('Point 5\n')
-

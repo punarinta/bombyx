@@ -9,10 +9,10 @@ typedef struct
 {
     char *name;
     unsigned int pos;
-//    unsigned int parent;
+    unsigned int parent;
 } block;
 
-unsigned int block_init(unsigned int, char *);
+unsigned int block_init(unsigned int, char *, unsigned int);
 unsigned int block_get_index(char *);
 void block_delete_by_index(unsigned int);
 
