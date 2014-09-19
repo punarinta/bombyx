@@ -48,7 +48,8 @@ void block_delete_by_index(unsigned int index)
 {
     if (index && index < blocks_count)
     {
-        if (blocks[index].name) free(blocks[index].name);
+        if (blocks[index].name) { free(blocks[index].name); blocks[index].name = NULL; }
         blocks[index].pos = 0;
+        blocks[index].parent = 0;
     }
 }

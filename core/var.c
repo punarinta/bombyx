@@ -124,8 +124,8 @@ double var_to_double(var *a)
     if (a->type == VAR_DOUBLE) memcpy(&d, a->data, sizeof(double));
     if (a->type == VAR_STRING) d = atof(a->data);
 
-    if (!a->name) { free(a->name); a->name = NULL; }
-    if (!a->data) { free(a->data); a->data = NULL; }
+    if (a->name) { free(a->name); a->name = NULL; }
+    if (a->data) { free(a->data); a->data = NULL; }
 
     return d;
 }
@@ -189,6 +189,10 @@ void var_echo(var a)
 {
     switch (a.type)
     {
+        case VAR_UNSET:
+        fprintf(stdout, "UNSET");
+        break;
+
         case VAR_STRING:
         if (a.data && a.data_size) fprintf(stdout, "%s", a.data);
         else fprintf(stdout, "NULL");
@@ -211,6 +215,7 @@ void var_echo(var a)
         break;
 
         default:
+        if (verbose) fprintf(stdout, "\nvar_echo() failed\n");
         break;
     }
 }

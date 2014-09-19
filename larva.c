@@ -243,31 +243,6 @@ var larva_digest()
             return r;
         }
         else if (!strcmp(token, "block")) skip_block();
-        /*else if (!strcmp(token, "block"))
-        {
-            read_token(token);
-
-            // check what's the status of this var
-            index = block_get_index(token);
-
-            if (index)
-            {
-                fprintf(stderr, "Block '%s' already exists.", token);
-                larva_error(code_pos);
-            }
-
-            unsigned int startpos = code_pos;
-
-            // move to the first symbol after '{'
-            while (code[startpos])
-            {
-                if (code[startpos++] == '{') break;
-            }
-
-            index = block_init(startpos, token);
-
-            skip_block();
-        }*/
         else if (!strcmp(token, "if"))
         {
             unsigned long expr_start = code_pos, level = 0;
@@ -413,9 +388,9 @@ int larva_stop(int ret_code)
     i = blocks_count;
     while (--i) block_delete_by_index(i);
 
-    if (vars) free(vars);
-    if (blocks) free(blocks);
-    if (code) free(code);
+    /*if (vars)*/ free(vars);
+    /*if (blocks)*/ free(blocks);
+    /*if (code)*/ free(code);
 
 #ifndef __APPLE__
     muntrace();
