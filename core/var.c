@@ -1,4 +1,5 @@
 #include "var.h"
+#include "../common.h"
 
 unsigned int var_init(char *name, unsigned short type, void *value)
 {

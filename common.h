@@ -1,5 +1,5 @@
-#ifndef _COMMON_H_
-#define _COMMON_H_ 1
+#ifndef _BOMBYX_COMMON_H_
+#define _BOMBYX_COMMON_H_ 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +46,5 @@ double started_at;
 int larva_stop(int);
 void larva_error();
 double get_microtime();
-char *strdup(const char *);
 
 #endif

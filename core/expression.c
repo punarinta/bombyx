@@ -1,5 +1,6 @@
 #include "expression.h"
 #include "block.h"
+#include "sys.h"
 
 char temp_error[256];
 
@@ -533,7 +534,7 @@ var parser_read_unary(parser_data *pd)
 			gl_save_names = 1;
 			v0 = parser_read_term(pd);
 			gl_save_names = 0;
-			var_decrement(v0);
+			op_decrement(v0);
 
             // sync done, free the name
 			free(v0.name);
@@ -545,7 +546,7 @@ var parser_read_unary(parser_data *pd)
 			// perform unary negation
 			parser_eat(pd);
 			parser_eat_whitespace(pd);
-			v0 = var_invert(parser_read_paren(pd));
+			v0 = op_invert(parser_read_paren(pd));
 		}
 	}
 	else if (c == '+')
@@ -556,7 +557,7 @@ var parser_read_unary(parser_data *pd)
 			gl_save_names = 1;
 			v0 = parser_read_term(pd);
 			gl_save_names = 0;
-			var_increment(v0);
+			op_increment(v0);
 
 			// sync done, free the name
 			free(v0.name);
@@ -610,7 +611,7 @@ var parser_read_power(parser_data *pd)
 
 		// read the second operand
 		var term = parser_read_power(pd);
-		v1 = var_multiply(&s, &term);
+		v1 = op_multiply(&s, &term);
 
 		// perform the exponentiation
 		// TODO:
@@ -652,12 +653,12 @@ var parser_read_term(parser_data *pd)
 		if (c == '*')
         {
         	var term = parser_read_power(pd);
-			v0 = var_multiply(&v0, &term);
+			v0 = op_multiply(&v0, &term);
 		}
 		else if (c == '/')
         {
         	var term = parser_read_power(pd);
-			v0 = var_divide(&v0, &term);
+			v0 = op_divide(&v0, &term);
 		}
 
 		// eat remaining whitespace
@@ -684,12 +685,12 @@ var parser_read_expr(parser_data *pd)
 		if (c == '+')
 		{
 			term = parser_read_term(pd);
-			v0 = var_add(&v0, &term);
+			v0 = op_add(&v0, &term);
 		}
 		else if (c == '-' && parser_peek_n(pd, -1) != '-')
 		{
 			term = parser_read_term(pd);
-			v0 = var_subtract(&v0, &term);
+			v0 = op_subtract(&v0, &term);
 		}
 		else
 		{
@@ -721,14 +722,14 @@ var parser_read_expr(parser_data *pd)
 		if (c == '+')
         {
 			term = parser_read_term(pd);
-			v0 = var_add(&v0, &term);
+			v0 = op_add(&v0, &term);
 			//var_free(&term);
 		}
 		else if (c == '-')
         {
         	// reset name for v0
 			term = parser_read_term(pd);
-			v0 = var_subtract(&v0, &term);
+			v0 = op_subtract(&v0, &term);
 			//var_free(&term);
 		}
 

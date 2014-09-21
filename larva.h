@@ -1,5 +1,5 @@
-#ifndef _LARVA_H_
-#define _LARVA_H_ 1
+#ifndef _BOMBYX_LARVA_H_
+#define _BOMBYX_LARVA_H_ 1
 
 #include "core/var.h"
 

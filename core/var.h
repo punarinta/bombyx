@@ -1,9 +1,10 @@
-#ifndef _VAR_H_
-#define _VAR_H_ 1
+#ifndef _BOMBYX_VAR_H_
+#define _BOMBYX_VAR_H_ 1
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "block.h"
 
 #define VAR_UNSET       0
 #define VAR_BYTE        1
@@ -20,8 +21,6 @@
 typedef unsigned char BYTE;
 typedef unsigned int  DWORD;
 
-char *trim(char *);
-
 typedef struct
 {
     unsigned char type;
@@ -30,6 +29,27 @@ typedef struct
     unsigned int data_size;
     unsigned int parent;
 } var;
+
+typedef struct _var_t_
+{
+    char *name;
+    struct _var_t_ *next;
+    struct _block_t_ *parent;
+    unsigned int pos;
+} var_t;
+
+typedef struct _var_table_t_
+{
+    unsigned int size;
+    var_t **table;
+} var_table_t;
+
+var_table_t *var_table_create(int);
+unsigned int var_hash(var_table_t *, char *);
+var_t *var_lookup(var_table_t *, char *);
+var_t *var_add(var_table_t *, char *, unsigned int, var_t *);
+int var_delete(var_table_t *, char *);
+void var_table_delete(var_table_t *);
 
 unsigned int var_init(char *, unsigned short, void *);
 unsigned int var_get_index(char *);
@@ -46,13 +66,13 @@ void var_set_string(var *, char *);
 
 void var_sync(var);
 void var_assign(var *, var *);
-var var_add(var *, var *);
-var var_subtract(var*, var*);
-var var_multiply(var*, var*);
-var var_divide(var*, var*);
-var var_invert(var);
-var var_increment(var);
-var var_decrement(var);
+var op_add(var *, var *);
+var op_subtract(var*, var*);
+var op_multiply(var*, var*);
+var op_divide(var*, var*);
+var op_invert(var);
+var op_increment(var);
+var op_decrement(var);
 
 double var_to_double(var *);
 double var_extract_double(var);
@@ -61,7 +81,5 @@ BYTE var_is_more(var, var);
 BYTE var_is_less(var, var);
 BYTE var_is_more_equal(var, var);
 BYTE var_is_less_equal(var, var);
-
-#include "../common.h"
 
 #endif

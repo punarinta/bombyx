@@ -1,6 +1,6 @@
 #include "common.h"
 #include "larva.h"
-
+#include "core/sys.h"
 
 /**
  *  Sets up the processor
@@ -10,7 +10,6 @@ void larva_init(char *incoming_code, unsigned int len)
     vars_count   = MIN_VARIABLES;
     blocks_count = MIN_BLOCKS;
     vars   = calloc(MIN_VARIABLES, sizeof(var));
-//    blocks = calloc(MIN_BLOCKS, sizeof(block));
     blocks = block_table_create(MIN_BLOCKS);
 
     code_pos = 0;

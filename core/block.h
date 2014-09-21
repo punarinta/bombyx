@@ -1,5 +1,5 @@
-#ifndef _BLOCK_H_
-#define _BLOCK_H_
+#ifndef _BOMBYX_BLOCK_H_
+#define _BOMBYX_BLOCK_H_ 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,8 +25,6 @@ block_t *block_lookup(block_table_t *, char *);
 block_t *block_add(block_table_t *, char *, unsigned int, block_t *);
 int block_delete(block_table_t *, char *);
 void block_table_delete(block_table_t *);
-
-#include "../common.h"
 
 // ideas: http://m.sparknotes.com/cs/searching/hashtables/problems_2.html
 

@@ -1,4 +1,5 @@
 #include "var.h"
+#include "../common.h"
 
 void var_assign(var *a, var *b)
 {
@@ -50,7 +51,7 @@ void var_sync(var a)
     }
 }
 
-var var_add(var *a, var *b)
+var op_add(var *a, var *b)
 {
     var r;
 
@@ -130,7 +131,7 @@ var var_add(var *a, var *b)
     return r;
 }
 
-var var_subtract(var *a, var *b)
+var op_subtract(var *a, var *b)
 {
     var r;
 
@@ -159,7 +160,7 @@ var var_subtract(var *a, var *b)
     return r;
 }
 
-var var_multiply(var *a, var *b)
+var op_multiply(var *a, var *b)
 {
     var r;
     double xa, xb;
@@ -179,7 +180,7 @@ var var_multiply(var *a, var *b)
     return r;
 }
 
-var var_divide(var *a, var *b)
+var op_divide(var *a, var *b)
 {
     var r;
     double xa, xb;
@@ -203,7 +204,7 @@ var var_divide(var *a, var *b)
     Inverts the var.
     Var is MODIFIED.
 */
-var var_invert(var a)
+var op_invert(var a)
 {
     var r = a;
 
@@ -254,7 +255,7 @@ var var_invert(var a)
     Increments the variable
     Returns its value back
 */
-var var_increment(var a)
+var op_increment(var a)
 {
     if (!a.name)
     {
@@ -279,7 +280,7 @@ var var_increment(var a)
     return a;
 }
 
-var var_decrement(var a)
+var op_decrement(var a)
 {
     if (!a.name)
     {

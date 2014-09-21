@@ -1,5 +1,5 @@
-#ifndef _EXPRESSION_H_
-#define _EXPRESSION_H_
+#ifndef _BOMBYX_EXPRESSION_H_
+#define _BOMBYX_EXPRESSION_H_ 1
 
 #include <math.h>
 #include <string.h>
