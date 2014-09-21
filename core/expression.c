@@ -1,4 +1,5 @@
 #include "expression.h"
+#include "block.h"
 
 char temp_error[256];
 
@@ -379,22 +380,22 @@ var parser_read_builtin(parser_data *pd)
 				}
 				else
 				{
-					unsigned int i = block_get_index(token);
-		        	if (!i)
+					block_t *this_block = block_lookup(blocks, token);
+		        	if (!this_block)
 		        	{
 		        	    sprintf(temp_error, "Unknown function '%s'.", token);
 		                parser_error(pd, temp_error);
 		        	}
 					else
 					{
-						if (verbose) fprintf(stdout, "Moving to pos %u\n", blocks[i].pos);
+						if (verbose) fprintf(stdout, "Moving to pos %u\n", this_block->pos);
 
 						// memorize
 						ret_point[gl_level++] = code_pos;
 
 						// step into
 						run_flag[gl_level] = 0;
-						code_pos = blocks[i].pos;
+						code_pos = this_block->pos;
 						var digest = larva_digest();
 
 						// get back

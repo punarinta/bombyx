@@ -26,7 +26,7 @@
 var *vars;
 unsigned int vars_count;
 
-block *blocks;
+block_table_t *blocks;
 unsigned int blocks_count;
 
 unsigned int gl_error;
@@ -46,5 +46,6 @@ double started_at;
 int larva_stop(int);
 void larva_error();
 double get_microtime();
+char *strdup(const char *);
 
 #endif

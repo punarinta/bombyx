@@ -43,6 +43,13 @@ char *trim(char *str)
     return str;
 }
 
+char *strdup(const char *s)
+{
+    size_t len = strlen(s);
+    char *p = malloc(++len);
+    return p ? memcpy(p, s, len) : NULL;
+}
+
 double get_microtime()
 {
     struct timeval tv;

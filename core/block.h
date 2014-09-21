@@ -5,17 +5,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct
+typedef struct _block_t_
 {
     char *name;
+    struct _block_t_ *next;
+    struct _block_t_ *parent;
     unsigned int pos;
-    unsigned int parent;
-} block;
+} block_t;
 
-unsigned int block_init(unsigned int, char *, unsigned int);
-unsigned int block_get_index(char *);
-void block_delete_by_index(unsigned int);
+typedef struct _block_table_t_
+{
+    unsigned int size;
+    block_t **table;
+} block_table_t;
+
+block_table_t *block_table_create(int);
+unsigned int block_hash(block_table_t *, char *);
+block_t *block_lookup(block_table_t *, char *);
+block_t *block_add(block_table_t *, char *, unsigned int, block_t *);
+int block_delete(block_table_t *, char *);
+void block_table_delete(block_table_t *);
 
 #include "../common.h"
+
+// ideas: http://m.sparknotes.com/cs/searching/hashtables/problems_2.html
 
 #endif

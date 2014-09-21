@@ -10,7 +10,8 @@ void larva_init(char *incoming_code, unsigned int len)
     vars_count   = MIN_VARIABLES;
     blocks_count = MIN_BLOCKS;
     vars   = calloc(MIN_VARIABLES, sizeof(var));
-    blocks = calloc(MIN_BLOCKS, sizeof(block));
+//    blocks = calloc(MIN_BLOCKS, sizeof(block));
+    blocks = block_table_create(MIN_BLOCKS);
 
     code_pos = 0;
     code_length = 0;
@@ -90,8 +91,8 @@ void larva_map_blocks()
 {
     // TODO: make this shit dynamic
     char token[PARSER_MAX_TOKEN_SIZE];
-    unsigned int parent_block = 0;
-    unsigned int not_allowed = 0;
+    block_t *parent_block = NULL;
+    int not_allowed = 0;
 
     while (code[code_pos])
     {
@@ -113,7 +114,7 @@ void larva_map_blocks()
             if (parent_block)
             {
                 size_t tl = strlen(token);
-                char *parent_name = blocks[parent_block].name;
+                char *parent_name = parent_block->name;
                 memcpy(token + strlen(parent_name) + 1, token, tl);
                 memcpy(token, parent_name, strlen(parent_name));
                 token[strlen(parent_name)] = '.';
@@ -121,7 +122,7 @@ void larva_map_blocks()
             }
 
             // check what's the status of this var
-            if (block_get_index(token))
+            if (block_lookup(blocks, token))
             {
                 fprintf(stderr, "Block '%s' already exists.", token);
                 larva_error(code_pos);
@@ -130,7 +131,7 @@ void larva_map_blocks()
             // scan for '{'
             while (code[code_pos]) if (code[code_pos++] == '{') break;
 
-            parent_block = block_init(code_pos, token, parent_block);
+            parent_block = block_add(blocks, token, code_pos, parent_block);
         }
         else if (!strcmp(token, "if") || !strcmp(token, "else") )
         {
@@ -140,7 +141,7 @@ void larva_map_blocks()
         else if (!strcmp(token, "}"))
         {
             if (not_allowed) not_allowed--;
-            else parent_block = blocks[parent_block].parent;
+            else parent_block = parent_block->parent;
         }
     }
 
@@ -385,12 +386,10 @@ int larva_stop(int ret_code)
     unsigned int i = vars_count;
     while (--i) var_delete_by_index(i);
 
-    i = blocks_count;
-    while (--i) block_delete_by_index(i);
+    block_table_delete(blocks);
 
-    /*if (vars)*/ free(vars);
-    /*if (blocks)*/ free(blocks);
-    /*if (code)*/ free(code);
+    free(vars);
+    free(code);
 
 #ifndef __APPLE__
     muntrace();
@@ -409,8 +408,13 @@ void larva_poo()
         fprintf(stdout, "\n'%s' [%s of size %u] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
         var_echo(vars[i]);
     }
-    for (i = 1; i < blocks_count; i++)
+
+    block_t *list;
+    for (i = 0; i < blocks->size; i++)
     {
-        if (blocks[i].pos) fprintf(stdout, "\nBlock '%s' at pos %u", blocks[i].name, blocks[i].pos);
+        for (list = blocks->table[i]; list != NULL; list = list->next)
+        {
+            if (list->pos) fprintf(stdout, "\nBlock '%s' at pos %u", list->name, list->pos);
+        }
     }
 }
