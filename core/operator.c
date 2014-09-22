@@ -1,59 +1,53 @@
 #include "var.h"
+#include "sys.h"
 #include "../common.h"
-
-void var_assign(var *a, var *b)
-{
-    // 'a' will be overwritten in any case
-    if (a->data) free(a->data);
-
-    a->data = malloc(b->data_size);
-    memcpy(a->data, b->data, b->data_size);
-
-    a->type = b->type;
-    a->data_size = b->data_size;
-
-    if (!b->name && b->data)
-    {
-        free(b->data);
-        b->data = NULL;
-    }
-
-    if (gl_save_names && b->name)
-    {
-        if (a->name) free(a->name);
-        a->name = malloc(strlen(b->name) + 1);
-        memcpy(a->name, b->name, strlen(b->name));
-        a->name[strlen(b->name)] = '\0';
-    }
-
-    if (!b->name && !gl_save_names)
-    {
-        a->name = NULL;
-    }
-}
 
 /*
     Synchronizes var with vars[] if necessary
     Var is NOT modified
 */
-void var_sync(var a)
+void var_sync(var *a)
 {
-    if (a.name)
+    var_t *v = var_lookup(vars, a->name);
+    if (v)
     {
-        unsigned int i = var_get_index(a.name);
+        v->type = a->type;
+        v->data_size = a->data_size;
 
-        vars[i].type = a.type;
-        vars[i].data_size = a.data_size;
+        if (v->data)
+        {
+            free(v->data);
+        }
 
-        if (vars[i].data) free(vars[i].data);
-        vars[i].data = malloc(a.data_size);
-        memcpy(vars[i].data, a.data, a.data_size);
+        v->data = malloc(a->data_size);
+        memcpy(v->data, a->data, a->data_size);
     }
 }
 
-var op_add(var *a, var *b)
+void op_copy(var *a, var *b)
 {
-    var r;
+    if (a->data)
+    {
+        free(a->data);
+
+        if (b->data)
+        {
+            a->data = malloc(b->data_size);
+            memcpy(a->data, b->data, b->data_size);
+        }
+        else
+        {
+            a->data = NULL;
+        }
+    }
+
+    a->data_size = b->data_size;
+    a->type = b->type;
+}
+
+void op_add(var *a, var *b)
+{
+    var r = {0};
 
     if (a->type == VAR_STRING && b->type == VAR_STRING)
     {
@@ -63,7 +57,9 @@ var op_add(var *a, var *b)
         memcpy(r.data + a->data_size - 1, b->data, b->data_size - 1);
 
         r.data[r.data_size++] = '\0';
-        r.type = VAR_STRING;
+
+        a->type = VAR_STRING;
+        memcpy(a->data, &r.data, r.data_size);
     }
     else if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
@@ -73,10 +69,7 @@ var op_add(var *a, var *b)
 
         xa += xb;
 
-        r.data = malloc(sizeof(double));
-        r.type = VAR_DOUBLE;
-        r.data_size = sizeof(double);
-        memcpy(r.data, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
     }
     else if (a->type == VAR_STRING && b->type == VAR_DOUBLE)
     {
@@ -92,7 +85,16 @@ var op_add(var *a, var *b)
 
         r.data_size = a->data_size + len;
         r.data[r.data_size - 1] = '\0';
-        r.type = VAR_STRING;
+
+        printf("===%s===", r.data);
+
+        // realloc
+        free(a->data);
+        a->data = malloc(r.data_size);
+
+        memcpy(a->data, &r.data, r.data_size);
+        a->type = VAR_STRING;
+        a->data_size = r.data_size;
 
         free(converted);
     }
@@ -110,7 +112,9 @@ var op_add(var *a, var *b)
 
         r.data_size = a->data_size + len;
         r.data[r.data_size - 1] = '\0';
-        r.type = VAR_STRING;
+
+        a->type = VAR_STRING;
+        memcpy(a->data, &r.data, r.data_size);
 
         free(converted);
     }
@@ -120,106 +124,65 @@ var op_add(var *a, var *b)
         larva_error();
     }
 
-
-    // if there's no name it means that operations with that var are done
-    // var itself is static, but its payload is dynamic, kill it with fire!
-    if (!a->name && a->data) { free(a->data); a->data = NULL; }
-    if (!b->name && b->data) { free(b->data); b->data = NULL; }
-
-    r.name = NULL;
-
-    return r;
+    if (r.data) free(r.data);
 }
 
-var op_subtract(var *a, var *b)
+void op_subtract(var *a, var *b)
 {
-    var r;
-
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
         double xa, xb;
         memcpy(&xa, a->data, sizeof(double));
         memcpy(&xb, b->data, sizeof(double));
 
-        xa = xa - xb;
+        xa -= xb;
 
-        r.type = VAR_DOUBLE;
-        r.data_size = sizeof(double);
-        r.data = malloc(sizeof(double));
-        memcpy(r.data, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
     }
     else
     {
         fprintf(stderr, "Operator '-' is not defined for given operands.");
         larva_error();
     }
-
-    if (!a->name && a->data) { free(a->data); a->data = NULL; }
-    if (!b->name && b->data) { free(b->data); b->data = NULL; }
-
-    return r;
 }
 
-var op_multiply(var *a, var *b)
+void op_multiply(var *a, var *b)
 {
-    var r;
     double xa, xb;
     memcpy(&xa, a->data, sizeof(double));
     memcpy(&xb, b->data, sizeof(double));
 
     xa *= xb;
 
-    r.type = VAR_DOUBLE;
-    r.data_size = sizeof(double);
-    r.data = malloc(sizeof(double));
-    memcpy(r.data, &xa, sizeof(double));
-
-    if (!a->name && a->data) { free(a->data); a->data = NULL; }
-    if (!b->name && b->data) { free(b->data); b->data = NULL; }
-
-    return r;
+    memcpy(a->data, &xa, sizeof(double));
 }
 
-var op_divide(var *a, var *b)
+void op_divide(var *a, var *b)
 {
-    var r;
     double xa, xb;
     memcpy(&xa, a->data, sizeof(double));
     memcpy(&xb, b->data, sizeof(double));
 
     xa /= xb;
 
-    r.type = VAR_DOUBLE;
-    r.data_size = sizeof(double);
-    r.data = malloc(sizeof(double));
     memcpy(a->data, &xa, sizeof(double));
-
-    if (!a->name && a->data) { free(a->data); a->data = NULL; }
-    if (!b->name && b->data) { free(b->data); b->data = NULL; }
-
-    return r;
 }
 
 /*
     Inverts the var.
-    Var is MODIFIED.
 */
-var op_invert(var a)
+void op_invert(var *a)
 {
-    var r = a;
-
-    if (a.type == VAR_DOUBLE)
+    if (a->type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data + 1, sizeof(double));
-        if (!a.name) free(a.data);
+        memcpy(&xa, a->data, sizeof(double));
 
         xa = -xa;
 
-        r.data = malloc(sizeof(double) + 1);
-        memcpy(r.data + 1, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
     }
-    else if (a.type == VAR_STRING)
+    /*else if (a.type == VAR_STRING)
     {
         // TODO: debug
         // revert a string
@@ -241,33 +204,31 @@ var op_invert(var a)
             end--;
         }
         #undef XOR_SWAP
-    }
+    }*/
     else
     {
         fprintf(stderr, "Inversion operator is not defined for the given operand.");
         larva_error();
     }
-
-    return r;
 }
 
 /*
     Increments the variable
     Returns its value back
 */
-var op_increment(var a)
+void op_increment(var *a)
 {
-    if (!a.name)
+    if (!a->name)
     {
         fprintf(stderr, "Operator '++' requires a variable.");
         larva_error();
     }
-    if (a.type == VAR_DOUBLE)
+    if (a->type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xa, a->data, sizeof(double));
         xa++;
-        memcpy(a.data, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
     }
     else
     {
@@ -276,23 +237,21 @@ var op_increment(var a)
     }
 
     var_sync(a);
-
-    return a;
 }
 
-var op_decrement(var a)
+void op_decrement(var *a)
 {
-    if (!a.name)
+    if (!a->name)
     {
         fprintf(stderr, "Operator '--' requires a variable.");
         larva_error();
     }
-    if (a.type == VAR_DOUBLE)
+    if (a->type == VAR_DOUBLE)
     {
         double xa;
-        memcpy(&xa, a.data, sizeof(double));
+        memcpy(&xa, a->data, sizeof(double));
         xa--;
-        memcpy(a.data, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
     }
     else
     {
@@ -301,33 +260,31 @@ var op_decrement(var a)
     }
 
     var_sync(a);
-
-    return a;
 }
 
-BYTE var_is_more(var a, var b)
+BYTE var_is_more(var *a, var *b)
 {
-    return (*a.data) > (*b.data);
+    return (*a->data) > (*b->data);
 }
 
-BYTE var_is_less(var a, var b)
+BYTE var_is_less(var *a, var *b)
 {
-    return (*a.data) < (*b.data);
+    return (*a->data) < (*b->data);
 }
 
-BYTE var_is_more_equal(var a, var b)
+BYTE var_is_more_equal(var *a, var *b)
 {
-    return (*a.data) >= (*b.data);
+    return (*a->data) >= (*b->data);
 }
 
-BYTE var_is_less_equal(var a, var b)
+BYTE var_is_less_equal(var *a, var *b)
 {
-    return (*a.data) <= (*b.data);
+    return (*a->data) <= (*b->data);
 }
 
-var var_array_element(var a, unsigned int i)
+/*var var_array_element(var a, unsigned int i)
 {
     // TODO
     a = var_as_double(42);
     return a;
-}
+}*/

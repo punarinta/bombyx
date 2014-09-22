@@ -1,115 +1,206 @@
 #include "var.h"
 #include "../common.h"
 
-unsigned int var_init(char *name, unsigned short type, void *value)
+var_table_t *var_table_create(int size)
 {
     unsigned int i;
-
-    // no necessity to do anything
-    if (type == VAR_UNSET) return 0;
-
-    // find first empty
-    for (i = 1; i < vars_count; i++) if (vars[i].type == VAR_UNSET) goto OK;
-
-    larva_stop(ERR_NO_MEMORY);
-
-    // TODO: support proper growing
-
-  /*  if (i == vars_count)
-    {
-        // try to allocate some space
-        larva_grow(0);
-    }*/
-
-    OK:;
-
-    // save variable name
-    size_t len = strlen(name) + 1;
+    var_table_t *new_table;
     
-    vars[i].name = calloc(len, sizeof(char));
+    if (size < 1) return NULL;
 
-    if (!vars[i].name)
+    if ((new_table = malloc(sizeof(var_table_t))) == NULL)
     {
-        larva_stop(ERR_NO_MEMORY);
+        return NULL;
+    }
+    
+    if ((new_table->table = malloc(sizeof(var_t *) * size)) == NULL)
+    {
+        return NULL;
     }
 
-    strcpy(vars[i].name, name);
-    vars[i].type = VAR_STRING;
-    vars[i].data = NULL;
+    for (i = 0; i < size; i++) new_table->table[i] = NULL;
 
-    return i;
+    new_table->size = size;
+
+    return new_table;
 }
 
-BYTE var_set_by_index(unsigned int i, var *o)
+unsigned int var_hash(var_table_t *hashtable, char *str)
 {
-    if (!i || i >= vars_count || vars[i].type == VAR_UNSET) return 0;
+    unsigned int hashval = 0;
 
-    // deallocate memory of the old variable
-    if (vars[i].data) free(vars[i].data);
+    for (; *str != '\0'; str++) hashval = *str + (hashval << 5) - hashval;
 
-    vars[i].type = o->type;
-    vars[i].data_size = o->data_size;
-    if (o->data && o->data_size)
+    return hashval % hashtable->size;
+}
+
+var_t *var_lookup(var_table_t *hashtable, char *str)
+{
+    var_t *list;
+    unsigned int hashval = var_hash(hashtable, str);
+
+    for (list = hashtable->table[hashval]; list != NULL; list = list->next)
     {
-        vars[i].data = malloc(o->data_size);
-        memcpy(vars[i].data, o->data, o->data_size);
-        free(o->data);
-        o->data = NULL;
+        if (strcmp(str, list->name) == 0) return list;
     }
-    else vars[i].data = NULL;
 
-    return 1;
+    return NULL;
 }
 
-var var_as_double(double a)
+var_t *var_add(var_table_t *hashtable, char *str, BYTE type, block_t *parent)
 {
-    var v;
-    v.name = NULL;
-    v.type = VAR_DOUBLE;
-    v.data = malloc(sizeof(double));
-    memcpy(v.data, &a, sizeof(double));
-    v.data_size = sizeof(double);
+    var_t *new_list;
+    var_t *current_list;
+    unsigned int hashval = var_hash(hashtable, str);
+
+    if ((new_list = malloc(sizeof(var_t))) == NULL) return NULL;
+
+    current_list = var_lookup(hashtable, str);
+
+    /* item already exists, dont insert it again. */
+    if (current_list != NULL) return NULL;
+
+    /* Insert into list */
+    new_list->data = NULL;
+    new_list->data_size = 0;
+    new_list->name = strdup(str);
+    new_list->type = type;
+    new_list->parent = parent;
+    new_list->next = hashtable->table[hashval];
+    hashtable->table[hashval] = new_list;
+
+    return new_list;
+}
+
+int var_delete(var_table_t *hashtable, char *str)
+{
+    int i;
+    var_t *list, *prev;
+    unsigned int hashval = var_hash(hashtable, str);
+
+    /* find the string in the table keeping track of the list item
+     * that points to it
+     */
+    for (prev = NULL, list = hashtable->table[hashval];
+        list != NULL && strcmp(str, list->name);
+        prev = list,
+        list = list->next);
+    
+    /* if it wasn't found, return 1 as an error */
+    if (list == NULL) return 1;
+
+    /* otherwise, it exists. remove it from the table */
+    if (prev == NULL) hashtable->table[hashval] = list->next;
+    else prev->next = list->next; 
+    
+    if (list->name) free(list->name);
+    if (list->data) free(list->data);
+    free(list);
+
+    return 0;
+}
+
+void var_table_delete(var_table_t *hashtable)
+{
+    var_t *list, *temp;
+
+    if (hashtable == NULL) return;
+
+    for (unsigned int i = 0; i < hashtable->size; i++)
+    {
+        list = hashtable->table[i];
+        while (list != NULL)
+        {
+            temp = list;
+            list = list->next;
+            if (temp->name) free(temp->name);
+            if (temp->data) free(temp->data);
+            free(temp);
+        }
+    }
+
+    free(hashtable->table);
+    free(hashtable);
+}
+
+
+
+var *var_as_double(double a)
+{
+    var *v = malloc(sizeof(var));
+    v->name = NULL;
+    v->type = VAR_DOUBLE;
+    v->data_size = sizeof(double);
+    v->data = malloc(sizeof(double));
+    memcpy(v->data, &a, sizeof(double));
+
+    return v;
+}
+
+var *var_as_var_t(var_t *vt)
+{
+    if (!vt) return NULL;
+
+    var *v = malloc(sizeof(var));
+
+    v->data_size = vt->data_size;
+    v->type = vt->type;
+
+    if (vt->name)
+    {
+        size_t len = strlen(vt->name) + 1;
+        v->name = malloc(len);
+        memcpy(v->name, vt->name, len);
+    }
+    else v->name = NULL;
+
+    if (vt->data)
+    {
+        v->data = malloc(vt->data_size);
+        memcpy(v->data, vt->data, vt->data_size);
+    }
+    else v->data = NULL;
+
+    return v;
+}
+
+var *var_as_string(char *a)
+{
+    var *v = malloc(sizeof(var));
+    v->name = NULL;
+    v->type = VAR_STRING;
+
+    unsigned int len = strlen(a) + 1;
+    v->data = malloc(len);
+    v->data_size = len;
+    memcpy(v->data, a, len);
 
     return v;
 }
 
 void var_set_double(var *v, double a)
 {
+    if (!v) return;
+
     if (v->data) free(v->data);
 
     v->type = VAR_DOUBLE;
     v->data = malloc(sizeof(double));
-    memcpy(v->data, &a, sizeof(double));
     v->data_size = sizeof(double);
-}
-
-var var_as_string(char *a)
-{
-    var v;
-    v.name = NULL;
-    v.type = VAR_STRING;
-
-    unsigned int len = strlen(a);
-    v.data = malloc(len + 1);
-    memcpy(v.data, a, sizeof(char) * len);
-
-    v.data[len++] = '\0';
-    v.data_size = len;
-
-    return v;
+    memcpy(v->data, &a, sizeof(double));
 }
 
 void var_set_string(var *v, char *a)
 {
+    if (!v) return;
+
     if (v->data) free(v->data);
 
+    unsigned int len = strlen(a) + 1;
     v->type = VAR_STRING;
-    unsigned int len = strlen(a);
-    v->data = malloc(len + 1);
-    memcpy(v->data, a, sizeof(char) * len);
-
-    v->data[len++] = '\0';
+    v->data = malloc(len);
     v->data_size = len;
+    memcpy(v->data, a, len);
 }
 
 /*
@@ -118,97 +209,58 @@ void var_set_string(var *v, char *a)
 */
 double var_to_double(var *a)
 {
-    double d = 0;
+    double d;
 
-    if (!a->data) return 0;
+    if (!a || !a->data) return 0;
 
     if (a->type == VAR_DOUBLE) memcpy(&d, a->data, sizeof(double));
-    if (a->type == VAR_STRING) d = atof(a->data);
+    else if (a->type == VAR_STRING) d = atof(a->data);
+    else d = 0;
 
-    if (a->name) { free(a->name); a->name = NULL; }
-    if (a->data) { free(a->data); a->data = NULL; }
+    var_free(a);
 
     return d;
 }
 
-double var_extract_double(var a)
+double var_extract_double(var *a)
 {
     double d;
 
-    if (!a.data) return 0;
+    if (!a || !a->data) return 0;
 
-    if (a.type == VAR_DOUBLE) memcpy(&d, a.data, sizeof(double));
-    else if (a.type == VAR_STRING) d = atof(a.data);
+    if (a->type == VAR_DOUBLE) memcpy(&d, a->data, sizeof(double));
+    else if (a->type == VAR_STRING) d = atof(a->data);
     else d = 0;
 
     return d;
 }
 
-unsigned int var_get_index(char *name)
-{
-    for (unsigned int i = 1; i < vars_count; i++)
-    {
-        if (vars[i].type != VAR_UNSET && !strcmp(vars[i].name, name))
-        {
-            return i;
-        }
-    }
-
-    return 0;
-}
-
 /*
     Unsets the variable
 */
-void var_free(var *a)
+inline void var_free(var *a)
 {
-    if (a->name)
-    {
-        free(a->name);
-        a->name = NULL;
-    }
-    if (a->data)
-    {
-        free(a->data);
-        a->data = NULL;
-    }
-    a->data_size = 0;
-    a->type = VAR_UNSET;
+    if (!a) return;
+    if (a->name) free(a->name);
+    if (a->data) free(a->data);
+    free(a);
 }
 
-void var_delete_by_index(unsigned int index)
+void var_echo(var *a)
 {
-    if (index && index < vars_count)
+    if (!a)
     {
-        if (vars[index].name) { free(vars[index].name); vars[index].name = NULL; }
-        if (vars[index].data) { free(vars[index].data); vars[index].data = NULL; }
-        vars[index].type = VAR_UNSET;
+        fprintf(stdout, "(null)");
     }
-}
-
-void var_echo(var a)
-{
-    switch (a.type)
+    else switch (a->type)
     {
         case VAR_UNSET:
         fprintf(stdout, "UNSET");
         break;
 
         case VAR_STRING:
-        if (a.data && a.data_size) fprintf(stdout, "%s", a.data);
+        if (a->data && a->data_size) fprintf(stdout, "%s", a->data);
         else fprintf(stdout, "NULL");
-        break;
-
-        case VAR_BYTE:
-        fprintf(stdout, "%ud", a.data[0]);
-        break;
-
-        case VAR_WORD:
-        fprintf(stdout, "%ud", (unsigned) (a.data[0] + 256 * a.data[1]));
-        break;
-
-        case VAR_DWORD:
-        fprintf(stdout, "%ud", (unsigned) (a.data[0] + 256 * a.data[1] + 65536 * a.data[2] + 16777216 * a.data[3]));
         break;
 
         case VAR_DOUBLE:

@@ -23,10 +23,9 @@
 #define ERR_SYNTAX          2
 #define ERR_TOO_LONG        3
 
-var *vars;
-unsigned int vars_count;
-
+var_table_t *vars;
 block_table_t *blocks;
+unsigned int vars_count;
 unsigned int blocks_count;
 
 unsigned int gl_error;
@@ -35,7 +34,7 @@ BYTE verbose;
 BYTE gl_level;
 BYTE gl_save_names;
 unsigned int gl_block;
-BYTE run_flag[256]; // this is only for statements, not for blocks
+BYTE run_flag[256];     // this is only for statements, not for blocks
 DWORD ret_point[256];
 
 char *code;

@@ -1,5 +1,7 @@
 #include "common.h"
 #include "larva.h"
+#include "core/var.h"
+#include "core/block.h"
 #include "core/sys.h"
 
 /**
@@ -9,7 +11,7 @@ void larva_init(char *incoming_code, unsigned int len)
 {
     vars_count   = MIN_VARIABLES;
     blocks_count = MIN_BLOCKS;
-    vars   = calloc(MIN_VARIABLES, sizeof(var));
+    vars   = var_table_create(MIN_VARIABLES);
     blocks = block_table_create(MIN_BLOCKS);
 
     code_pos = 0;
@@ -54,7 +56,7 @@ void larva_init(char *incoming_code, unsigned int len)
  */
 void larva_grow(unsigned long size)
 {
-    if (!size)
+/*    if (!size)
     {
         // by default just double it
         size = MIN_VARIABLES;
@@ -63,7 +65,7 @@ void larva_grow(unsigned long size)
     vars = realloc(vars, sizeof(var) * (vars_count + size));
 
     if (!vars) larva_stop(ERR_NO_MEMORY);
-    vars_count += size;
+    vars_count += size;*/
 }
 
 int larva_digest_start()
@@ -80,8 +82,7 @@ int larva_digest_start()
     if (gl_error) return larva_stop(gl_error);
 
     // no vars need to leave to the outer world
-    var r = larva_digest();
-    var_free(&r);
+    var_free(larva_digest());
 
     return larva_stop(0);
 }
@@ -150,12 +151,12 @@ void larva_map_blocks()
 /**
  *  Processes code buffer
  */
-var larva_digest()
+var *larva_digest()
 {
-    unsigned int index;
+    var_t *token_var = NULL;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
-    var r;
+    var *r;
 
     while (code[code_pos])
     {
@@ -169,9 +170,6 @@ var larva_digest()
         size_t line_start = code_pos;
         read_token(token);
 
-        // TODO: not needed for all the keywords, move into IFs ;)
-        index = var_get_index(token);
-
         if (!strcmp(token, "var"))
         {
             re_read_var:
@@ -179,9 +177,9 @@ var larva_digest()
             read_token(token);
 
             // check what's the status of this var
-            index = var_get_index(token);
+            token_var = var_lookup(vars, token);
 
-            if (index)
+            if (token_var)
             {
                 fprintf(stderr, "Variable '%s' already exists.", token);
                 larva_error(code_pos);
@@ -190,7 +188,7 @@ var larva_digest()
             // TODO: check that token is not in the list of reserved words
 
             // should be no var -- create it
-            index = var_init(token, VAR_STRING, 0);
+            token_var = var_add(vars, token, VAR_STRING, NULL);
 
             // variable is just initialized, but not defined
             if (code[code_pos] == '\n') continue;
@@ -211,8 +209,18 @@ var larva_digest()
             }
 
             // equalize
-            var parse_result = parse();
-            var_set_by_index(index, &parse_result);
+            var *parse_result = parse();
+
+            if (!parse_result)
+            {
+                fprintf(stderr, "Operator '=' expects an value to follow");
+                larva_error(code_pos);
+            }
+
+            if (parse_result->name) free(parse_result->name);
+            parse_result->name = strdup(token);
+            var_sync(parse_result);
+            var_free(parse_result);
 
             // we have one more var to init
             if (code[code_pos] == ',')
@@ -226,16 +234,16 @@ var larva_digest()
             if (gl_level == 0)
             {
                 if (verbose) fprintf(stdout, "Returning from zero level. Bye-bye!\n");
-                return vars[0];
+                return NULL;
             }
 
             r = parse();
 
             // this var CANNOT have a name
-            if (r.name)
+            if (r->name)
             {
-                free(r.name);
-                r.name = NULL;
+                free(r->name);
+                r->name = NULL;
             }
 
             if (verbose) fprintf(stdout, "Returning from level %u...\n", gl_level);
@@ -262,11 +270,11 @@ var larva_digest()
             memcpy(expr, &code[expr_start], code_pos - expr_start + 1);
             expr[code_pos - expr_start] = '\0';
 
-            var x = parse_expression(expr);
+            var *x = parse_expression(expr);
             free(expr);
 
             // compare and unset 'x'
-            if (!var_to_double(&x))
+            if (!var_to_double(x))
             {
                 run_flag[gl_level + 1] = 2;  // RUN_ELSE
                 skip_block();
@@ -290,7 +298,7 @@ var larva_digest()
             // if you met a bracket and 'run_flag' on this level is zero, then this is a function end
             if (!run_flag[gl_level])
             {
-                return vars[0];
+                return NULL;
             }
             else gl_level--;
         }
@@ -308,12 +316,12 @@ var larva_digest()
         {
             code_pos = line_start;
             // result is not fed anywhere, free it
-            var parse_result = parse();
-            var_free(&parse_result);
+            var *parse_result = parse();
+            //var_free(parse_result);
         }
     }
 
-    return vars[0];
+    return NULL;
 }
 
 void read_token(char *token)
@@ -382,13 +390,10 @@ int larva_stop(int ret_code)
         fputs("\n======================================\n", stdout);
     }
 
-    unsigned int i = vars_count;
-    while (--i) var_delete_by_index(i);
-
+    var_table_delete(vars);
     block_table_delete(blocks);
 
-    free(vars);
-    free(code);
+    if (code) free(code);
 
 #ifndef __APPLE__
     muntrace();
@@ -402,18 +407,26 @@ void larva_poo()
     unsigned int i;
     char types[][20] = {"UNSET", "BYTE", "WORD", "DWORD", "QWORD", "FLOAT", "DOUBLE", "STRING", "BLOCK", "ARRAY"};
 
-    for (i = 1; i < vars_count; i++) if (vars[i].type) 
+    var_t *v_list;
+    block_t *b_list;
+
+    for (i = 0; i < vars->size; i++)
     {
-        fprintf(stdout, "\n'%s' [%s of size %u] = ", vars[i].name, types[vars[i].type], vars[i].data_size);
-        var_echo(vars[i]);
+        for (v_list = vars->table[i]; v_list != NULL; v_list = v_list->next)
+        {
+            fprintf(stdout, "\n'%s' [%s of size %u] = ", v_list->name, types[v_list->type], v_list->data_size);
+
+            var *v = var_as_var_t(v_list);
+            var_echo(v);
+            var_free(v);
+        }
     }
 
-    block_t *list;
     for (i = 0; i < blocks->size; i++)
     {
-        for (list = blocks->table[i]; list != NULL; list = list->next)
+        for (b_list = blocks->table[i]; b_list != NULL; b_list = b_list->next)
         {
-            if (list->pos) fprintf(stdout, "\nBlock '%s' at pos %u", list->name, list->pos);
+            if (b_list->pos) fprintf(stdout, "\nBlock '%s' at pos %u", b_list->name, b_list->pos);
         }
     }
 }

@@ -56,3 +56,9 @@ double get_microtime()
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000000L + tv.tv_usec;
 }
+
+void *bytecopy(void *const dest, void const *const src, size_t bytes)
+{
+    while (bytes-- > (size_t)0) ((unsigned char *)dest)[bytes] = ((unsigned char const *)src)[bytes];
+    return dest;
+}

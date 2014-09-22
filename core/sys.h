@@ -3,5 +3,6 @@
 
 char *strdup(const char *);
 char *trim(char *);
+void *bytecopy(void * const, void const * const, size_t);
 
 #endif

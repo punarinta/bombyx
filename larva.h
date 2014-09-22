@@ -6,7 +6,7 @@
 void larva_init();
 int larva_digest_start();
 void larva_map_blocks();
-var larva_digest();
+var *larva_digest();
 void larva_grow(unsigned long);
 void larva_error();
 void larva_poo();
