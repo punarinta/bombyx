@@ -344,10 +344,9 @@ var *parser_read_builtin(parser_data *pd)
 			// start handling the specific built-in functions
 			if (strcmp(token, "swap") == 0)
             {
-            /*    gl_save_names = 1;
+            /*
 				v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
-				gl_save_names = 0;
 
 				unsigned int i0 = var_get_index(v0.name),
 				             i1 = var_get_index(v1.name);
@@ -369,7 +368,7 @@ var *parser_read_builtin(parser_data *pd)
             {
 				v0 = parser_read_boolean_or(pd);
 				var_echo(v0);
-				var_free(v0);
+				// returns its argument (still doubtful)
 			}
 			else if (strcmp(token, "microtime") == 0)
             {
@@ -400,11 +399,10 @@ var *parser_read_builtin(parser_data *pd)
 						// step into
 						run_flag[gl_level] = 0;
 						code_pos = this_block->pos;
-						var *digest = larva_digest();
+						v0 = larva_digest();
 
 						// get back
 						code_pos = ret_point[--gl_level];
-						v0 = digest;
 					}
 				}
 			}
@@ -514,9 +512,8 @@ var *parser_read_paren(parser_data *pd)
 
 var *parser_read_unary(parser_data *pd)
 {
-	char c;
 	var *v0;
-	c = parser_peek(pd);
+	char c = parser_peek(pd);
 	
 	if (c == '!')
     {
@@ -537,9 +534,7 @@ var *parser_read_unary(parser_data *pd)
     	if (parser_peek(pd) == '-')
     	{
 			parser_eat(pd);
-			gl_save_names = 1;
 			v0 = parser_read_term(pd);
-			gl_save_names = 0;
 			op_decrement(v0);
 
             // sync done, free the name
@@ -561,9 +556,7 @@ var *parser_read_unary(parser_data *pd)
     	if (parser_peek(pd) == '+')
     	{
 			parser_eat(pd);
-			gl_save_names = 1;
 			v0 = parser_read_term(pd);
-			gl_save_names = 0;
 			op_increment(v0);
 
 			// sync done, free the name
@@ -686,12 +679,13 @@ var *parser_read_term(parser_data *pd)
 
 var *parser_read_expr(parser_data *pd)
 {
-	var *v0 = NULL, *term = NULL;
+	var *v0 = NULL;
 	char c = parser_peek(pd);
 
 	// handle unary minus
 	if (c == '+' || c == '-')
     {
+        var *term;
         v0 = var_as_double(0.0);
 		parser_eat(pd);
 		parser_eat_whitespace(pd);
@@ -710,6 +704,8 @@ var *parser_read_expr(parser_data *pd)
 			term = parser_read_term(pd);
 			op_copy(v0, term);
 		}
+
+		var_free(term);
 	}
 	else
 	{
@@ -723,6 +719,8 @@ var *parser_read_expr(parser_data *pd)
 	c = parser_peek(pd);
 	while (c == '+' || c == '-')
     {
+        var *term;
+
 		// advance the input
 		parser_eat(pd);
 
@@ -742,14 +740,14 @@ var *parser_read_expr(parser_data *pd)
 			op_subtract(v0, term);
 		}
 
+		var_free(term);
+
 		// eat whitespace
 		parser_eat_whitespace(pd);
 
 		// update the character being tested in the while loop
 		c = parser_peek(pd);
 	}
-
-	var_free(term);
 
 	// return expression result
 	return v0;
@@ -831,9 +829,6 @@ var *parser_read_boolean_equality(parser_data *pd)
 	// eat whitespace
 	parser_eat_whitespace(pd);
 
-	// force to memorize names
-	gl_save_names = 1;
-
 	// read the first value
 	v0 = parser_read_boolean_comparison(pd);
 
@@ -900,8 +895,6 @@ var *parser_read_boolean_equality(parser_data *pd)
 		{
 			parser_error(pd, "Unknown operation.");
 		}
-
-		gl_save_names = 0;
 
 		var_free(v1);
 

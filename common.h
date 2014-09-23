@@ -32,7 +32,6 @@ unsigned int gl_error;
 jmp_buf error_exit;
 BYTE verbose;
 BYTE gl_level;
-BYTE gl_save_names;
 unsigned int gl_block;
 BYTE run_flag[256];     // this is only for statements, not for blocks
 DWORD ret_point[256];

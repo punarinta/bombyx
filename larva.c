@@ -72,7 +72,6 @@ int larva_digest_start()
 {
     gl_error = 0;
     gl_level = 0;
-    gl_save_names = 0;
     run_flag[0] = 0;
 
     larva_map_blocks();
@@ -316,8 +315,7 @@ var *larva_digest()
         {
             code_pos = line_start;
             // result is not fed anywhere, free it
-            var *parse_result = parse();
-            //var_free(parse_result);
+            var_free(parse());
         }
     }
 
