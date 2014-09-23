@@ -344,25 +344,30 @@ var *parser_read_builtin(parser_data *pd)
 			// start handling the specific built-in functions
 			if (strcmp(token, "swap") == 0)
             {
-            /*
-				v0 = parser_read_argument(pd);
+            	v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
 
-				unsigned int i0 = var_get_index(v0.name),
-				             i1 = var_get_index(v1.name);
+				var_t *i0 = var_lookup(vars, v0->name),
+				      *i1 = var_lookup(vars, v1->name);
 
-                // save names
-                char *n0 = v0.name, *n1 = v1.name;
+                // exchange data, data_size, type
+                BYTE temp_type = i0->type;
+                i0->type = i1->type;
+                i1->type = temp_type;
 
-				var temp = vars[i0];
-				vars[i0] = vars[i1];
-				vars[i1] = temp;
+                char *temp_data = malloc(i0->data_size);
+                memcpy(temp_data, i0->data, i0->data_size);
+                if (i0->data) free(i0->data);
+                i0->data = malloc(i1->data_size);
+                memcpy(i0->data, i1->data, i1->data_size);
+                if (i1->data) free(i1->data);
+                i1->data = malloc(i0->data_size);
+                memcpy(i1->data, temp_data, i0->data_size);
+                free(temp_data);
 
-				// restore names
-				vars[i0].name = n0;
-				vars[i1].name = n1;
-
-				var_set_double(&v0, 1);*/
+                unsigned int temp_data_size = i0->data_size;
+                i0->data_size = i1->data_size;
+                i1->data_size = temp_data_size;
 			}
 			else if (strcmp(token, "print") == 0)
             {
