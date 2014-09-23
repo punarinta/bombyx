@@ -49,25 +49,7 @@ void larva_init(char *incoming_code, unsigned int len)
 
     started_at = get_microtime();
 
-    larva_map_blocks();
-}
-
-
-/**
- *  Allocates more space for variables
- */
-void larva_grow(unsigned long size)
-{
-/*    if (!size)
-    {
-        // by default just double it
-        size = MIN_VARIABLES;
-    }
-
-    vars = realloc(vars, sizeof(var) * (vars_count + size));
-
-    if (!vars) larva_stop(ERR_NO_MEMORY);
-    vars_count += size;*/
+    larva_chew();
 }
 
 int larva_digest_start()
@@ -86,12 +68,11 @@ int larva_digest_start()
     return larva_stop(0);
 }
 
-void larva_map_blocks()
+void larva_chew()
 {
-    // TODO: make this shit dynamic
-    char token[PARSER_MAX_TOKEN_SIZE];
-    block_t *parent_block = NULL;
     int not_allowed = 0;
+    block_t *parent_block = NULL;
+    char token[PARSER_MAX_TOKEN_SIZE];
 
     while (code[code_pos])
     {
@@ -131,6 +112,35 @@ void larva_map_blocks()
             while (code[code_pos]) if (code[code_pos++] == '{') break;
 
             parent_block = block_add(blocks, token, code_pos, parent_block);
+        }
+        else if (!strcmp(token, "use"))
+        {
+            read_token(token);
+
+            void *lib_handle;
+            double (*fn)(int *);
+            int x;
+            char *error;
+
+            lib_handle = dlopen(token, RTLD_LAZY);
+
+            if (!lib_handle)
+            {
+                fprintf(stderr, "%s\n", dlerror());
+                larva_error();
+            }
+
+            fn = dlsym(lib_handle, "dynamic_test");
+            if ((error = dlerror()) != NULL)
+            {
+                fprintf(stderr, "%s\n", error);
+                larva_error();
+            }
+
+            (*fn)(&x);
+            printf("val = %d\n", x);
+
+            dlclose(lib_handle);
         }
         else if (!strcmp(token, "if") || !strcmp(token, "else") )
         {

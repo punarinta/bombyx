@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <setjmp.h>
+#include <dlfcn.h>
 #include "core/var.h"
 #include "core/block.h"
 #include "core/expression.h"
@@ -13,11 +14,11 @@
     #include <mcheck.h>
 #endif
 
-#define MIN_VARIABLES       100
+#define MIN_VARIABLES       1000
 #define MAX_VARIABLES       100000
 
 #define MIN_BLOCKS       	1000
-#define MAX_BLOCKS       	1000000
+#define MAX_BLOCKS       	100000
 
 #define ERR_NO_MEMORY       1
 #define ERR_SYNTAX          2

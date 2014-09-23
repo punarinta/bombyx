@@ -75,7 +75,7 @@ void op_add(var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_DOUBLE)
     {
         double xb;
-        char *converted = calloc(256, sizeof(char));        // the length is doubtful
+        char *converted = calloc(256, sizeof(char));
         memcpy(&xb, b->data, sizeof(double));
         sprintf(converted, "%.6g", xb);
         unsigned int len = strlen(converted);
@@ -99,7 +99,7 @@ void op_add(var *a, var *b)
     else if (a->type == VAR_DOUBLE && b->type == VAR_STRING)
     {
         double xa;
-        char *converted = calloc(256, sizeof(char));        // the length is doubtful
+        char *converted = calloc(256, sizeof(char));
         memcpy(&xa, a->data, sizeof(double));
         sprintf(converted, "%.6g", xa);
         unsigned int len = strlen(converted);

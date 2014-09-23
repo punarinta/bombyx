@@ -46,3 +46,4 @@ myBlock.internalBlock(-15)
 # block's parameters and internal variables can be also accessed through the block name
 print(myBlock.internalBlock.z)
 
+core.files::open('readme.txt')
