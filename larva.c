@@ -11,8 +11,8 @@ void larva_init(char *incoming_code, unsigned int len)
 {
     vars_count   = MIN_VARIABLES;
     blocks_count = MIN_BLOCKS;
-    vars   = var_table_create(MIN_VARIABLES);
-    blocks = block_table_create(MIN_BLOCKS);
+    vars         = var_table_create(MIN_VARIABLES);
+    blocks       = block_table_create(MIN_BLOCKS);
 
     code_pos = 0;
     code_length = 0;
@@ -48,6 +48,8 @@ void larva_init(char *incoming_code, unsigned int len)
     }
 
     started_at = get_microtime();
+
+    larva_map_blocks();
 }
 
 
@@ -73,8 +75,6 @@ int larva_digest_start()
     gl_error = 0;
     gl_level = 0;
     run_flag[0] = 0;
-
-    larva_map_blocks();
 
     setjmp(error_exit);
 
