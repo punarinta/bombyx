@@ -1,4 +1,5 @@
 #include "var.h"
+#include "sys.h"
 #include "../common.h"
 
 var_table_t *var_table_create(int size)
