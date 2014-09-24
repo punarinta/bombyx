@@ -14,6 +14,9 @@ void larva_init(char *incoming_code, unsigned int len)
     vars         = var_table_create(MIN_VARIABLES);
     blocks       = block_table_create(MIN_BLOCKS);
 
+    gl_level = 0;
+    run_flag[0] = 0;
+
     code_pos = 0;
     code_length = 0;
     code = malloc(len * sizeof(char));
@@ -52,22 +55,6 @@ void larva_init(char *incoming_code, unsigned int len)
     larva_chew();
 }
 
-int larva_digest_start()
-{
-    gl_error = 0;
-    gl_level = 0;
-    run_flag[0] = 0;
-
-    setjmp(error_exit);
-
-    if (gl_error) return larva_stop(gl_error);
-
-    // no vars need to leave to the outer world
-    var_free(larva_digest());
-
-    return larva_stop(0);
-}
-
 void larva_chew()
 {
     int not_allowed = 0;
@@ -78,11 +65,11 @@ void larva_chew()
     {
         if (isspace(code[code_pos])) { code_pos++; continue; }
 
-        read_token(token);
+        larva_read_token(token);
 
         if (!strcmp(token, "block"))
         {
-            read_token(token);
+            larva_read_token(token);
 
             if (not_allowed)
             {
@@ -115,7 +102,7 @@ void larva_chew()
         }
         else if (!strcmp(token, "use"))
         {
-            read_token(token);
+            larva_read_token(token);
 
             void *lib_handle;
             double (*fn)(int *);
@@ -177,13 +164,13 @@ var *larva_digest()
         }
 
         size_t line_start = code_pos;
-        read_token(token);
+        larva_read_token(token);
 
         if (!strcmp(token, "var"))
         {
             re_read_var:
 
-            read_token(token);
+            larva_read_token(token);
 
             // check what's the status of this var
             token_var = var_lookup(vars, token);
@@ -203,7 +190,7 @@ var *larva_digest()
             if (code[code_pos] == '\n') continue;
             
             // expect operator '='
-            read_token(oper);
+            larva_read_token(oper);
 
             if (!strlen(oper)) continue;
 
@@ -259,7 +246,7 @@ var *larva_digest()
 
             return r;
         }
-        else if (!strcmp(token, "block")) skip_block();
+        else if (!strcmp(token, "block")) larva_skip_block();
         else if (!strcmp(token, "if"))
         {
             unsigned long expr_start = code_pos, level = 0;
@@ -286,7 +273,7 @@ var *larva_digest()
             if (!var_to_double(x))
             {
                 run_flag[gl_level + 1] = 2;  // RUN_ELSE
-                skip_block();
+                larva_skip_block();
             }
             else
             {
@@ -313,7 +300,7 @@ var *larva_digest()
         }
         else if (!strcmp(token, "else"))
         {
-            if (run_flag[gl_level + 1] == 1) skip_block();
+            if (run_flag[gl_level + 1] == 1) larva_skip_block();
             else
             {
                 // find where else-block begins
@@ -332,7 +319,7 @@ var *larva_digest()
     return NULL;
 }
 
-void read_token(char *token)
+void larva_read_token(char *token)
 {
     size_t start = code_pos;
 
@@ -349,7 +336,7 @@ void read_token(char *token)
     trim(token);
 }
 
-void skip_block()
+void larva_skip_block()
 {
     BYTE level = 0;
     while (code[code_pos])
@@ -389,7 +376,7 @@ void larva_error()
 /**
  *  Call to stop execution
  */
-int larva_stop(int ret_code)
+void larva_stop()
 {
     if (verbose)
     {
@@ -406,8 +393,6 @@ int larva_stop(int ret_code)
 #ifndef __APPLE__
     muntrace();
 #endif
-
-    return ret_code;
 }
 
 void larva_poo()

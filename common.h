@@ -42,8 +42,4 @@ unsigned int code_pos;
 unsigned int code_length;
 double started_at;
 
-int larva_stop(int);
-void larva_error();
-double get_microtime();
-
 #endif

@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
-
-void larva_init(char *, unsigned int);
-int larva_digest_start();
+#include "larva.h"
 
 int main(int argc, char *argv[])
 {
-    char *source = NULL;
-    size_t newLen = 0;
     verbose = 0;
+    gl_error = 0;
+    char *source;
+    size_t newLen = 0;
 
     if (argc < 2)
     {
@@ -17,7 +16,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    for (int i = 2; i < argc; i++)
+    for (int i = 2; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-v"))
         {
@@ -62,11 +61,26 @@ int main(int argc, char *argv[])
                 source[++newLen] = '\0';
             }
         }
+        else
+        {
+            fputs("File reading error.\n", stderr);
+            return -1;
+        }
 
         fclose(fp);
 
-        larva_init(source, newLen);
-        larva_digest_start();
+        setjmp(error_exit);
+
+        if (gl_error)
+        {
+            larva_stop();
+        }
+        else
+        {
+            larva_init(source, newLen);
+            var_free(larva_digest());
+            larva_stop();
+        }
     }
 
     free(source);
@@ -75,5 +89,5 @@ int main(int argc, char *argv[])
     muntrace();
 #endif
 
-    return 0;
+    return gl_error;
 }

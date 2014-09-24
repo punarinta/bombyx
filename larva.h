@@ -4,13 +4,12 @@
 #include "core/var.h"
 
 void larva_init();
-int larva_digest_start();
 void larva_chew();
 var *larva_digest();
 void larva_error();
 void larva_poo();
-
-void read_token(char *);
-void skip_block();
+void larva_stop();
+void larva_skip_block();
+void larva_read_token(char *);
 
 #endif

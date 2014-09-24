@@ -1,6 +1,7 @@
 #include "expression.h"
 #include "block.h"
 #include "sys.h"
+#include "../larva.h"
 
 char temp_error[256];
 
