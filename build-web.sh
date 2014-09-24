@@ -5,5 +5,5 @@ core/*.c \
 larva.c \
 web.cpp \
 \
--lfcgi++ -lfcgi -lmysqlclient_r -std=c++11 \
--O2 -o bombyx-web -lpthread
+-std=c++11 \
+-O0 -o bombyx-web -lpthread -ldl -lfcgi++ -lfcgi -lmysqlclient_r
