@@ -16,17 +16,16 @@ var *parse()
     // find expression end, note that newline does don't count if it's inside a string
     while (code[code_pos])
     {
-        if (code[code_pos] == '(') br_level++;
-        if (code[code_pos] == ')') br_level--;
-        if (code[code_pos] == '\'') quote_opened = !quote_opened;
-        if (code[code_pos] == '\n' && !quote_opened) break;
-
-        if (code[code_pos] == ',' && !br_level) break;
-        code_pos++;
+        if (code[code_pos] == '(') ++br_level;
+        else if (code[code_pos] == ')') --br_level;
+        else if (code[code_pos] == '\'') quote_opened = !quote_opened;
+        else if (code[code_pos] == '\n' && !quote_opened) break;
+        else if (code[code_pos] == ',' && !br_level) break;
+        ++code_pos;
     }
 
     expression_size = code_pos - expression_start;
-    expression = malloc(sizeof(char) * (expression_size + 1));
+    expression = malloc(expression_size + 1);
     memcpy(expression, code + expression_start, expression_size);
     expression[expression_size] = '\0';
     trim(expression);
@@ -59,7 +58,7 @@ var *parse_expression(const char *expr)
 
 var *parse_expression_with_callbacks(const char *expr, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data)
 {
-	if (!strlen(expr)) return NULL;
+	if (!expr[0]) return NULL;
 
 	var *val;
 	parser_data pd;
@@ -279,7 +278,6 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 
 	while (parser_peek(pd) != ')')
     {
-
 		// check that we haven't read too many arguments
 		if (*num_args >= PARSER_MAX_ARGUMENT_COUNT) parser_error(pd, "Exceeded maximum argument count for function call, increase PARSER_MAX_ARGUMENT_COUNT and recompile!");
 
@@ -476,7 +474,7 @@ var *parser_read_builtin(parser_data *pd)
 
 var *parser_read_paren(parser_data *pd)
 {
-	var *val;
+	var *v0;
 
 	// check if the expression has a parenthesis
 	if (parser_peek(pd) == '(')
@@ -490,7 +488,7 @@ var *parser_read_paren(parser_data *pd)
 		// if there is a parenthesis, read it
 		// and then read an expression, then
 		// match the closing brace
-		val = parser_read_boolean_or(pd);
+		v0 = parser_read_boolean_or(pd);
 
 		// consume remaining whitespace
 		parser_eat_whitespace(pd);
@@ -502,13 +500,13 @@ var *parser_read_paren(parser_data *pd)
 	else
 	{
 		// otherwise just read a literal value
-		val = parser_read_builtin(pd);
+		v0 = parser_read_builtin(pd);
 	}
 	// eat following whitespace
 	parser_eat_whitespace(pd);
 
 	// return the result
-	return val;
+	return v0;
 }
 
 var *parser_read_unary(parser_data *pd)
@@ -519,16 +517,12 @@ var *parser_read_unary(parser_data *pd)
 	if (c == '!')
     {
 		// if the first character is a '!', perform a boolean not operation
-#if !defined(PARSER_EXCLUDE_BOOLEAN_OPS)
 		parser_eat(pd);
 		parser_eat_whitespace(pd);
 		v0 = parser_read_paren(pd);
 
 		// extract and unset v0
 		v0 = (fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? var_as_double(0.0) : var_as_double(1.0);
-#else
-		parser_error(pd, "Expected '+' or '-' for unary expression, got '!'");
-#endif
 	}
 	else if (c == '-')
     {
@@ -680,7 +674,7 @@ var *parser_read_term(parser_data *pd)
 
 var *parser_read_expr(parser_data *pd)
 {
-	var *v0 = NULL;
+	var *v0;
 	char c = parser_peek(pd);
 
 	// handle unary minus
@@ -756,7 +750,6 @@ var *parser_read_expr(parser_data *pd)
 
 var *parser_read_boolean_comparison(parser_data *pd)
 {
-	char c, oper[] = { '\0', '\0', '\0' };
 	BYTE val;
 
 	// eat whitespace
@@ -774,11 +767,12 @@ var *parser_read_boolean_comparison(parser_data *pd)
 	// operations would have unintended results: 2.0 < 3.0 < 1.5 would
 	// evaluate to true, since (2.0 < 3.0) == 1.0, which is less than 1.5, even
 	// though the 3.0 < 1.5 does not hold.
-	c = parser_peek(pd);
+	char c = parser_peek(pd);
 
 	if (c == '>' || c == '<')
     {
         var *v1;
+        char oper[] = { '\0', '\0', '\0' };
 
 		// read the operation
 		oper[0] = parser_eat(pd);
@@ -826,7 +820,6 @@ var *parser_read_boolean_comparison(parser_data *pd)
 
 var *parser_read_boolean_equality(parser_data *pd)
 {
-	char c, oper[] = { '\0', '\0', '\0' };
 	var *v0, *v1;
 
 	// eat whitespace
@@ -839,9 +832,12 @@ var *parser_read_boolean_equality(parser_data *pd)
 	parser_eat_whitespace(pd);
 
 	// try to perform boolean equality operator
-	c = parser_peek(pd);
+	char c = parser_peek(pd);
+
 	if (c == '=' || c == '!')
     {
+        char oper[] = { '\0', '\0', '\0' };
+
 		if (c == '!')
         {
 			// try to match '!=' without advancing input to not clobber unary not
@@ -914,7 +910,7 @@ var *parser_read_boolean_and(parser_data *pd)
 	// as the first operand of the expression
 	var *v0 = parser_read_boolean_equality(pd);
 
-	// consume any whitespace befor the operator
+	// consume any whitespace before the operator
 	parser_eat_whitespace(pd);
 
 	// grab the next character and check if it matches an 'and'

@@ -23,14 +23,14 @@ void larva_init(char *incoming_code, unsigned int len)
 
     // TODO: include all the necessary files
 
-    for (unsigned int i = 0; i < len; i++)
+    for (unsigned int i = 0; i < len; ++i)
     {
         if (i < len - 1 && incoming_code[i] == '\\')
         {
             if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
             else if (incoming_code[i + 1] == 't') code[code_length] = '\t';
             else code_length--;
-            i++;
+            ++i;
         }
         else if (incoming_code[i] == '#')
         {
@@ -47,7 +47,7 @@ void larva_init(char *incoming_code, unsigned int len)
             code[code_length] = incoming_code[i];
         }
 
-        code_length++;
+        ++code_length;
     }
 
     started_at = get_microtime();
@@ -63,7 +63,7 @@ void larva_chew()
 
     while (code[code_pos])
     {
-        if (isspace(code[code_pos])) { code_pos++; continue; }
+        if (isspace(code[code_pos])) { ++code_pos; continue; }
 
         larva_read_token(token);
 
@@ -131,12 +131,12 @@ void larva_chew()
         }
         else if (!strcmp(token, "if") || !strcmp(token, "else") )
         {
-            not_allowed++;
+            ++not_allowed;
             while (code[code_pos]) if (code[code_pos++] == '{') break;
         }
         else if (!strcmp(token, "}"))
         {
-            if (not_allowed) not_allowed--;
+            if (not_allowed) --not_allowed;
             else parent_block = parent_block->parent;
         }
     }
@@ -149,17 +149,17 @@ void larva_chew()
  */
 var *larva_digest()
 {
-    var_t *token_var = NULL;
+    var *r;
+    var_t *token_var;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
-    var *r;
 
     while (code[code_pos])
     {
         // find first significant character
         if (isspace(code[code_pos]))
         {
-            code_pos++;
+            ++code_pos;
             continue;
         }
 
@@ -233,7 +233,7 @@ var *larva_digest()
             // we have one more var to init
             if (code[code_pos] == ',')
             {
-                code_pos++;
+                ++code_pos;
                 goto re_read_var;
             }
         }
@@ -265,16 +265,16 @@ var *larva_digest()
             // find expression
             while (code[code_pos])
             {
-                if (code[code_pos] == '(') level++;
+                if (code[code_pos] == '(') ++level;
                 if (code[code_pos] == ')')
                 {
-                    level--;
-                    if (level < 1) { code_pos++; break; }
+                    --level;
+                    if (level < 1) { ++code_pos; break; }
                 }
-                code_pos++;
+                ++code_pos;
             }
 
-            char *expr = calloc(code_pos - expr_start + 1, sizeof(char));
+            char *expr = malloc(code_pos - expr_start + 1);
             memcpy(expr, &code[expr_start], code_pos - expr_start + 1);
             expr[code_pos - expr_start] = '\0';
 
@@ -308,7 +308,7 @@ var *larva_digest()
             {
                 return NULL;
             }
-            else gl_level--;
+            else --gl_level;
         }
         else if (!strcmp(token, "else"))
         {
@@ -339,7 +339,7 @@ void larva_read_token(char *token)
     while (code[code_pos] != '\0')
     {
         token[code_pos - start] = code[code_pos];
-        code_pos++;
+        ++code_pos;
         // either it's a function call or just a command
         if (code[code_pos] == '(' || code[code_pos] == ',' || isspace(code[code_pos])) break;
     }
@@ -353,13 +353,13 @@ void larva_skip_block()
     BYTE level = 0;
     while (code[code_pos])
     {
-        if (code[code_pos] == '{') level++;
-        if (code[code_pos] == '}') if (--level < 1)
+        if (code[code_pos] == '{') ++level;
+        else if (code[code_pos] == '}') if (--level < 1)
         {
-            code_pos++;
+            ++code_pos;
             break;
         }
-        code_pos++;
+        ++code_pos;
     }
 }
 
@@ -368,11 +368,11 @@ void larva_error()
     int line = 1, sym = 0; size_t i = 0;
     while (code[i] != '\0')
     {
-        i++;
-        sym++;
+        ++i;
+        ++sym;
         if (code[i] == 10 || code[i] == 13)
         {
-            line++;
+            ++line;
             sym = 0;
         }
 
@@ -415,7 +415,7 @@ void larva_poo()
     var_t *v_list;
     block_t *b_list;
 
-    for (i = 0; i < vars->size; i++)
+    for (i = 0; i < vars->size; ++i)
     {
         for (v_list = vars->table[i]; v_list != NULL; v_list = v_list->next)
         {
@@ -427,7 +427,7 @@ void larva_poo()
         }
     }
 
-    for (i = 0; i < blocks->size; i++)
+    for (i = 0; i < blocks->size; ++i)
     {
         for (b_list = blocks->table[i]; b_list != NULL; b_list = b_list->next)
         {
