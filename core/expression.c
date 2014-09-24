@@ -369,6 +369,8 @@ var *parser_read_builtin(parser_data *pd)
                 unsigned int temp_data_size = i0->data_size;
                 i0->data_size = i1->data_size;
                 i1->data_size = temp_data_size;
+
+                var_free(v1);
 			}
 			else if (strcmp(token, "print") == 0)
             {
@@ -385,7 +387,10 @@ var *parser_read_builtin(parser_data *pd)
 				parser_read_argument_list(pd, &num_args, args);
 				if (pd->function_cb && pd->function_cb(pd->user_data, token, num_args, args, v1))
                 {
+                    // TODO: below is illegal
 					v0 = v1;
+
+					var_free(v1);
 				}
 				else
 				{
@@ -437,31 +442,23 @@ var *parser_read_builtin(parser_data *pd)
 		else
 		{
 			// no opening bracket, indicates a variable lookup
-			if (pd->variable_cb != NULL && pd->variable_cb(pd->user_data, token, v1))
+			var_t *vt = var_lookup(vars, token);
+
+            if (vt)
             {
-                // TODO: bug!
-				v0 = v1;
-			}
-			else
-			{
-			    var_t *vt = var_lookup(vars, token);
-                if (vt)
+                // NB: no sync, just copy vars[i] to a temporary var.
+              	if (!vt->type)
               	{
-              		// NB: no sync!
-              		// You just copy vars[i] to a temporary var.
-              		if (!vt->type)
-              		{
-              			sprintf(temp_error, "Variable '%s' was not set.", token);
-                  		parser_error(pd, temp_error);
-              		}
-              		v0 = var_as_var_t(vt);
-               	}
-               	else
-               	{
-               		sprintf(temp_error, "Unknown variable '%s'.", token);
-                  	parser_error(pd, temp_error);
-               	}
-			}
+              	    sprintf(temp_error, "Variable '%s' was not set.", token);
+                    parser_error(pd, temp_error);
+              	}
+              	v0 = var_as_var_t(vt);
+            }
+            else
+            {
+                sprintf(temp_error, "Unknown variable '%s'.", token);
+                parser_error(pd, temp_error);
+            }
 		}
 	}
 	else
@@ -472,8 +469,6 @@ var *parser_read_builtin(parser_data *pd)
 
 	// consume whitespace
 	parser_eat_whitespace(pd);
-
-	var_free(v1);
 
 	// return the value
 	return v0;
@@ -881,12 +876,11 @@ var *parser_read_boolean_equality(parser_data *pd)
 		// perform the boolean operations
 		if (strcmp(oper, "==") == 0)
         {
-            // TODO: compare strings
-			var_set_double(v0, (fabs(var_extract_double(v0) - var_extract_double(v1)) < PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+			var_set_double(v0, var_is_equal(v0, v1));
 		}
 		else if (strcmp(oper, "!=") == 0)
         {
-			var_set_double(v0, (fabs(var_extract_double(v0) - var_extract_double(v1)) > PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+			var_set_double(v0, !var_is_equal(v0, v1));
 		}
 		else if (strcmp(oper, "=") == 0)
         {

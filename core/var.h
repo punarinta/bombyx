@@ -68,6 +68,7 @@ void op_decrement(var *);
 double var_to_double(var *);
 double var_extract_double(var *);
 
+BYTE var_is_equal(var *, var *);
 BYTE var_is_more(var *, var *);
 BYTE var_is_less(var *, var *);
 BYTE var_is_more_equal(var *, var *);

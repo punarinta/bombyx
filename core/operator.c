@@ -279,12 +279,28 @@ void op_decrement(var *a)
     var_sync(a);
 }
 
+/*
+    '1' is 'equal'
+*/
+BYTE var_is_equal(var *a, var *b)
+{
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) == (*b->data);
+    else if (a->type == VAR_STRING && b->type == VAR_STRING) return !strcmp(a->data, b->data);
+    else
+    {
+        fprintf(stderr, "Operator '>' is not defined for the given operand type.");
+        larva_error();
+    }
+    return 0;
+}
+
 BYTE var_is_more(var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) > (*b->data);
+    else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
     {
-        fprintf(stderr, "Operator '>' is defined for numbers only.");
+        fprintf(stderr, "Operator '>' is not defined for the given operand type.");
         larva_error();
     }
     return 0;
@@ -293,9 +309,10 @@ BYTE var_is_more(var *a, var *b)
 BYTE var_is_less(var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) < (*b->data);
+    else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
     {
-        fprintf(stderr, "Operator '<' is defined for numbers only.");
+        fprintf(stderr, "Operator '<' is not defined for the given operand type.");
         larva_error();
     }
     return 0;
