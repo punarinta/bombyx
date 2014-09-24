@@ -588,10 +588,8 @@ var *parser_read_unary(parser_data *pd)
 
 var *parser_read_power(parser_data *pd)
 {
-	var *v0, *v1 = var_as_double(1.0), *s = var_as_double(1.0);
-
 	// read the first operand
-	v0 = parser_read_unary(pd);
+	var *v0 = parser_read_unary(pd);
 
 	// eat remaining whitespace
 	parser_eat_whitespace(pd);
@@ -599,6 +597,8 @@ var *parser_read_power(parser_data *pd)
 	// attempt to read the exponentiation operator
 	while (parser_peek(pd) == '^')
     {
+        var *v1 = var_as_double(1.0), *s = var_as_double(1.0);
+
 		parser_eat(pd);
 
 		// eat remaining whitespace
@@ -626,10 +626,11 @@ var *parser_read_power(parser_data *pd)
 
 		// eat remaining whitespace
 		parser_eat_whitespace(pd);
-	}
 
-	var_free(v1);
-	var_free(s);
+		var_free(term);
+		var_free(v1);
+        var_free(s);
+	}
 
 	// return the result
 	return v0;
@@ -637,8 +638,6 @@ var *parser_read_power(parser_data *pd)
 
 var *parser_read_term(parser_data *pd)
 {
-	char c;
-
 	// read the first operand
 	var *v0 = parser_read_power(pd);
 
@@ -647,7 +646,8 @@ var *parser_read_term(parser_data *pd)
 
 	// check to see if the next character is a
 	// multiplication or division operand
-	c = parser_peek(pd);
+	char c = parser_peek(pd);
+
 	while (c == '*' || c == '/')
     {   
 		// eat the character
@@ -761,14 +761,13 @@ var *parser_read_expr(parser_data *pd)
 var *parser_read_boolean_comparison(parser_data *pd)
 {
 	char c, oper[] = { '\0', '\0', '\0' };
-	var *v0, *v1;
 	BYTE val;
 
 	// eat whitespace
 	parser_eat_whitespace(pd);
 
 	// read the first value
-	v0 = parser_read_expr(pd);
+	var *v0 = parser_read_expr(pd);
 
 	// eat trailing whitespace
 	parser_eat_whitespace(pd);
@@ -780,8 +779,11 @@ var *parser_read_boolean_comparison(parser_data *pd)
 	// evaluate to true, since (2.0 < 3.0) == 1.0, which is less than 1.5, even
 	// though the 3.0 < 1.5 does not hold.
 	c = parser_peek(pd);
+
 	if (c == '>' || c == '<')
     {
+        var *v1;
+
 		// read the operation
 		oper[0] = parser_eat(pd);
 		c = parser_peek(pd);
@@ -829,7 +831,7 @@ var *parser_read_boolean_comparison(parser_data *pd)
 var *parser_read_boolean_equality(parser_data *pd)
 {
 	char c, oper[] = { '\0', '\0', '\0' };
-	var *v0, *v1, *v2;
+	var *v0, *v1;
 
 	// eat whitespace
 	parser_eat_whitespace(pd);
@@ -913,12 +915,9 @@ var *parser_read_boolean_equality(parser_data *pd)
 
 var *parser_read_boolean_and(parser_data *pd)
 {
-	char c;
-	var *v0, *v1 = NULL;
-
 	// tries to read a boolean comparison operator (<, >, <=, >=)
 	// as the first operand of the expression
-	v0 = parser_read_boolean_equality(pd);
+	var *v0 = parser_read_boolean_equality(pd);
 
 	// consume any whitespace befor the operator
 	parser_eat_whitespace(pd);
@@ -926,10 +925,12 @@ var *parser_read_boolean_and(parser_data *pd)
 	// grab the next character and check if it matches an 'and'
 	// operation. If so, match and perform and operations until
 	// there are no more to perform
-	c = parser_peek(pd);
+	char c = parser_peek(pd);
 	
 	while (c == '&')
     {
+        var *v1;
+
 		// eat the first '&'
 		parser_eat(pd);
 
@@ -952,20 +953,17 @@ var *parser_read_boolean_and(parser_data *pd)
 
 		// grab the next character to continue trying to perform 'and' operations
 		c = parser_peek(pd);
-	}
 
-	var_free(v1);
+		var_free(v1);
+	}
 
 	return v0;
 }
 
 var *parser_read_boolean_or(parser_data *pd)
 {
-	char c;
-	var *v0, *v1 = NULL;
-
 	// read the first term
-	v0 = parser_read_boolean_and(pd);
+	var *v0 = parser_read_boolean_and(pd);
 
 	// eat whitespace
 	parser_eat_whitespace(pd);
@@ -973,10 +971,12 @@ var *parser_read_boolean_or(parser_data *pd)
 	// grab the next character and check if it matches an 'or'
 	// operation. If so, match and perform and operations until
 	// there are no more to perform
-	c = parser_peek(pd);
+	char c = parser_peek(pd);
 	
 	while (c == '|')
     {
+        var *v1;
+
 		// match the first '|' character
 		parser_eat(pd);
 
@@ -1000,9 +1000,9 @@ var *parser_read_boolean_or(parser_data *pd)
 		// grab the next character to continue trying to match
 		// 'or' operations
 		c = parser_peek(pd);
-	}
 
-	var_free(v1);
+		var_free(v1);
+	}
 
 	// return the resulting value
 	return v0;
