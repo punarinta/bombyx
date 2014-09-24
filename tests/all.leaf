@@ -80,4 +80,22 @@ print('OK\n')
 
 # =========================================
 
+print('Blocks (b1, b1.b2):\n')
+
+block b1
+{
+    block b2
+    {
+        print('b1.b2() should return 95\n')
+        return 95
+    }
+
+    print('b1() is OK\n')
+}
+
+b1()
+print('Return value = ' + b1.b2() + '\n')
+
+# =========================================
+
 print('\nExecution took: ' + (microtime() - starting_time) + ' microsecond(s).\n')
