@@ -150,24 +150,40 @@ void op_subtract(var *a, var *b)
 
 void op_multiply(var *a, var *b)
 {
-    double xa, xb;
-    memcpy(&xa, a->data, sizeof(double));
-    memcpy(&xb, b->data, sizeof(double));
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
+    {
+        double xa, xb;
+        memcpy(&xa, a->data, sizeof(double));
+        memcpy(&xb, b->data, sizeof(double));
 
-    xa *= xb;
+        xa *= xb;
 
-    memcpy(a->data, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
+    }
+    else
+    {
+        fprintf(stderr, "Operator '-' is not defined for given operands.");
+        larva_error();
+    }
 }
 
 void op_divide(var *a, var *b)
 {
-    double xa, xb;
-    memcpy(&xa, a->data, sizeof(double));
-    memcpy(&xb, b->data, sizeof(double));
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
+    {
+        double xa, xb;
+        memcpy(&xa, a->data, sizeof(double));
+        memcpy(&xb, b->data, sizeof(double));
 
-    xa /= xb;
+        xa /= xb;
 
-    memcpy(a->data, &xa, sizeof(double));
+        memcpy(a->data, &xa, sizeof(double));
+    }
+    else
+    {
+        fprintf(stderr, "Operator '-' is not defined for given operands.");
+        larva_error();
+    }
 }
 
 /*
@@ -184,12 +200,12 @@ void op_invert(var *a)
 
         memcpy(a->data, &xa, sizeof(double));
     }
-    /*else if (a.type == VAR_STRING)
+    else if (a->type == VAR_STRING)
     {
-        // TODO: debug
         // revert a string
+        char *ptr = a->data;
+        char *end = a->data + strlen(a->data) - 1;
 
-        char *end = a.data + strlen(a.data) - 1;
         #define XOR_SWAP(a, b) do\
         {\
             a ^= b;\
@@ -199,14 +215,14 @@ void op_invert(var *a)
 
         // walk inwards from both ends of the string, 
         // swapping until we get to the middle
-        while (a.data < end)
+        while (ptr < end)
         {
-            XOR_SWAP(*a.data, *end);
-            a.data++;
-            end--;
+            XOR_SWAP(*ptr, *end);
+            ++ptr;
+            --end;
         }
         #undef XOR_SWAP
-    }*/
+    }
     else
     {
         fprintf(stderr, "Inversion operator is not defined for the given operand.");
@@ -225,11 +241,12 @@ void op_increment(var *a)
         fprintf(stderr, "Operator '++' requires a variable.");
         larva_error();
     }
+
     if (a->type == VAR_DOUBLE)
     {
         double xa;
         memcpy(&xa, a->data, sizeof(double));
-        xa++;
+        ++xa;
         memcpy(a->data, &xa, sizeof(double));
     }
     else
@@ -248,16 +265,17 @@ void op_decrement(var *a)
         fprintf(stderr, "Operator '--' requires a variable.");
         larva_error();
     }
+
     if (a->type == VAR_DOUBLE)
     {
         double xa;
         memcpy(&xa, a->data, sizeof(double));
-        xa--;
+        --xa;
         memcpy(a->data, &xa, sizeof(double));
     }
     else
     {
-        fprintf(stderr, "Operator '--' is not defined for given operand type.");
+        fprintf(stderr, "Operator '--' is not defined for the given operand type.");
         larva_error();
     }
 
@@ -266,27 +284,53 @@ void op_decrement(var *a)
 
 BYTE var_is_more(var *a, var *b)
 {
-    return (*a->data) > (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) > (*b->data);
+    else
+    {
+        fprintf(stderr, "Operator '>' is defined for numbers only.");
+        larva_error();
+    }
+    return 0;
 }
 
 BYTE var_is_less(var *a, var *b)
 {
-    return (*a->data) < (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) < (*b->data);
+    else
+    {
+        fprintf(stderr, "Operator '<' is defined for numbers only.");
+        larva_error();
+    }
+    return 0;
 }
 
 BYTE var_is_more_equal(var *a, var *b)
 {
-    return (*a->data) >= (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) >= (*b->data);
+    else
+    {
+        fprintf(stderr, "Operator '>=' is defined for numbers only.");
+        larva_error();
+    }
+    return 0;
 }
 
 BYTE var_is_less_equal(var *a, var *b)
 {
-    return (*a->data) <= (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) <= (*b->data);
+    else
+    {
+        fprintf(stderr, "Operator '<=' is defined for numbers only.");
+        larva_error();
+    }
+    return 0;
 }
 
-/*var var_array_element(var a, unsigned int i)
+/*
+var *var_array_element(var *a, unsigned int i)
 {
-    // TODO
-    a = var_as_double(42);
+    var *a = NULL;
+
     return a;
-}*/
+}
+*/
