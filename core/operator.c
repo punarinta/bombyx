@@ -282,13 +282,13 @@ void op_decrement(var *a)
 /*
     '1' is 'equal'
 */
-BYTE var_is_equal(var *a, var *b)
+BYTE var_cmp(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) == (*b->data);
-    else if (a->type == VAR_STRING && b->type == VAR_STRING) return !strcmp(a->data, b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return memcmp(a->data, b->data, sizeof(double));
+    else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data);
     else
     {
-        fprintf(stderr, "Operator '>' is not defined for the given operand type.");
+        fprintf(stderr, "Comparison operator is not defined for the given operand type.");
         larva_error();
     }
     return 0;
@@ -296,7 +296,7 @@ BYTE var_is_equal(var *a, var *b)
 
 BYTE var_is_more(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) > (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) > (double)(*b->data);
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
     {
@@ -308,7 +308,7 @@ BYTE var_is_more(var *a, var *b)
 
 BYTE var_is_less(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) < (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) < (double)(*b->data);
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
     {
@@ -320,7 +320,7 @@ BYTE var_is_less(var *a, var *b)
 
 BYTE var_is_more_equal(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) >= (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) >= (double)(*b->data);
     else
     {
         fprintf(stderr, "Operator '>=' is defined for numbers only.");
@@ -331,7 +331,7 @@ BYTE var_is_more_equal(var *a, var *b)
 
 BYTE var_is_less_equal(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (*a->data) <= (*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) <= (double)(*b->data);
     else
     {
         fprintf(stderr, "Operator '<=' is defined for numbers only.");

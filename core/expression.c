@@ -876,11 +876,11 @@ var *parser_read_boolean_equality(parser_data *pd)
 		// perform the boolean operations
 		if (strcmp(oper, "==") == 0)
         {
-			var_set_double(v0, var_is_equal(v0, v1));
+			var_set_double(v0, !var_cmp(v0, v1));
 		}
 		else if (strcmp(oper, "!=") == 0)
         {
-			var_set_double(v0, !var_is_equal(v0, v1));
+			var_set_double(v0, var_cmp(v0, v1));
 		}
 		else if (strcmp(oper, "=") == 0)
         {
