@@ -271,8 +271,9 @@ void var_echo(var *a)
         default:
         if (verbose)
         {
-            if (a->data) fprintf(stdout, "\nvar_echo() failed, type: %d, data: %s\n", a->type, a->data);
-            else fprintf(stdout, "\nvar_echo() failed, type: %d, data is NULL\n", a->type);
+            fprintf(stdout, "\nvar_echo() failed, type = %d, data = ", a->type);
+            if (a->data) fprintf(stdout, "%s\n", a->data);
+            else fprintf(stdout, "NULL\n");
         }
         break;
     }
