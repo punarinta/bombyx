@@ -180,8 +180,16 @@ var *larva_digest()
                 fprintf(stderr, "Variable '%s' already exists.", token);
                 larva_error(code_pos);
             }
-
-            // TODO: check that token is not in the list of reserved words
+            if (   !strcmp(token, "if")
+                || !strcmp(token, "else")
+                || !strcmp(token, "var")
+                || !strcmp(token, "block")
+                || !strcmp(token, "return")
+            )
+            {
+                fprintf(stderr, "Token '%s' is reserved and cannot be used as a variable name.", token);
+                larva_error(code_pos);
+            }
 
             // should be no var -- create it
             token_var = var_add(vars, token, VAR_STRING, NULL);
@@ -192,7 +200,11 @@ var *larva_digest()
             // expect operator '='
             larva_read_token(oper);
 
-            if (!strlen(oper)) continue;
+            if (!strlen(oper))
+            {
+                // no operator, just a var declaration
+                continue;
+            }
 
             if (!strcmp(oper, ","))
             {
