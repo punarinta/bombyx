@@ -4,15 +4,14 @@
 #include <math.h>
 #include <string.h>
 #include "../common.h"
+#include "../larva.h"
 
 var *parse();
-var *larva_digest();
 
-/**
-	@author James Gregson james.gregson@gmail.com
-	Licence: GPLv2 for non-commercial use. Contact the author for commercial licensing.
-	This code is provided as-is, with no warranty whatsoever.
-*/
+/******************************************************
+        The code below is based on a parser by
+        James Gregson (james.gregson@gmail.com)
+ ******************************************************/
 
 #include <setjmp.h>
 #include <stdlib.h>
@@ -39,7 +38,7 @@ extern "C" {
  @brief maximum number of arguments to user-defined functions, define this in the compiler opetions to change.
 */
 #if !defined(PARSER_MAX_ARGUMENT_COUNT)
-#define PARSER_MAX_ARGUMENT_COUNT 10
+#define PARSER_MAX_ARGUMENT_COUNT 16
 #endif
 
 /**
@@ -47,26 +46,6 @@ extern "C" {
 */
 #define PARSER_FALSE 0
 #define PARSER_TRUE  (!PARSER_FALSE)
-
-/**
- @brief definition of the variable callback function type.  
- @param[in] user_data user-specified data pointer that will be passed to the callback, for holding application state
- @param[in] name the name of the variable that is being looked up
- @param[out] value pointer to a var precision value in which to put the variable value
- @return PARSER_TRUE if the variable exists and value was set by the callback, PARSER_FALSE otherwise
-*/
-typedef int (*parser_variable_callback)( void *user_data, const char *name, var *value );
-
-/**
- @brief definition of the function callback type
- @param[in] user_data user-specified data pointer that will be passed to the callback, for holding application state
- @param[in] name the name of the function to be called
- @param[in] num_args the number of arguments in the function call
- @param[in] args a pointer to a var precision list of arguments for the function call
- @param[out] value the return value of the evaluated function
- @return PARSER_TRUE if the function was evaluated successfully and value was set, PARSER_FALSE otherwise
-*/
-typedef int (*parser_function_callback)( void *user_data, const char *name, const int num_args, const var *args, var *value );
 
 /**
  @brief main data structure for the parser, holds a pointer to the input string and the index of the current position of the parser in the input
@@ -77,25 +56,16 @@ typedef struct
 	const char *str; 
 	
 	/** @brief length of input string */
-	int        len;
+	unsigned int len;
 	
 	/** @brief current parser position in the input */
-	int        pos;
+	unsigned int pos;
 	
 	/** @brief position to return to for exception handling */
 	jmp_buf		err_jmp_buf;
 	
 	/** @brief error string to display, or query on failure */
 	const char *error;
-	
-	/** @brief data pointer that is passed to the variable and function callback. Can be used to stored application state data necessary for performing variable and function lookup. Set to NULL if not used */
-	void						*user_data;
-	
-	/** @brief callback function used to lookup variable values, set to NULL if not used */
-	parser_variable_callback	variable_cb;
-	
-	/** @brief callback function used to perform user-function evaluations, set to NULL if not used */
-	parser_function_callback	function_cb;
 } parser_data;
 
 /**
@@ -106,47 +76,11 @@ typedef struct
 var *parse_expression( const char *expr );
 
 /**
- @brief convenience function for using the library that exposes the callback interface to the variable and function features.  Initializes a parser_data structure on the stack (i.e. no malloc() or free()), sets the appropriate fields and then calls the internal library functions.
- @param[in] expr expression to parse
- @param[in] variable_cb the user-defined variables callback function. set to NULL if unused. see the parser_data structure and the header documentation for this file for more information.
- @param[in] function_cb the user-defined functions callback function. set to NULL if unused. see the parser_data structure and the header documentation of this file for more information.
- @param[in] user_data void pointer that is passed unaltered to the variable_cb and function_cb pointers, for storing application state needed to look up variables and to evaluate functions. set to NULL if unused
-*/
-var *parse_expression_with_callbacks( const char *expr, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data );
-
-/**
  @brief primary public routine for the library
  @param[in] expr expression to parse
  @return expression value
  */
 var *parser_parse( parser_data *pd );
-
-/**
- @brief initializes a pre-existing parser_data struture. Use this function to avoid any dynamic memory allocation by the code by passing a pointer to a parser_data structure that has been initialized on the stack.
- @param[inout] pd input and output parser data structure to initialize
- @param[in] str input string to parse
- @param[in] variable_cb variable callback function pointer, set to NULL if not used
- @param[in] function_cb function callback function pointer, set to NULL if not used
- @param[in] user_data pointer to arbitrary user-specified data needed by either the variable or function callback. The same pointer is passed to both functions.  Set to NULL if not needed.
- @return true if initialization was successful, false otherwise
- */
-int parser_data_init( parser_data *pd, const char *str, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data );
-
-/**
- @brief allocates a new parser_data structure and initializes the member variables
- @param[in] str input string to be parsed
- @param[in] variable_cb variable-lookup callback function pointer, set to NULL if unused
- @param[in] function_cb function-evaluation callback function pointer, set to NULL if unused
- @param[in] user_data user-specified data pointer to be used by the variable_cb and/or function_cb callbacks.  Set to NULL if unused.
- @return parser_data structure if successful, or NULL on failure
- */
-parser_data *parser_data_new( const char *str, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data );
-
-/**
- @brief frees a previously allocated parser_data structure
- @param[in] pd input parser_data structure to free
- */
-void parser_data_free( parser_data *pd );
 
 /**
  @brief error function for the parser, simply bails on the code

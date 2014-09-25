@@ -53,58 +53,25 @@ var *parse()
 
 var *parse_expression(const char *expr)
 {
-	return parse_expression_with_callbacks(expr, NULL, NULL, NULL);
-}
+    if (!expr[0]) return NULL;
 
-var *parse_expression_with_callbacks(const char *expr, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data)
-{
-	if (!expr[0]) return NULL;
+    var *val;
+    parser_data pd;
+    pd.str = expr;
+    pd.len = strlen(expr) + 1;
+    pd.pos = 0;
+    pd.error = NULL;
+    val = parser_parse(&pd);
 
-	var *val;
-	parser_data pd;
-	parser_data_init(&pd, expr, variable_cb, function_cb, user_data);
-	val = parser_parse(&pd);
-	if (pd.error)
+    if (pd.error)
     {
-		fprintf(stderr, "Failed to parse expression '%s'. ", expr);
-		fprintf(stderr, "%s", pd.error);
-		larva_error();
-	}
+        var_free(val);
+        fprintf(stderr, "Failed to parse expression '%s'. ", expr);
+   	    fprintf(stderr, "%s", pd.error);
+        larva_error();
+    }
 
-	return val;
-}
-
-parser_data *parser_data_new(const char *str, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data)
-{
-	parser_data *pd = malloc(sizeof(parser_data));
-	if (!pd) return NULL;
-	pd->str = str;
-	pd->len = strlen(str) + 1;
-	pd->pos = 0;
-	pd->error = NULL;
-	pd->user_data   = user_data;
-	pd->variable_cb = variable_cb;
-	pd->function_cb = function_cb;
-
-	return pd;
-}
-
-int parser_data_init(parser_data *pd, const char *str, parser_variable_callback variable_cb, parser_function_callback function_cb, void *user_data)
-{
-	pd->str = str;
-	pd->len = strlen(str) + 1;
-	pd->pos = 0;
-	pd->error = NULL;
-	pd->user_data   = user_data;
-	pd->variable_cb = variable_cb;
-	pd->function_cb = function_cb;
-
-	return PARSER_TRUE;
-}
-
-void parser_data_free(parser_data *pd)
-{
-	free(pd);
+    return val;
 }
 
 var *parser_parse(parser_data *pd)
@@ -382,37 +349,30 @@ var *parser_read_builtin(parser_data *pd)
 			}
 			else
 			{
-				parser_read_argument_list(pd, &num_args, args);
-				if (pd->function_cb && pd->function_cb(pd->user_data, token, num_args, args, v1))
-                {
-                    // TODO: below is illegal
-					v0 = v1;
+			    // this is a 'block' function call
 
-					var_free(v1);
-				}
+				parser_read_argument_list(pd, &num_args, args);
+
+				block_t *this_block = block_lookup(blocks, token);
+		        if (!this_block)
+		        {
+		            sprintf(temp_error, "Unknown function '%s'.", token);
+		            parser_error(pd, temp_error);
+		        }
 				else
 				{
-					block_t *this_block = block_lookup(blocks, token);
-		        	if (!this_block)
-		        	{
-		        	    sprintf(temp_error, "Unknown function '%s'.", token);
-		                parser_error(pd, temp_error);
-		        	}
-					else
-					{
-						if (verbose) fprintf(stdout, "Moving to pos %u\n", this_block->pos);
+					if (verbose) fprintf(stdout, "Moving to pos %u\n", this_block->pos);
 
-						// memorize
-						ret_point[gl_level++] = code_pos;
+					// memorize
+					ret_point[gl_level++] = code_pos;
 
-						// step into
-						run_flag[gl_level] = 0;
-						code_pos = this_block->pos;
-						v0 = larva_digest();
+					// step into
+					run_flag[gl_level] = 0;
+					code_pos = this_block->pos;
+					v0 = larva_digest();
 
-						// get back
-						code_pos = ret_point[--gl_level];
-					}
+					// get back
+					code_pos = ret_point[--gl_level];
 				}
 			}
 
