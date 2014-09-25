@@ -640,27 +640,21 @@ var *parser_read_expr(parser_data *pd)
 	// handle unary minus
 	if (c == '+' || c == '-')
     {
-        var *term;
-        v0 = var_as_double(0.0);
 		parser_eat(pd);
 		parser_eat_whitespace(pd);
 		if (c == '+')
 		{
-			term = parser_read_term(pd);
-			op_add(v0, term);
+			v0 = parser_read_term(pd);
 		}
-		else if (c == '-' && parser_peek_n(pd, -1) != '-')
+		else if (c == '-' && parser_peek(pd) != '-')
 		{
-			term = parser_read_term(pd);
-			op_subtract(v0, term);
+			v0 = parser_read_term(pd);
+			op_invert(v0);
 		}
 		else
 		{
-			term = parser_read_term(pd);
-			op_copy(v0, term);
+			v0 = parser_read_term(pd);
 		}
-
-		var_free(term);
 	}
 	else
 	{
