@@ -20,11 +20,14 @@ void larva_init(char *incoming_code, unsigned int len)
     code_pos = 0;
     code_length = 0;
     code = malloc(len * sizeof(char));
+    BYTE quotes_on = 0;
 
     // TODO: include all the necessary files
 
     for (unsigned int i = 0; i < len; ++i)
     {
+        if (incoming_code[i] == '\'') quotes_on = !quotes_on;
+
         if (i < len - 1 && incoming_code[i] == '\\')
         {
             if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
@@ -32,7 +35,7 @@ void larva_init(char *incoming_code, unsigned int len)
             else code_length--;
             ++i;
         }
-        else if (incoming_code[i] == '#')
+        else if (incoming_code[i] == '#' && !quotes_on)
         {
             if (i < len - 1 && incoming_code[i + 1] == '#')
             {
