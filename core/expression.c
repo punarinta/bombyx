@@ -308,7 +308,13 @@ var *parser_read_builtin(parser_data *pd)
 			parser_eat(pd);
 
 			// start handling the specific built-in functions
-			if (strcmp(token, "swap") == 0)
+			if (strcmp(token, "print") == 0)
+            {
+				v0 = parser_read_boolean_or(pd);
+				var_echo(v0);
+				// returns its argument (still doubtful)
+			}
+			else if (strcmp(token, "swap") == 0)
             {
             	v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
@@ -336,12 +342,6 @@ var *parser_read_builtin(parser_data *pd)
                 i1->data_size = temp_data_size;
 
                 var_free(v1);
-			}
-			else if (strcmp(token, "print") == 0)
-            {
-				v0 = parser_read_boolean_or(pd);
-				var_echo(v0);
-				// returns its argument (still doubtful)
 			}
 			else if (strcmp(token, "microtime") == 0)
             {
