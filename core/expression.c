@@ -20,7 +20,7 @@ var *parse()
         else if (code[code_pos] == ')') --br_level;
         else if (code[code_pos] == '\'') quote_opened = !quote_opened;
         else if (code[code_pos] == '\n' && !quote_opened) break;
-        else if (code[code_pos] == ',' && !br_level) break;
+        else if (code[code_pos] == ',' && !br_level && !quote_opened) break;
         ++code_pos;
     }
 
