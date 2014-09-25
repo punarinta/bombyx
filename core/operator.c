@@ -41,6 +41,14 @@ void op_copy(var *a, var *b)
             a->data = NULL;
         }
     }
+    else
+    {
+        if (b->data)
+        {
+            a->data = malloc(b->data_size);
+            memcpy(a->data, b->data, b->data_size);
+        }
+    }
 
     a->data_size = b->data_size;
     a->type = b->type;
