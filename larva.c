@@ -172,14 +172,6 @@ var *larva_digest()
 
             larva_read_token(token);
 
-            // check what's the status of this var
-            token_var = var_lookup(vars, token);
-
-            if (token_var)
-            {
-                fprintf(stderr, "Variable '%s' already exists.", token);
-                larva_error(code_pos);
-            }
             if (   !strcmp(token, "if")
                 || !strcmp(token, "else")
                 || !strcmp(token, "var")
@@ -193,6 +185,12 @@ var *larva_digest()
 
             // should be no var -- create it
             token_var = var_add(vars, token, VAR_STRING, NULL);
+
+            if (!token_var)
+            {
+                fprintf(stderr, "Variable '%s' already exists.", token);
+                larva_error(code_pos);
+            }
 
             // variable is just initialized, but not defined
             if (code[code_pos] == '\n') continue;
@@ -333,31 +331,39 @@ var *larva_digest()
 
 void larva_read_token(char *token)
 {
-    size_t start = code_pos;
+    size_t start = code_pos, token_pos = 0;
 
     // read until newline
     while (code[code_pos] != '\0')
     {
-        token[code_pos - start] = code[code_pos];
+        if (token_pos == PARSER_MAX_TOKEN_SIZE)
+        {
+            fprintf(stderr, "Token name is too long.");
+            larva_error(code_pos);
+        }
+
+        token[token_pos] = code[code_pos];
         ++code_pos;
+        ++token_pos;
+
         // either it's a function call or just a command
         if (code[code_pos] == '(' || code[code_pos] == ',' || isspace(code[code_pos])) break;
     }
 
-    token[code_pos - start] = '\0';
+    token[token_pos] = '\0';
     trim(token);
 }
 
 void larva_skip_block()
 {
-    BYTE level = 0;
+    unsigned int level = 0;
     while (code[code_pos])
     {
         if (code[code_pos] == '{') ++level;
-        else if (code[code_pos] == '}') if (--level < 1)
+        else if (code[code_pos] == '}' && --level < 1)
         {
             ++code_pos;
-            break;
+            return;
         }
         ++code_pos;
     }
@@ -365,7 +371,8 @@ void larva_skip_block()
 
 void larva_error()
 {
-    int line = 1, sym = 0; size_t i = 0;
+    unsigned int line = 1, sym = 0, i = 0;
+
     while (code[i] != '\0')
     {
         ++i;
