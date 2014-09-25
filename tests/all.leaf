@@ -80,6 +80,13 @@ print('OK\n')
 
 # =========================================
 
+print('Characters support:\n')
+print(' - just UTF: ÅÄÖ åäö ¢€\n')
+print(' - 0x0A** symbols: ਅਊ→ (must be on one line)\n')
+print(' - 0x0D** symbols: അഋ→ (must be on one line)\n')
+
+# =========================================
+
 print('Blocks (b1, b1.b2):\n')
 
 block b1
