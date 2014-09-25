@@ -642,19 +642,13 @@ var *parser_read_expr(parser_data *pd)
     {
 		parser_eat(pd);
 		parser_eat_whitespace(pd);
-		if (c == '+')
+		if (c == '-' && parser_peek(pd) != '-')
 		{
-			v0 = parser_read_term(pd);
-		}
-		else if (c == '-' && parser_peek(pd) != '-')
-		{
+		    // here's a potential bug: v0 = parser_read_term(pd) cannot be moved out of the comparison for some reason
 			v0 = parser_read_term(pd);
 			op_invert(v0);
 		}
-		else
-		{
-			v0 = parser_read_term(pd);
-		}
+		else v0 = parser_read_term(pd);
 	}
 	else
 	{
