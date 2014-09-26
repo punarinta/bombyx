@@ -77,7 +77,7 @@ void larva_chew()
             if (not_allowed)
             {
                 fprintf(stderr, "Block '%s' is declared within control statement.", token);
-                larva_error(code_pos);
+                larva_error(0);
             }
 
             // if this block haz parents, copy parent_name before own name
@@ -95,7 +95,7 @@ void larva_chew()
             if (block_lookup(blocks, token))
             {
                 fprintf(stderr, "Block '%s' already exists.", token);
-                larva_error(code_pos);
+                larva_error(0);
             }
 
             // scan for '{'
@@ -117,14 +117,14 @@ void larva_chew()
             if (!lib_handle)
             {
                 fprintf(stderr, "%s\n", dlerror());
-                larva_error();
+                larva_error(0);
             }
 
             fn = dlsym(lib_handle, "dynamic_test");
             if ((error = dlerror()) != NULL)
             {
                 fprintf(stderr, "%s\n", error);
-                larva_error();
+                larva_error(0);
             }
 
             (*fn)(&x);
@@ -183,7 +183,7 @@ var *larva_digest()
             )
             {
                 fprintf(stderr, "Token '%s' is reserved and cannot be used as a variable name.", token);
-                larva_error(code_pos);
+                larva_error(0);
             }
 
             // should be no var -- create it
@@ -192,7 +192,7 @@ var *larva_digest()
             if (!token_var)
             {
                 fprintf(stderr, "Variable '%s' already exists.", token);
-                larva_error(code_pos);
+                larva_error(0);
             }
 
             // variable is just initialized, but not defined
@@ -214,7 +214,7 @@ var *larva_digest()
             else if (strcmp(oper, "="))
             {
                 fprintf(stderr, "Operator '=' expected, found '%s'", oper);
-                larva_error(code_pos);
+                larva_error(0);
             }
 
             // equalize
@@ -222,8 +222,7 @@ var *larva_digest()
 
             if (!parse_result)
             {
-                fprintf(stderr, "Operator '=' expects an value to follow");
-                larva_error(code_pos);
+                larva_error("Operator '=' expects an value to follow");
             }
 
             if (parse_result->name) free(parse_result->name);
@@ -242,7 +241,7 @@ var *larva_digest()
         {
             if (gl_level == 0)
             {
-                if (verbose) fprintf(stdout, "Returning from zero level. Bye-bye!\n");
+                if (verbose) puts("Returning from zero level. Bye-bye!");
                 return NULL;
             }
 
@@ -299,8 +298,7 @@ var *larva_digest()
         }
         else if (!strcmp(token, "{"))
         {
-            fprintf(stderr, "Blocks should be named or preceeded by control statements.");
-            larva_error(code_pos);
+            larva_error("Blocks should be named or preceeded by control statements.");
         }
         else if (!strcmp(token, "}"))
         {
@@ -341,8 +339,7 @@ void larva_read_token(char *token)
     {
         if (token_pos == PARSER_MAX_TOKEN_SIZE)
         {
-            fprintf(stderr, "Token name is too long.");
-            larva_error(code_pos);
+            larva_error("Token name is too long.");
         }
 
         token[token_pos] = code[code_pos];
@@ -372,9 +369,11 @@ void larva_skip_block()
     }
 }
 
-void larva_error()
+void larva_error(char *err)
 {
     unsigned int line = 1, sym = 0, i = 0;
+
+    if (err) fputs(err, stderr);
 
     while (code[i] != '\0')
     {
@@ -402,9 +401,9 @@ void larva_stop()
 {
     if (verbose)
     {
-        fputs("================= DUMP ===============", stdout);
+        puts("================= DUMP ===============");
         larva_poo();
-        fputs("\n======================================\n", stdout);
+        puts("======================================");
     }
 
     var_table_delete(vars);
@@ -420,8 +419,9 @@ void larva_stop()
 void larva_poo()
 {
     unsigned int i;
-    char types[][20] = {"UNSET", "BYTE", "WORD", "DWORD", "QWORD", "FLOAT", "DOUBLE", "STRING", "BLOCK", "ARRAY"};
+    char types[][10] = {"UNSET", "DOUBLE", "STRING", "BLOCK", "ARRAY", "A-ARRAY", "PTR"};
 
+    var *v;
     var_t *v_list;
     block_t *b_list;
 
@@ -429,11 +429,12 @@ void larva_poo()
     {
         for (v_list = vars->table[i]; v_list != NULL; v_list = v_list->next)
         {
-            fprintf(stdout, "\n'%s' [%s of size %u] = ", v_list->name, types[v_list->type], v_list->data_size);
+            fprintf(stdout, "'%s' [%s of size %u] = ", v_list->name, types[v_list->type], v_list->data_size);
 
-            var *v = var_as_var_t(v_list);
+            v = var_as_var_t(v_list);
             var_echo(v);
             var_free(v);
+            putc('\n', stdout);
         }
     }
 
@@ -441,7 +442,7 @@ void larva_poo()
     {
         for (b_list = blocks->table[i]; b_list != NULL; b_list = b_list->next)
         {
-            if (b_list->pos) fprintf(stdout, "\nBlock '%s' at pos %u", b_list->name, b_list->pos);
+            if (b_list->pos) fprintf(stdout, "Block '%s' at pos %u\n", b_list->name, b_list->pos);
         }
     }
 }

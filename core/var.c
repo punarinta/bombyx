@@ -251,17 +251,17 @@ void var_echo(var *a)
 {
     if (!a)
     {
-        fprintf(stdout, "(null)");
+        fputs("(null)", stdout);
     }
     else switch (a->type)
     {
         case VAR_UNSET:
-        fprintf(stdout, "UNSET");
+        fputs("UNSET", stdout);
         break;
 
         case VAR_STRING:
-        if (a->data && a->data_size) fprintf(stdout, "%s", a->data);
-        else fprintf(stdout, "NULL");
+        if (a->data && a->data_size) fputs(a->data, stdout);
+        else fputs("NULL", stdout);
         break;
 
         case VAR_DOUBLE:
@@ -272,8 +272,8 @@ void var_echo(var *a)
         if (verbose)
         {
             fprintf(stdout, "\nvar_echo() failed, type = %d, data = ", a->type);
-            if (a->data) fprintf(stdout, "%s\n", a->data);
-            else fprintf(stdout, "NULL\n");
+            if (a->data) puts(a->data);
+            else puts("NULL");
         }
         break;
     }

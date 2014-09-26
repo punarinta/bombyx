@@ -34,10 +34,11 @@ var *parse()
 
     if (verbose)
     {
-		fprintf(stdout, "expression '%s' {", expression);
-	    fprintf(stdout, "} -> [");
+        fputs("expression [", stdout);
+        fputs(expression, stdout);
+	    fputs("] -> [", stdout);
 	    var_echo(result);
-	    fprintf(stdout, "]\n");
+	    puts("]");
 	}
 
     free(expression);
@@ -67,8 +68,7 @@ var *parse_expression(const char *expr)
     {
         var_free(val);
         fprintf(stderr, "Failed to parse expression '%s'. ", expr);
-   	    fprintf(stderr, "%s", pd.error);
-        larva_error();
+        larva_error((char *)pd.error);
     }
 
     return val;
@@ -498,7 +498,7 @@ var *parser_read_unary(parser_data *pd)
     	}
     	else
     	{
-    		if (verbose) printf("DEBUG: INVERT REACHED\n");
+    		if (verbose) puts("DEBUG: INVERT REACHED");
 			// perform unary negation
 			parser_eat(pd);
 			parser_eat_whitespace(pd);

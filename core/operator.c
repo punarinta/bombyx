@@ -127,8 +127,7 @@ void op_add(var *a, var *b)
     }
     else
     {
-        fprintf(stderr, "Operator '+' is not defined for given operands.");
-        larva_error();
+        larva_error("Operator '+' is not defined for given operands.");
     }
 
     if (r.data) free(r.data);
@@ -148,8 +147,7 @@ void op_subtract(var *a, var *b)
     }
     else
     {
-        fprintf(stderr, "Operator '-' is not defined for given operands.");
-        larva_error();
+        larva_error("Operator '-' is not defined for given operands.");
     }
 }
 
@@ -167,8 +165,7 @@ void op_multiply(var *a, var *b)
     }
     else
     {
-        fprintf(stderr, "Operator '-' is not defined for given operands.");
-        larva_error();
+        larva_error("Operator '-' is not defined for given operands.");
     }
 }
 
@@ -186,8 +183,7 @@ void op_divide(var *a, var *b)
     }
     else
     {
-        fprintf(stderr, "Operator '-' is not defined for given operands.");
-        larva_error();
+        larva_error("Operator '-' is not defined for given operands.");
     }
 }
 
@@ -230,8 +226,7 @@ void op_invert(var *a)
     }
     else
     {
-        fprintf(stderr, "Inversion operator is not defined for the given operand.");
-        larva_error();
+        larva_error("Inversion operator is not defined for the given operand.");
     }
 }
 
@@ -243,8 +238,7 @@ void op_increment(var *a)
 {
     if (!a->name)
     {
-        fprintf(stderr, "Operator '++' requires a variable.");
-        larva_error();
+        larva_error("Operator '++' requires a variable.");
     }
 
     if (a->type == VAR_DOUBLE)
@@ -256,8 +250,7 @@ void op_increment(var *a)
     }
     else
     {
-        fprintf(stderr, "Operator '++' is not defined for the given operand type.");
-        larva_error();
+        larva_error("Operator '++' is not defined for the given operand type.");
     }
 
     var_sync(a);
@@ -267,8 +260,7 @@ void op_decrement(var *a)
 {
     if (!a->name)
     {
-        fprintf(stderr, "Operator '--' requires a variable.");
-        larva_error();
+        larva_error("Operator '--' requires a variable.");
     }
 
     if (a->type == VAR_DOUBLE)
@@ -280,8 +272,7 @@ void op_decrement(var *a)
     }
     else
     {
-        fprintf(stderr, "Operator '--' is not defined for the given operand type.");
-        larva_error();
+        larva_error("Operator '--' is not defined for the given operand type.");
     }
 
     var_sync(a);
@@ -296,8 +287,7 @@ BYTE var_cmp(var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data);
     else
     {
-        fprintf(stderr, "Comparison operator is not defined for the given operand type.");
-        larva_error();
+        larva_error("Comparison operator is not defined for the given operand type.");
     }
     return 0;
 }
@@ -308,8 +298,7 @@ BYTE var_is_more(var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
     {
-        fprintf(stderr, "Operator '>' is not defined for the given operand type.");
-        larva_error();
+        larva_error("Operator '>' is not defined for the given operand type.");
     }
     return 0;
 }
@@ -320,8 +309,7 @@ BYTE var_is_less(var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
     {
-        fprintf(stderr, "Operator '<' is not defined for the given operand type.");
-        larva_error();
+        larva_error("Operator '<' is not defined for the given operand type.");
     }
     return 0;
 }
@@ -331,8 +319,7 @@ BYTE var_is_more_equal(var *a, var *b)
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) >= (double)(*b->data);
     else
     {
-        fprintf(stderr, "Operator '>=' is defined for numbers only.");
-        larva_error();
+        larva_error("Operator '>=' is defined for numbers only.");
     }
     return 0;
 }
@@ -342,8 +329,7 @@ BYTE var_is_less_equal(var *a, var *b)
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) <= (double)(*b->data);
     else
     {
-        fprintf(stderr, "Operator '<=' is defined for numbers only.");
-        larva_error();
+        larva_error("Operator '<=' is defined for numbers only.");
     }
     return 0;
 }

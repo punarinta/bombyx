@@ -6,7 +6,7 @@
 void larva_init();
 void larva_chew();
 var *larva_digest();
-void larva_error();
+void larva_error(char *);
 void larva_poo();
 void larva_stop();
 void larva_skip_block();
