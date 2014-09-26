@@ -102,12 +102,6 @@ char parser_peek( parser_data *pd );
  @return current character
  */
 char parser_eat( parser_data *pd );
-	
-/**
- @brief voraciously consumes whitespace input until a non-whitespace character is reached
- @param[in] pd input parser_data structure to operate on
- */
-void parser_eat_whitespace( parser_data *pd );
 
 /**
  @brief reads and converts a var precision floating point value in one of the many forms,

@@ -4,6 +4,15 @@
 #include "core/block.h"
 #include "core/sys.h"
 
+BYTE keywcmp(char *a, char *b, size_t n)
+{
+    while (n --> 0)
+    {
+        if (a[n] != b[n]) return 1;
+    }
+    return 0;
+}
+
 /**
  *  Sets up the processor
  */
@@ -21,6 +30,7 @@ void larva_init(char *incoming_code, unsigned int len)
     code_length = 0;
     code = malloc(len * sizeof(char));
     BYTE quotes_on = 0;
+    BYTE transfer_space = 0;
 
     // TODO: include all the necessary files
 
@@ -28,7 +38,23 @@ void larva_init(char *incoming_code, unsigned int len)
     {
         if (incoming_code[i] == '\'') quotes_on = !quotes_on;
 
-        if (i < len - 1 && incoming_code[i] == '\\')
+        if (!quotes_on && (incoming_code[i] == ' ' || incoming_code[i] == '\t'))
+        {
+            if ((code_length >= 3 && !keywcmp(&code[code_length - 3], "var", 3))
+            ||  (code_length >= 5 && !keywcmp(&code[code_length - 5], "block", 5))
+            ||  (code_length >= 6 && !keywcmp(&code[code_length - 6], "return", 6))
+            )
+            {
+                code[code_length] = incoming_code[i];
+            }
+            else continue;
+        }
+        else if (i < len - 1 && code_length && code[code_length - 1] == '\n' && incoming_code[i] == '\n')
+        {
+            // skip multiple newlines
+            continue;
+        }
+        else if (i < len - 1 && incoming_code[i] == '\\')
         {
             if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
             else if (incoming_code[i + 1] == 't') code[code_length] = '\t';
@@ -39,7 +65,7 @@ void larva_init(char *incoming_code, unsigned int len)
         {
             if (i < len - 1 && incoming_code[i + 1] == '#')
             {
-                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') {i++; break;}
+                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') {++i; break;}
             }
             else while (i++ < len) if (incoming_code[i] == '\n') break;
             
@@ -152,7 +178,6 @@ void larva_chew()
  */
 var *larva_digest()
 {
-    var *r;
     var_t *token_var;
     char token[PARSER_MAX_TOKEN_SIZE];
     char oper[PARSER_MAX_TOKEN_SIZE];
@@ -197,25 +222,20 @@ var *larva_digest()
 
             // variable is just initialized, but not defined
             if (code[code_pos] == '\n') continue;
-            
-            // expect operator '='
-            larva_read_token(oper);
 
-            if (!strlen(oper))
+            if (code[code_pos] == ',')
             {
-                // no operator, just a var declaration
-                continue;
-            }
-
-            if (!strcmp(oper, ","))
-            {
+                ++code_pos;
                 goto re_read_var;
             }
-            else if (strcmp(oper, "="))
+
+            if (code[code_pos] != '=')
             {
-                fprintf(stderr, "Operator '=' expected, found '%s'", oper);
+                fprintf(stderr, "Operator '=' expected, found '%c'", code[code_pos]);
                 larva_error(0);
             }
+
+            ++code_pos;
 
             // equalize
             var *parse_result = parse();
@@ -245,7 +265,10 @@ var *larva_digest()
                 return NULL;
             }
 
-            r = parse();
+            // read space
+            ++code_pos;
+
+            var *r = parse();
 
             // this var CANNOT have a name
             if (r->name)
@@ -342,16 +365,21 @@ void larva_read_token(char *token)
             larva_error("Token name is too long.");
         }
 
+        if (!token_pos && code[code_pos] == ' ')
+        {
+            ++code_pos;
+            continue;
+        }
+
         token[token_pos] = code[code_pos];
-        ++code_pos;
         ++token_pos;
+        ++code_pos;
 
         // either it's a function call or just a command
-        if (code[code_pos] == '(' || code[code_pos] == ',' || isspace(code[code_pos])) break;
+        if (code[code_pos] == '(' || code[code_pos] == ',' || code[code_pos] == '=' || isspace(code[code_pos])) break;
     }
 
     token[token_pos] = '\0';
-    trim(token);
 }
 
 void larva_skip_block()

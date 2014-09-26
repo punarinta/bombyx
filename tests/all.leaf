@@ -1,4 +1,4 @@
-var starting_time = microtime()
+var starting_time = microtime(), some_var
 
 # =========================================
 
