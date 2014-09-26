@@ -297,11 +297,12 @@ var *larva_digest()
                 ++code_pos;
             }
 
-            char *expr = malloc(code_pos - expr_start + 1);
-            memcpy(expr, &code[expr_start], code_pos - expr_start + 1);
-            expr[code_pos - expr_start] = '\0';
+            size_t diff = code_pos - expr_start;
+            char *expr = malloc(diff + 1);
+            memcpy(expr, &code[expr_start], diff + 1);
+            expr[diff] = '\0';
 
-            var *x = parse_expression(expr);
+            var *x = parse_expression(expr, diff);
             free(expr);
 
             // compare and unset 'x'

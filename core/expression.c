@@ -29,7 +29,7 @@ var *parse()
     memcpy(expression, code + expression_start, expression_size);
     expression[expression_size] = '\0';
 
-    var *result = parse_expression(expression);
+    var *result = parse_expression(expression, expression_size);
 
     if (verbose)
     {
@@ -51,14 +51,14 @@ var *parse()
         James Gregson (james.gregson@gmail.com)
  ******************************************************/
 
-var *parse_expression(const char *expr)
+var *parse_expression(const char *expr, size_t size)
 {
     if (!expr[0]) return NULL;
 
     var *val;
     parser_data pd;
     pd.str = expr;
-    pd.len = strlen(expr) + 1;
+    pd.len = /*strlen(expr)*/++size;
     pd.pos = 0;
     pd.error = NULL;
     val = parser_parse(&pd);
@@ -131,7 +131,7 @@ var *parser_read_double(parser_data *pd)
 {
 	char c, token[PARSER_MAX_TOKEN_SIZE];
 	int pos = 0;
-    var *val = NULL;
+    var *val;
 
 	// read a leading sign
 	c = parser_peek(pd);

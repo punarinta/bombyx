@@ -73,7 +73,7 @@ typedef struct
  @param[in] expr expression to parse
  @return expression value
  */
-var *parse_expression( const char *expr );
+var *parse_expression( const char *expr, size_t size);
 
 /**
  @brief primary public routine for the library
