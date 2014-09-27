@@ -194,17 +194,18 @@ var *larva_digest()
         size_t line_start = code_pos;
         larva_read_token(token);
 
-        if (!strcmp(token, "var"))
+        if (!memcmp(token, "var\0", 4))
         {
             re_read_var:
 
             larva_read_token(token);
 
-            if (   !strcmp(token, "if")
-                || !strcmp(token, "else")
-                || !strcmp(token, "var")
-                || !strcmp(token, "block")
-                || !strcmp(token, "return")
+            if (   !memcmp(token, "if\0", 3)
+                || !memcmp(token, "else\0", 5)
+                || !memcmp(token, "var\0", 4)
+                || !memcmp(token, "block\0", 6)
+                || !memcmp(token, "return\0", 7)
+                || !memcmp(token, "while\0", 6)
             )
             {
                 fprintf(stderr, "Token '%s' is reserved and cannot be used as a variable name.", token);
@@ -257,7 +258,7 @@ var *larva_digest()
                 goto re_read_var;
             }
         }
-        else if (!strcmp(token, "return"))
+        else if (!memcmp(token, "return\0", 7))
         {
             if (gl_level == 0)
             {
@@ -281,8 +282,8 @@ var *larva_digest()
 
             return r;
         }
-        else if (!strcmp(token, "block")) larva_skip_block();
-        else if (!strcmp(token, "if"))
+        else if (!memcmp(token, "block\0", 6)) larva_skip_block();
+        else if (!memcmp(token, "if\0", 3))
         {
             unsigned long expr_start = code_pos, level = 0;
             // find expression
@@ -320,7 +321,7 @@ var *larva_digest()
                 run_flag[++gl_level] = 1;  // RUN_THIS
             }
         }
-        else if (!strcmp(token, "while"))
+        else if (!memcmp(token, "while\0", 6))
         {
             unsigned long expr_start = code_pos, level = 0;
             // find expression
@@ -361,11 +362,11 @@ var *larva_digest()
                 larva_skip_block();
             }
         }
-        else if (!strcmp(token, "{"))
+        else if (!memcmp(token, "{\0", 2))
         {
             larva_error("Blocks should be named or preceded by control statements.");
         }
-        else if (!strcmp(token, "}"))
+        else if (!memcmp(token, "}\0", 2))
         {
             // if you met a bracket and 'run_flag' on this level is zero, then this is a function end
             if (!run_flag[gl_level])
@@ -383,7 +384,7 @@ var *larva_digest()
 
             --gl_level;
         }
-        else if (!strcmp(token, "else"))
+        else if (!memcmp(token, "else\0", 5))
         {
             if (run_flag[gl_level + 1] == 1) larva_skip_block();
             else

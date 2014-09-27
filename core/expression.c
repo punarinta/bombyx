@@ -16,11 +16,16 @@ var *parse()
     // find expression end, note that newline does don't count if it's inside a string
     while (code[code_pos])
     {
-        if (code[code_pos] == '(' && !quote_opened) ++br_level;
-        else if (code[code_pos] == ')' && !quote_opened) --br_level;
-        else if (code[code_pos] == '\'') quote_opened = !quote_opened;
-        else if (code[code_pos] == '\n' && !quote_opened) break;
-        else if (code[code_pos] == ',' && !br_level && !quote_opened) break;
+        if (!quote_opened)
+        {
+            if (code[code_pos] == '\n') break;
+            else if (code[code_pos] == '(') ++br_level;
+            else if (code[code_pos] == ')') --br_level;
+            else if (code[code_pos] == ',' && !br_level) break;
+        }
+
+        if (code[code_pos] == '\'') quote_opened = !quote_opened;
+
         ++code_pos;
     }
 
@@ -104,26 +109,27 @@ void parser_error(parser_data *pd, const char *err)
 
 inline char parser_peek(parser_data *pd)
 {
-	if (pd->pos < pd->len) return pd->str[pd->pos];
+    unsigned int p = pd->pos;
+	if (p < pd->len) return pd->str[p];
 	parser_error(pd, "Tried to read past end of string!");
 
-	return '\0';
+	return 0;
 }
 
-char parser_peek_n(parser_data *pd, int n)
+inline char parser_peek_n(parser_data *pd, int n)
 {
 	if (pd->pos+n < pd->len) return pd->str[pd->pos+n];
 	parser_error(pd, "Tried to read past end of string!");
 
-	return '\0';
+	return 0;
 }
 
-char parser_eat(parser_data *pd)
+inline char parser_eat(parser_data *pd)
 {
 	if (pd->pos < pd->len) return pd->str[pd->pos++];
 	parser_error(pd, "Tried to read past end of string!");
 
-	return '\0';
+	return 0;
 }
 
 var *parser_read_double(parser_data *pd)
@@ -277,13 +283,13 @@ var *parser_read_builtin(parser_data *pd)
 			parser_eat(pd);
 
 			// start handling the specific built-in functions
-			if (strcmp(token, "print") == 0)
+			if (memcmp(token, "print\0", 6) == 0)
             {
 				v0 = parser_read_boolean_or(pd);
 				var_echo(v0);
 				// returns its argument (still doubtful)
 			}
-			else if (strcmp(token, "swap") == 0)
+			else if (memcmp(token, "swap\0", 5) == 0)
             {
             	v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
@@ -312,7 +318,7 @@ var *parser_read_builtin(parser_data *pd)
 
                 var_free(v1);
 			}
-			else if (strcmp(token, "microtime") == 0)
+			else if (memcmp(token, "microtime\0", 10) == 0)
             {
 				v0 = var_as_double(get_microtime());
 			}
@@ -650,19 +656,19 @@ var *parser_read_boolean_comparison(parser_data *pd)
 		v1 = parser_read_expr(pd);
 
 		// perform the boolean operations
-		if (strcmp(oper, "<") == 0)
+		if (memcmp(oper, "<\0", 2) == 0)
         {
 			val = var_is_less(v0, v1);
 		}
-		else if (strcmp(oper, ">") == 0)
+		else if (memcmp(oper, ">\0", 2) == 0)
         {
 			val = var_is_more(v0, v1);
 		}
-		else if (strcmp(oper, "<=") == 0)
+		else if (memcmp(oper, "<=\0", 3) == 0)
         {
 			val = var_is_less_equal(v0, v1);
 		}
-		else if (strcmp(oper, ">=") == 0)
+		else if (memcmp(oper, ">=\0", 3) == 0)
         {
 			val = var_is_more_equal(v0, v1);
 		}
@@ -722,15 +728,15 @@ var *parser_read_boolean_equality(parser_data *pd)
 		v1 = parser_read_boolean_comparison(pd);
 
 		// perform the boolean operations
-		if (strcmp(oper, "==") == 0)
+		if (memcmp(oper, "==\0", 3) == 0)
         {
 			var_set_double(v0, var_cmp(v0, v1));
 		}
-		else if (strcmp(oper, "!=") == 0)
+		else if (memcmp(oper, "!=\0", 3) == 0)
         {
 			var_set_double(v0, !var_cmp(v0, v1));
 		}
-		else if (strcmp(oper, "=") == 0)
+		else if (memcmp(oper, "=\0", 2) == 0)
         {
         	if (!v0->name)
         	{

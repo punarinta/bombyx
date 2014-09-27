@@ -95,7 +95,8 @@ void parser_error( parser_data *pd, const char *err );
  @return character that is offset characters from the current input
  */
 char parser_peek( parser_data *pd );
-	
+char parser_peek_n( parser_data *pd, int n );
+
 /**
  @brief returns the current character, and advances the input position
  @param[in] pd input parser_data structure to operate on
