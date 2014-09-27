@@ -14,7 +14,7 @@ var *parse()
     size_t expression_start = code_pos;
 
     // find expression end, note that newline does don't count if it's inside a string
-    while (code[code_pos])
+    while (code_pos < code_length)
     {
         if (!quote_opened)
         {
@@ -53,7 +53,7 @@ var *parse_expression(const char *expr, size_t size)
     var *val;
     parser_data pd;
     pd.str = expr;
-    pd.len = /*strlen(expr)*/++size;
+    pd.len = ++size;
     pd.pos = 0;
     pd.error = NULL;
     val = parser_parse(&pd);
@@ -132,6 +132,12 @@ inline char parser_eat(parser_data *pd)
 	return 0;
 }
 
+inline void parser_skip(parser_data *pd)
+{
+	if (pd->pos < pd->len) pd->pos++;
+	else parser_error(pd, "Tried to read past end of string!");
+}
+
 var *parser_read_double(parser_data *pd)
 {
 	char c, token[PARSER_MAX_TOKEN_SIZE];
@@ -145,7 +151,7 @@ var *parser_read_double(parser_data *pd)
 	// is a string?
 	if (c == '\'')
 	{
-	    parser_eat(pd);
+	    parser_skip(pd);
 
 	    // read until closed
 	    // TODO: support escaping
@@ -155,7 +161,7 @@ var *parser_read_double(parser_data *pd)
         val = var_as_string(token);
 
         // the closing quote
-        parser_eat(pd);
+        parser_skip(pd);
 	}
 	else
 	{
@@ -209,7 +215,7 @@ var *parser_read_argument(parser_data *pd)
 	var *val = parser_read_expr(pd);
 
 	// check if there's a comma
-	if (parser_peek(pd) == ',') parser_eat(pd);
+	if (parser_peek(pd) == ',') parser_skip(pd);
 
 	// return result
 	return val;
@@ -245,7 +251,7 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 			// comma, indicates another argument follows, match
 			// the comma and continue
 			// parsing arguments
-			parser_eat(pd);
+			parser_skip(pd);
 		}
 		else
 		{
@@ -265,7 +271,7 @@ var *parser_read_builtin(parser_data *pd)
 	var args[PARSER_MAX_ARGUMENT_COUNT];
 
 	c = parser_peek(pd);
-	if (isalpha(c) || c == '_' || c == '.')
+	if (isalpha(c) || c == '_')
     {
 		// alphabetic character or underscore, indicates that either a function
 		// call or variable follows
@@ -280,7 +286,7 @@ var *parser_read_builtin(parser_data *pd)
 		if (parser_peek(pd) == '(')
         {
 			// eat the bracket
-			parser_eat(pd);
+			parser_skip(pd);
 
 			// start handling the specific built-in functions
 			if (memcmp(token, "print\0", 6) == 0)
@@ -354,10 +360,10 @@ var *parser_read_builtin(parser_data *pd)
 			// eat closing bracket of function call
 			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in function call.");
 		}
-		else if (parser_peek(pd) == '[')
+		/*else if (parser_peek(pd) == '[')
 		{
-		/*	// eat the bracket
-        	parser_eat(pd);
+			// eat the bracket
+        	parser_skip(pd);
 
         	unsigned int i = var_get_index(token);
         	if (!i)
@@ -370,8 +376,8 @@ var *parser_read_builtin(parser_data *pd)
         	v0 = var_array_element(vars[i], var_to_double(parser_read_argument(pd)));
 
 			// eat closing bracket of function call
-			if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in the array access.");*/
-		}
+			if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in the array access.");
+		}*/
 		else
 		{
 			// no opening bracket, indicates a variable lookup
@@ -412,7 +418,7 @@ var *parser_read_paren(parser_data *pd)
 	if (parser_peek(pd) == '(')
     {
 		// eat the character
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// if there is a parenthesis, read it
 		// and then read an expression, then
@@ -421,7 +427,7 @@ var *parser_read_paren(parser_data *pd)
 
 		// match the closing brace
 		if (parser_peek(pd) != ')') parser_error(pd, "Expected ')'!");
-		parser_eat(pd);
+		parser_skip(pd);
 	}
 	else
 	{
@@ -441,7 +447,7 @@ var *parser_read_unary(parser_data *pd)
 	if (c == '!')
     {
 		// if the first character is a '!', perform a boolean not operation
-		parser_eat(pd);
+		parser_skip(pd);
 		v0 = parser_read_paren(pd);
 
 		// extract and unset v0
@@ -451,7 +457,7 @@ var *parser_read_unary(parser_data *pd)
     {
     	if (parser_peek(pd) == '-')
     	{
-			parser_eat(pd);
+			parser_skip(pd);
 			v0 = parser_read_term(pd);
 			op_decrement(v0);
 
@@ -463,7 +469,7 @@ var *parser_read_unary(parser_data *pd)
     	{
     		if (verbose) puts("DEBUG: INVERT REACHED");
 			// perform unary negation
-			parser_eat(pd);
+			parser_skip(pd);
 			v0 = parser_read_paren(pd);
 			op_invert(v0);
 		}
@@ -472,7 +478,7 @@ var *parser_read_unary(parser_data *pd)
     {
     	if (parser_peek(pd) == '+')
     	{
-			parser_eat(pd);
+			parser_skip(pd);
 			v0 = parser_read_term(pd);
 			op_increment(v0);
 
@@ -483,7 +489,7 @@ var *parser_read_unary(parser_data *pd)
     	else
     	{
 			// consume extra '+' sign and continue reading
-			parser_eat(pd);
+			parser_skip(pd);
 			v0 = parser_read_paren(pd);
     	}
 	}
@@ -505,14 +511,14 @@ var *parser_read_power(parser_data *pd)
     {
         var *v1 = var_as_double(1.0), *s = var_as_double(1.0);
 
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// handles case of a negative immediately
 		// following exponentiation but leading
 		// the parenthetical exponent
 		if (parser_peek(pd) == '-')
         {
-			parser_eat(pd);
+			parser_skip(pd);
 			var_set_double(s, -1.0);
 		}
 
@@ -547,7 +553,7 @@ var *parser_read_term(parser_data *pd)
 	while (c == '*' || c == '/')
     {
 		// eat the character
-		parser_eat(pd);
+		parser_skip(pd);
 
 		var *term;
 
@@ -580,7 +586,7 @@ var *parser_read_expr(parser_data *pd)
 	// handle unary minus
 	if (c == '+' || c == '-')
     {
-		parser_eat(pd);
+		parser_skip(pd);
 
 		if (c == '-' && parser_peek(pd) != '-')
 		{
@@ -603,7 +609,7 @@ var *parser_read_expr(parser_data *pd)
         var *term;
 
 		// advance the input
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// perform the operation
 		if (c == '+')
@@ -775,12 +781,12 @@ var *parser_read_boolean_and(parser_data *pd)
         var *v1;
 
 		// eat the first '&'
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// check for and eat the second '&'
 		c = parser_peek(pd);
 		if (c != '&') parser_error(pd, "Expected '&' to follow '&' in logical and operation!");
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// read the second operand of the
 		v1 = parser_read_boolean_equality(pd);
@@ -812,12 +818,12 @@ var *parser_read_boolean_or(parser_data *pd)
         var *v1;
 
 		// match the first '|' character
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// check for and match the second '|' character
 		c = parser_peek(pd);
 		if (c != '|') parser_error(pd, "Expected '|' to follow '|' in logical or operation!");
-		parser_eat(pd);
+		parser_skip(pd);
 
 		// read the second operand
 		v1 = parser_read_boolean_and(pd);

@@ -194,7 +194,26 @@ var *larva_digest()
         size_t line_start = code_pos;
         larva_read_token(token);
 
-        if (!memcmp(token, "var\0", 4))
+        // start with the most often operator
+        if (!memcmp(token, "}\0", 2))
+        {
+            // if you met a bracket and 'run_flag' on this level is zero, then this is a function end
+            if (!run_flag[gl_level])
+            {
+                return NULL;
+            }
+
+            if (run_flag[gl_level] == 3)
+            {
+                code_pos = ret_point[gl_level];
+                // we go level up to check 'while' condition again
+                --gl_level;
+                goto re_while;
+            }
+
+            --gl_level;
+        }
+        else if (!memcmp(token, "var\0", 4))
         {
             re_read_var:
 
@@ -362,28 +381,6 @@ var *larva_digest()
                 larva_skip_block();
             }
         }
-        else if (!memcmp(token, "{\0", 2))
-        {
-            larva_error("Blocks should be named or preceded by control statements.");
-        }
-        else if (!memcmp(token, "}\0", 2))
-        {
-            // if you met a bracket and 'run_flag' on this level is zero, then this is a function end
-            if (!run_flag[gl_level])
-            {
-                return NULL;
-            }
-
-            if (run_flag[gl_level] == 3)
-            {
-                code_pos = ret_point[gl_level];
-                // we go level up to check 'while' condition again
-                --gl_level;
-                goto re_while;
-            }
-
-            --gl_level;
-        }
         else if (!memcmp(token, "else\0", 5))
         {
             if (run_flag[gl_level + 1] == 1) larva_skip_block();
@@ -393,6 +390,10 @@ var *larva_digest()
                 while (code[code_pos]) if (code[code_pos++] == '{') break;
                 run_flag[++gl_level] = 1;
             }
+        }
+        else if (!memcmp(token, "{\0", 2))
+        {
+            larva_error("Blocks should be named or preceded by control statements.");
         }
         else
         {
@@ -412,7 +413,7 @@ void larva_read_token(char *token)
     size_t start = code_pos, token_pos = 0;
 
     // read until newline
-    while (code[code_pos++])
+    while (++code_pos < code_length)
     {
         if (++token_pos == PARSER_MAX_TOKEN_SIZE)
         {
@@ -426,8 +427,6 @@ void larva_read_token(char *token)
     memcpy(token, code + start, token_pos);
 
     token[token_pos] = '\0';
-
-    //printf("\ntoken: '%s'\n", token);
 }
 
 void larva_skip_block()

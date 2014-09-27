@@ -103,6 +103,7 @@ char parser_peek_n( parser_data *pd, int n );
  @return current character
  */
 char parser_eat( parser_data *pd );
+void parser_skip(parser_data *pd);
 
 /**
  @brief reads and converts a var precision floating point value in one of the many forms,

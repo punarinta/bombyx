@@ -30,7 +30,7 @@ unsigned int var_hash(var_table_t *hashtable, char *str)
 {
     unsigned int hashval = 0;
 
-    for (; *str != '\0'; str++) hashval = *str + (hashval << 5) - hashval;
+    for (; *str != '\0'; ++str) hashval = *str + (hashval << 5) - hashval;
 
     return hashval % hashtable->size;
 }
