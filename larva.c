@@ -3,13 +3,11 @@
 #include "core/var.h"
 #include "core/block.h"
 #include "core/sys.h"
+#include "core/bytecode.h"
 
 BYTE keywcmp(char *a, char *b, size_t n)
 {
-    while (n --> 0)
-    {
-        if (a[n] != b[n]) return 1;
-    }
+    while (n --> 0) if (a[n] != b[n]) return 1;
     return 0;
 }
 
@@ -31,6 +29,8 @@ void larva_init(char *incoming_code, unsigned int len)
     code = malloc(len * sizeof(char));
     BYTE quotes_on = 0;
     BYTE transfer_space = 0;
+
+    bc_init();
 
     // TODO: include all the necessary files
 
@@ -478,6 +478,8 @@ void larva_stop()
     {
         puts("================= DUMP ===============");
         larva_poo();
+        puts("=============== BYTECODE =============");
+        bc_poo();
         puts("======================================");
     }
 
@@ -485,6 +487,8 @@ void larva_stop()
     block_table_delete(blocks);
 
     if (code) free(code);
+
+    bc_free();
 
 #ifndef __APPLE__
     muntrace();
