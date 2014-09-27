@@ -36,6 +36,7 @@ BYTE gl_level;
 unsigned int gl_block;
 BYTE run_flag[256];     // this is only for statements, not for blocks
 DWORD ret_point[256];
+char *level_expr[256];
 
 char *code;
 unsigned int code_pos;

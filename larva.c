@@ -322,8 +322,6 @@ var *larva_digest()
         }
         else if (!strcmp(token, "while"))
         {
-            re_while:;
-
             unsigned long expr_start = code_pos, level = 0;
             // find expression
             while (code[code_pos])
@@ -338,12 +336,13 @@ var *larva_digest()
             }
 
             size_t diff = code_pos - expr_start;
-            char *expr = malloc(diff + 1);
-            memcpy(expr, code + expr_start, diff + 1);
-            expr[diff] = '\0';
+            level_expr[gl_level] = malloc(diff + 1);
+            memcpy(level_expr[gl_level], code + expr_start, diff + 1);
+            level_expr[gl_level][diff] = '\0';
 
-            var *x = parse_expression(expr, diff);
-            free(expr);
+            re_while:;
+
+            var *x = parse_expression(level_expr[gl_level], diff);
 
             // compare and unset 'x'
             if (var_to_double(x))
@@ -356,7 +355,11 @@ var *larva_digest()
                 ret_point[gl_level] = expr_start;
                 run_flag[gl_level] = 3;  // RUN_WHILE
             }
-            else larva_skip_block();
+            else
+            {
+                free(level_expr[gl_level]);
+                larva_skip_block();
+            }
         }
         else if (!strcmp(token, "{"))
         {
