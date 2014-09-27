@@ -30,16 +30,6 @@ var *parse()
     expression[expression_size] = '\0';
 
     var *result = parse_expression(expression, expression_size);
-
-    if (verbose)
-    {
-        fputs("expression [", stdout);
-        fputs(expression, stdout);
-	    fputs("] -> [", stdout);
-	    var_echo(result);
-	    puts("]");
-	}
-
     free(expression);
 
     return result;
@@ -69,6 +59,15 @@ var *parse_expression(const char *expr, size_t size)
         fprintf(stderr, "Failed to parse expression '%s'. ", expr);
         larva_error((char *)pd.error);
     }
+
+    if (verbose)
+    {
+        fputs("expression [", stdout);
+        fputs(expr, stdout);
+	    fputs("] -> [", stdout);
+	    var_echo(val);
+	    puts("]");
+	}
 
     return val;
 }
@@ -103,7 +102,7 @@ void parser_error(parser_data *pd, const char *err)
 	longjmp(pd->err_jmp_buf, 1);
 }
 
-char parser_peek(parser_data *pd)
+inline char parser_peek(parser_data *pd)
 {
 	if (pd->pos < pd->len) return pd->str[pd->pos];
 	parser_error(pd, "Tried to read past end of string!");
@@ -185,12 +184,13 @@ var *parser_read_double(parser_data *pd)
         // null-terminate the string
         token[pos] = '\0';
 
-        double d_val;
+        //double d_val;
 
         // check that a double-precision was read, otherwise throw an error
-        if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read operand");
+    //    if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read operand");
+        if (pos == 0) parser_error(pd, "Failed to read operand");
 
-        val = var_as_double(d_val);
+        val = var_as_double(strtod(token, NULL));
     }
 
     // return the parsed value
@@ -724,11 +724,11 @@ var *parser_read_boolean_equality(parser_data *pd)
 		// perform the boolean operations
 		if (strcmp(oper, "==") == 0)
         {
-			var_set_double(v0, !var_cmp(v0, v1));
+			var_set_double(v0, var_cmp(v0, v1));
 		}
 		else if (strcmp(oper, "!=") == 0)
         {
-			var_set_double(v0, var_cmp(v0, v1));
+			var_set_double(v0, !var_cmp(v0, v1));
 		}
 		else if (strcmp(oper, "=") == 0)
         {

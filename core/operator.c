@@ -12,16 +12,23 @@ void var_sync(var *a)
     var_t *v = var_lookup(vars, a->name);
     if (v)
     {
-        v->type = a->type;
-        v->data_size = a->data_size;
-
-        if (v->data)
+        if (v->data_size == a->data_size)
         {
-            free(v->data);
+            memcpy(v->data, a->data, a->data_size);
         }
+        else
+        {
+            v->type = a->type;
+            v->data_size = a->data_size;
 
-        v->data = malloc(a->data_size);
-        memcpy(v->data, a->data, a->data_size);
+            if (v->data)
+            {
+                free(v->data);
+            }
+
+            v->data = malloc(a->data_size);
+            memcpy(v->data, a->data, a->data_size);
+        }
     }
 }
 
@@ -29,12 +36,18 @@ void op_copy(var *a, var *b)
 {
     if (a->data)
     {
-        free(a->data);
-
         if (b->data)
         {
-            a->data = malloc(b->data_size);
-            memcpy(a->data, b->data, b->data_size);
+            if (a->data_size == b->data_size)
+            {
+                memcpy(a->data, b->data, b->data_size);
+            }
+            else
+            {
+                free(a->data);
+                a->data = malloc(b->data_size);
+                memcpy(a->data, b->data, b->data_size);
+            }
         }
         else
         {
@@ -283,7 +296,7 @@ void op_decrement(var *a)
 */
 BYTE var_cmp(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return memcmp(a->data, b->data, sizeof(double));
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return memcmp(a->data, b->data, sizeof(double)) ? 0 : 1;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data);
     else
     {

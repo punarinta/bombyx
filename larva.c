@@ -158,7 +158,7 @@ void larva_chew()
 
             dlclose(lib_handle);
         }
-        else if (!strcmp(token, "if") || !strcmp(token, "else") )
+        else if (!strcmp(token, "if") || !strcmp(token, "else") || !strcmp(token, "while") )
         {
             ++not_allowed;
             while (code[code_pos]) if (code[code_pos++] == '{') break;
@@ -289,7 +289,7 @@ var *larva_digest()
             while (code[code_pos])
             {
                 if (code[code_pos] == '(') ++level;
-                if (code[code_pos] == ')')
+                else if (code[code_pos] == ')')
                 {
                     --level;
                     if (level < 1) { ++code_pos; break; }
@@ -299,7 +299,7 @@ var *larva_digest()
 
             size_t diff = code_pos - expr_start;
             char *expr = malloc(diff + 1);
-            memcpy(expr, &code[expr_start], diff + 1);
+            memcpy(expr, code + expr_start, diff + 1);
             expr[diff] = '\0';
 
             var *x = parse_expression(expr, diff);
@@ -320,9 +320,47 @@ var *larva_digest()
                 run_flag[++gl_level] = 1;  // RUN_THIS
             }
         }
+        else if (!strcmp(token, "while"))
+        {
+            re_while:;
+
+            unsigned long expr_start = code_pos, level = 0;
+            // find expression
+            while (code[code_pos])
+            {
+                if (code[code_pos] == '(') ++level;
+                else if (code[code_pos] == ')')
+                {
+                    --level;
+                    if (level < 1) { ++code_pos; break; }
+                }
+                ++code_pos;
+            }
+
+            size_t diff = code_pos - expr_start;
+            char *expr = malloc(diff + 1);
+            memcpy(expr, code + expr_start, diff + 1);
+            expr[diff] = '\0';
+
+            var *x = parse_expression(expr, diff);
+            free(expr);
+
+            // compare and unset 'x'
+            if (var_to_double(x))
+            {
+                // find where while-block begins
+                while (code[code_pos]) if (code[code_pos++] == '{') break;
+
+                gl_level++;
+
+                ret_point[gl_level] = expr_start;
+                run_flag[gl_level] = 3;  // RUN_WHILE
+            }
+            else larva_skip_block();
+        }
         else if (!strcmp(token, "{"))
         {
-            larva_error("Blocks should be named or preceeded by control statements.");
+            larva_error("Blocks should be named or preceded by control statements.");
         }
         else if (!strcmp(token, "}"))
         {
@@ -331,7 +369,16 @@ var *larva_digest()
             {
                 return NULL;
             }
-            else --gl_level;
+
+            if (run_flag[gl_level] == 3)
+            {
+                code_pos = ret_point[gl_level];
+                // we go level up to check 'while' condition again
+                --gl_level;
+                goto re_while;
+            }
+
+            --gl_level;
         }
         else if (!strcmp(token, "else"))
         {
@@ -356,31 +403,27 @@ var *larva_digest()
 
 void larva_read_token(char *token)
 {
+    while (isspace(code[code_pos])) ++code_pos;
+
     size_t start = code_pos, token_pos = 0;
 
     // read until newline
-    while (code[code_pos] != '\0')
+    while (code[code_pos++])
     {
-        if (token_pos == PARSER_MAX_TOKEN_SIZE)
+        if (++token_pos == PARSER_MAX_TOKEN_SIZE)
         {
             larva_error("Token name is too long.");
         }
-
-        if (!token_pos && code[code_pos] == ' ')
-        {
-            ++code_pos;
-            continue;
-        }
-
-        token[token_pos] = code[code_pos];
-        ++token_pos;
-        ++code_pos;
 
         // either it's a function call or just a command
         if (code[code_pos] == '(' || code[code_pos] == ',' || code[code_pos] == '=' || isspace(code[code_pos])) break;
     }
 
+    memcpy(token, code + start, token_pos);
+
     token[token_pos] = '\0';
+
+    //printf("\ntoken: '%s'\n", token);
 }
 
 void larva_skip_block()
