@@ -4,8 +4,6 @@
 #include "sys.h"
 #include "larva.h"
 
-char temp_error[256];
-
 var *parse()
 {
     BYTE quote_opened = 0;
@@ -352,9 +350,12 @@ var *parser_read_builtin(parser_data *pd)
 			{
 			    // this is a 'block' function call
 
-				/*parser_read_argument_list(pd, &num_args, args);
+				parser_read_argument_list(pd, &num_args, args);
 
-				block_t *this_block = block_lookup(blocks, token);
+				bc_add_cmd(BCO_CALL);
+				bc_add_token(token);
+
+				/*block_t *this_block = block_lookup(blocks, token);
 		        if (!this_block)
 		        {
 		            sprintf(temp_error, "Unknown function '%s'.", token);

@@ -31,6 +31,7 @@
 #define BCO_BLOCK_START     26
 #define BCO_BLOCK_END       27
 #define BCO_CEIT            28      // Compare and Execute If True
+#define BCO_CALL            29
 #define BCO_PRINT           200
 #define BCO_MICROTIME       201
 #define BCO_SWAP            202

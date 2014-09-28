@@ -16,6 +16,8 @@ void larva_silk()
     BYTE level = 0;
     BYTE skip_mode = 0;
     gl_level = 0;
+    char temp_error[256];
+    block_t *parent_block = NULL;
 
     bc_ready();
 
@@ -89,6 +91,47 @@ exit(0);*/
             token[size] = 0;
             bc_stack[bc_stack_size++] = var_as_string(token);
             bc_pos += size;
+            break;
+
+            case BCO_CALL:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_CALL");
+            size = bytecode[bc_pos++];
+            if (skip_mode)
+            {
+                bc_pos += size;
+                break;
+            }
+            memcpy(token, bytecode + bc_pos, size);
+            token[size] = 0;
+            bc_pos += size;
+            block_t *this_block = block_lookup(blocks, token);
+            if (!this_block)
+            {
+                sprintf(temp_error, "Unknown function '%s'.", token);
+                larva_error(temp_error);
+            }
+            else
+            {
+                ret_point[gl_level++] = bc_pos;
+            	// step into
+            	run_flag[gl_level] = 0;
+            	bc_pos = this_block->pos;
+            }
+            break;
+
+            case BCO_BLOCK:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_BLOCK");
+            size = bytecode[bc_pos++];
+            memcpy(token, bytecode + bc_pos, size);
+            token[size] = 0;
+            bc_pos += size;
+            parent_block = block_add(blocks, token, bc_pos, parent_block);
+
+            ++gl_level;
+            // we don't need it now
+            skip_mode = 1;
             break;
 
             case BCO_BLOCK_START:

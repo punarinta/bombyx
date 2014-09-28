@@ -62,7 +62,6 @@ void larva_init(char *incoming_code, unsigned int len)
 void larva_chew()
 {
     int not_allowed = 0;
-    block_t *parent_block = NULL;
     char token[PARSER_MAX_TOKEN_SIZE];
 
     while (code[code_pos])
@@ -81,7 +80,7 @@ void larva_chew()
                 larva_error(0);
             }
 
-            // if this block haz parents, copy parent_name before own name
+            /*// if this block haz parents, copy parent_name before own name
             if (parent_block)
             {
                 size_t tl = strlen(token);
@@ -97,12 +96,10 @@ void larva_chew()
             {
                 fprintf(stderr, "Block '%s' already exists.", token);
                 larva_error(0);
-            }
+            }*/
 
             // scan for '{'
             while (code[code_pos]) if (code[code_pos++] == '{') break;
-
-            parent_block = block_add(blocks, token, code_pos, parent_block);
         }
         else if (!strcmp(token, "use"))
         {
@@ -248,7 +245,10 @@ void larva_digest()
         }
         else if (!memcmp(token, "block\0", 6))
         {
+            larva_read_token(token);
             bc_add_cmd(BCO_BLOCK);
+            bc_add_token(token);
+
             while (code[code_pos]) if (code[code_pos++] == '{') break;
         }
         else if (!memcmp(token, "if\0", 3))
