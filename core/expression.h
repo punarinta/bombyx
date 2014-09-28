@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include "../common.h"
-#include "../larva.h"
+#include "larva.h"
 
 var *parse();
 
@@ -103,6 +103,7 @@ char parser_peek_n( parser_data *pd, int n );
  @return current character
  */
 char parser_eat( parser_data *pd );
+void parser_eat_whitespace( parser_data *pd );
 void parser_skip(parser_data *pd);
 
 /**

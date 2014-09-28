@@ -1,7 +1,8 @@
 #include "expression.h"
+#include "bytecode.h"
 #include "block.h"
 #include "sys.h"
-#include "../larva.h"
+#include "larva.h"
 
 char temp_error[256];
 
@@ -37,7 +38,7 @@ var *parse()
     var *result = parse_expression(expression, expression_size);
     free(expression);
 
-    return result;
+    return NULL;
 }
 
 
@@ -50,31 +51,29 @@ var *parse_expression(const char *expr, size_t size)
 {
     if (!expr[0]) return NULL;
 
-    var *val;
     parser_data pd;
     pd.str = expr;
     pd.len = ++size;
     pd.pos = 0;
     pd.error = NULL;
-    val = parser_parse(&pd);
+    parser_parse(&pd);
 
     if (pd.error)
     {
-        var_free(val);
         fprintf(stderr, "Failed to parse expression '%s'. ", expr);
         larva_error((char *)pd.error);
     }
 
-    if (verbose)
+    /*if (verbose)
     {
         fputs("expression [", stdout);
         fputs(expr, stdout);
 	    fputs("] -> [", stdout);
 	    var_echo(val);
 	    puts("]");
-	}
+	}*/
 
-    return val;
+    return NULL;
 }
 
 var *parser_parse(parser_data *pd)
@@ -82,17 +81,17 @@ var *parser_parse(parser_data *pd)
 	// set the jump position and launch the parser
 	if (!setjmp(pd->err_jmp_buf))
     {
-	    var *result = parser_read_boolean_or(pd);
+	    parser_read_boolean_or(pd);
+        parser_eat_whitespace(pd);
 
         if (pd->pos < pd->len - 1)
         {
-            var_free(result);
             parser_error(pd, "Failed to reach end of input expression, likely malformed input");
 
             // this is just to shut the compiler, in fact this line is never reached
             return NULL;
         }
-        else return result;
+        else return NULL;
 	}
 	else
 	{
@@ -132,6 +131,11 @@ inline char parser_eat(parser_data *pd)
 	return 0;
 }
 
+inline void parser_eat_whitespace( parser_data *pd )
+{
+	while (isspace(parser_peek(pd))) parser_eat(pd);
+}
+
 inline void parser_skip(parser_data *pd)
 {
 	if (pd->pos < pd->len) pd->pos++;
@@ -142,7 +146,6 @@ var *parser_read_double(parser_data *pd)
 {
 	char c, token[PARSER_MAX_TOKEN_SIZE];
 	int pos = 0;
-    var *val;
 
 	// read a leading sign
 	c = parser_peek(pd);
@@ -158,7 +161,8 @@ var *parser_read_double(parser_data *pd)
         while (parser_peek(pd) != c) token[pos++] = parser_eat(pd);
         token[pos] = '\0';
 
-        val = var_as_string(token);
+        bc_add_cmd(BCO_AS_STRING);
+        bc_add_string(token);
 
         // the closing quote
         parser_skip(pd);
@@ -193,6 +197,8 @@ var *parser_read_double(parser_data *pd)
         // read the exponent delimiter
         while (isdigit(parser_peek(pd))) token[pos++] = parser_eat(pd);
 
+        parser_eat_whitespace(pd);
+
         // null-terminate the string
         token[pos] = '\0';
 
@@ -202,23 +208,32 @@ var *parser_read_double(parser_data *pd)
     //    if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read operand");
         if (pos == 0) parser_error(pd, "Failed to read operand");
 
-        val = var_as_double(strtod(token, NULL));
+        double d = strtod(token, NULL);
+        bc_add_cmd(BCO_AS_DOUBLE);
+        bc_add_double(d);
+
+        //val = var_as_double(d);
     }
 
     // return the parsed value
-	return val;
+	return NULL;
 }
 
 var *parser_read_argument(parser_data *pd)
 {
+    parser_eat_whitespace(pd);
 	// read the argument
-	var *val = parser_read_expr(pd);
+	parser_read_expr(pd);
+
+	parser_eat_whitespace(pd);
 
 	// check if there's a comma
 	if (parser_peek(pd) == ',') parser_skip(pd);
 
+	parser_eat_whitespace(pd);
+
 	// return result
-	return val;
+	return NULL;
 }
 
 int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
@@ -227,6 +242,7 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 
 	// set the initial number of arguments to zero
 	*num_args = 0;
+    parser_eat_whitespace(pd);
 
 	while (parser_peek(pd) != ')')
     {
@@ -237,6 +253,8 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 		var *this_arg = parser_read_expr(pd);
 		args[*num_args] = *this_arg;
 		*num_args = *num_args + 1;
+
+		parser_eat_whitespace(pd);
 
 		// check the next character
 		c = parser_peek(pd);
@@ -252,6 +270,7 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 			// the comma and continue
 			// parsing arguments
 			parser_skip(pd);
+			parser_eat_whitespace(pd);
 		}
 		else
 		{
@@ -267,7 +286,6 @@ var *parser_read_builtin(parser_data *pd)
 {
 	int num_args, pos = 0;
 	char c, token[PARSER_MAX_TOKEN_SIZE];
-	var *v0 = NULL, *v1 = NULL;
 	var args[PARSER_MAX_ARGUMENT_COUNT];
 
 	c = parser_peek(pd);
@@ -291,13 +309,14 @@ var *parser_read_builtin(parser_data *pd)
 			// start handling the specific built-in functions
 			if (memcmp(token, "print\0", 6) == 0)
             {
-				v0 = parser_read_boolean_or(pd);
-				var_echo(v0);
+				parser_read_boolean_or(pd);
+                bc_add_cmd(BCO_PRINT);
+				//var_echo(v0);
 				// returns its argument (still doubtful)
 			}
 			else if (memcmp(token, "swap\0", 5) == 0)
             {
-            	v0 = parser_read_argument(pd);
+            	/*v0 = parser_read_argument(pd);
 				v1 = parser_read_argument(pd);
 
 				var_t *i0 = var_lookup(vars, v0->name),
@@ -322,17 +341,18 @@ var *parser_read_builtin(parser_data *pd)
                 i0->data_size = i1->data_size;
                 i1->data_size = temp_data_size;
 
-                var_free(v1);
+                var_free(v1);*/
 			}
 			else if (memcmp(token, "microtime\0", 10) == 0)
             {
-				v0 = var_as_double(get_microtime());
+				//v0 = var_as_double(get_microtime());
+				bc_add_cmd(BCO_MICROTIME);
 			}
 			else
 			{
 			    // this is a 'block' function call
 
-				parser_read_argument_list(pd, &num_args, args);
+				/*parser_read_argument_list(pd, &num_args, args);
 
 				block_t *this_block = block_lookup(blocks, token);
 		        if (!this_block)
@@ -350,37 +370,24 @@ var *parser_read_builtin(parser_data *pd)
 					// step into
 					run_flag[gl_level] = 0;
 					code_pos = this_block->pos;
-					v0 = larva_digest();
+					larva_digest();
 
 					// get back
 					code_pos = ret_point[--gl_level];
-				}
+				}*/
 			}
 
 			// eat closing bracket of function call
 			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in function call.");
 		}
-		/*else if (parser_peek(pd) == '[')
-		{
-			// eat the bracket
-        	parser_skip(pd);
-
-        	unsigned int i = var_get_index(token);
-        	if (!i)
-        	{
-        	    sprintf(temp_error, "Unknown variable '%s'.", token);
-                parser_error(pd, temp_error);
-        	}
-
-            // array index
-        	v0 = var_array_element(vars[i], var_to_double(parser_read_argument(pd)));
-
-			// eat closing bracket of function call
-			if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in the array access.");
-		}*/
 		else
 		{
-			// no opening bracket, indicates a variable lookup
+		    //v0 = NULL;
+
+		    bc_add_cmd(BCO_AS_VAR);
+            bc_add_token(token);
+
+		/*	// no opening bracket, indicates a variable lookup
 			var_t *vt = var_lookup(vars, token);
 
             if (vt)
@@ -397,33 +404,37 @@ var *parser_read_builtin(parser_data *pd)
             {
                 sprintf(temp_error, "Unknown variable '%s'.", token);
                 parser_error(pd, temp_error);
-            }
+            }*/
 		}
 	}
 	else
 	{
 		// not a built-in function call, just read a literal double
-		v0 = parser_read_double(pd);
+		parser_read_double(pd);
 	}
 
+	parser_eat_whitespace(pd);
+
 	// return the value
-	return v0;
+	return NULL;
 }
 
 var *parser_read_paren(parser_data *pd)
 {
-	var *v0;
-
 	// check if the expression has a parenthesis
 	if (parser_peek(pd) == '(')
     {
 		// eat the character
 		parser_skip(pd);
 
+		parser_eat_whitespace(pd);
+
 		// if there is a parenthesis, read it
 		// and then read an expression, then
 		// match the closing brace
-		v0 = parser_read_boolean_or(pd);
+		parser_read_boolean_or(pd);
+
+		parser_eat_whitespace(pd);
 
 		// match the closing brace
 		if (parser_peek(pd) != ')') parser_error(pd, "Expected ')'!");
@@ -432,46 +443,46 @@ var *parser_read_paren(parser_data *pd)
 	else
 	{
 		// otherwise just read a literal value
-		v0 = parser_read_builtin(pd);
+		parser_read_builtin(pd);
 	}
 
+	parser_eat_whitespace(pd);
+
 	// return the result
-	return v0;
+	return NULL;
 }
 
 var *parser_read_unary(parser_data *pd)
 {
-	var *v0;
 	char c = parser_peek(pd);
 
 	if (c == '!')
     {
 		// if the first character is a '!', perform a boolean not operation
 		parser_skip(pd);
-		v0 = parser_read_paren(pd);
+		parser_eat_whitespace(pd);
+		parser_read_paren(pd);
 
 		// extract and unset v0
-		v0 = (fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? var_as_double(0.0) : var_as_double(1.0);
+	//	v0 = (fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? var_as_double(0.0) : var_as_double(1.0);
 	}
 	else if (c == '-')
     {
     	if (parser_peek(pd) == '-')
     	{
 			parser_skip(pd);
-			v0 = parser_read_term(pd);
-			op_decrement(v0);
-
-            // sync done, free the name
-			free(v0->name);
-            v0->name = NULL;
+			parser_eat_whitespace(pd);
+			parser_read_term(pd);
+			bc_add_cmd(BCO_DECR);
     	}
     	else
     	{
-    		if (verbose) puts("DEBUG: INVERT REACHED");
+    		puts("DEBUG: DOUBLE UNARY MINUS");
 			// perform unary negation
 			parser_skip(pd);
-			v0 = parser_read_paren(pd);
-			op_invert(v0);
+			parser_eat_whitespace(pd);
+			parser_read_paren(pd);
+		//	op_invert(v0);
 		}
 	}
 	else if (c == '+')
@@ -479,39 +490,43 @@ var *parser_read_unary(parser_data *pd)
     	if (parser_peek(pd) == '+')
     	{
 			parser_skip(pd);
-			v0 = parser_read_term(pd);
-			op_increment(v0);
-
-			// sync done, free the name
-			free(v0->name);
-            v0->name = NULL;
+			parser_eat_whitespace(pd);
+			parser_read_term(pd);
+		    bc_add_cmd(BCO_INCR);
     	}
     	else
     	{
 			// consume extra '+' sign and continue reading
+			puts("DEBUG: DOUBLE UNARY PLUS");
 			parser_skip(pd);
-			v0 = parser_read_paren(pd);
+			parser_eat_whitespace(pd);
+			parser_read_paren(pd);
     	}
 	}
 	else
 	{
-		v0 = parser_read_paren(pd);
+		parser_read_paren(pd);
 	}
 
-	return v0;
+	parser_eat_whitespace(pd);
+
+	return NULL;
 }
 
 var *parser_read_power(parser_data *pd)
 {
 	// read the first operand
-	var *v0 = parser_read_unary(pd);
+	parser_read_unary(pd);
+
+	parser_eat_whitespace(pd);
 
 	// attempt to read the exponentiation operator
-	while (parser_peek(pd) == '^')
+	/*while (parser_peek(pd) == '^')
     {
         var *v1 = var_as_double(1.0), *s = var_as_double(1.0);
 
 		parser_skip(pd);
+		parser_eat_whitespace(pd);
 
 		// handles case of a negative immediately
 		// following exponentiation but leading
@@ -520,6 +535,7 @@ var *parser_read_power(parser_data *pd)
         {
 			parser_skip(pd);
 			var_set_double(s, -1.0);
+			parser_eat_whitespace(pd);
 		}
 
 		// read the second operand
@@ -532,19 +548,23 @@ var *parser_read_power(parser_data *pd)
 		// TODO:
 	//	v0 = pow(v0, v1);
 
+	    parser_eat_whitespace(pd);
+
 		var_free(term);
 		var_free(v1);
         var_free(s);
-	}
+	}*/
 
 	// return the result
-	return v0;
+	return NULL;
 }
 
 var *parser_read_term(parser_data *pd)
 {
 	// read the first operand
-	var *v0 = parser_read_power(pd);
+	parser_read_power(pd);
+
+	parser_eat_whitespace(pd);
 
 	// check to see if the next character is a
 	// multiplication or division operand
@@ -554,90 +574,96 @@ var *parser_read_term(parser_data *pd)
     {
 		// eat the character
 		parser_skip(pd);
-
-		var *term;
+		parser_eat_whitespace(pd);
 
 		// perform the appropriate operation
 		if (c == '*')
         {
-        	term = parser_read_power(pd);
-			op_multiply(v0, term);
+        	parser_read_power(pd);
+			bc_add_cmd(BCO_MUL);
 		}
 		else if (c == '/')
         {
-        	term = parser_read_power(pd);
-			op_divide(v0, term);
+        	parser_read_power(pd);
+			bc_add_cmd(BCO_DIV);
 		}
 
-		var_free(term);
+		parser_eat_whitespace(pd);
 
 		// update the character
 		c = parser_peek(pd);
 	}
 
-	return v0;
+	return NULL;
 }
 
 var *parser_read_expr(parser_data *pd)
 {
-	var *v0;
 	char c = parser_peek(pd);
 
 	// handle unary minus
 	if (c == '+' || c == '-')
     {
 		parser_skip(pd);
+		parser_eat_whitespace(pd);
 
 		if (c == '-' && parser_peek(pd) != '-')
 		{
 		    // here's a potential bug: v0 = parser_read_term(pd) cannot be moved out of the comparison for some reason
-			v0 = parser_read_term(pd);
-			op_invert(v0);
+			parser_read_term(pd);
+		//	op_invert(v0);
 		}
-		else v0 = parser_read_term(pd);
+		else parser_read_term(pd);
 	}
 	else
 	{
-		v0 = parser_read_term(pd);
+		parser_read_term(pd);
 	}
+
+	parser_eat_whitespace(pd);
 
 	// check if there is an addition or
 	// subtraction operation following
 	c = parser_peek(pd);
 	while (c == '+' || c == '-')
     {
-        var *term;
-
 		// advance the input
 		parser_skip(pd);
+		parser_eat_whitespace(pd);
 
 		// perform the operation
 		if (c == '+')
         {
-			term = parser_read_term(pd);
-			op_add(v0, term);
+			parser_read_term(pd);
+		//	op_add(v0, term);
+			bc_add_cmd(BCO_ADD);
 		}
 		else if (c == '-')
         {
         	// reset name for v0
-			term = parser_read_term(pd);
-			op_subtract(v0, term);
+			parser_read_term(pd);
+		//	op_subtract(v0, term);
+			bc_add_cmd(BCO_SUB);
 		}
 
-		var_free(term);
+		parser_eat_whitespace(pd);
 
 		// update the character being tested in the while loop
 		c = parser_peek(pd);
 	}
 
 	// return expression result
-	return v0;
+	return NULL;
 }
 
 var *parser_read_boolean_comparison(parser_data *pd)
 {
+    parser_eat_whitespace(pd);
+
 	// read the first value
-	var *v0 = parser_read_expr(pd);
+	parser_read_expr(pd);
+
+	parser_eat_whitespace(pd);
 
 	// try to perform boolean comparison operator. Unlike the other operators
 	// like the arithmetic operations and the boolean and/or operations, we
@@ -649,7 +675,6 @@ var *parser_read_boolean_comparison(parser_data *pd)
 
 	if (c == '>' || c == '<')
     {
-        var *v1;
 	    BYTE val;
         char oper[] = { '\0', '\0', '\0' };
 
@@ -658,45 +683,49 @@ var *parser_read_boolean_comparison(parser_data *pd)
 		c = parser_peek(pd);
 		if (c == '=') oper[1] = parser_eat(pd);
 
+		parser_eat_whitespace(pd);
+
 		// try to read the next term
-		v1 = parser_read_expr(pd);
+		parser_read_expr(pd);
 
 		// perform the boolean operations
 		if (memcmp(oper, "<\0", 2) == 0)
         {
-			val = var_is_less(v0, v1);
+			//val = var_is_less(v0, v1);
 		}
 		else if (memcmp(oper, ">\0", 2) == 0)
         {
-			val = var_is_more(v0, v1);
+			//val = var_is_more(v0, v1);
 		}
 		else if (memcmp(oper, "<=\0", 3) == 0)
         {
-			val = var_is_less_equal(v0, v1);
+			//val = var_is_less_equal(v0, v1);
 		}
 		else if (memcmp(oper, ">=\0", 3) == 0)
         {
-			val = var_is_more_equal(v0, v1);
+			//val = var_is_more_equal(v0, v1);
 		}
 		else
 		{
 			parser_error(pd, "Unknown comparison operation.");
 		}
 
-		var_free(v1);
+		parser_eat_whitespace(pd);
 
-		var_set_double(v0, val);
+		//var_set_double(v0, val);
 	}
 
-	return v0;
+	return NULL;
 }
 
 var *parser_read_boolean_equality(parser_data *pd)
 {
-	var *v0, *v1;
+	parser_eat_whitespace(pd);
 
 	// read the first value
-	v0 = parser_read_boolean_comparison(pd);
+	parser_read_boolean_comparison(pd);
+
+	parser_eat_whitespace(pd);
 
 	// try to perform boolean equality operator
 	char c = parser_peek(pd);
@@ -715,7 +744,7 @@ var *parser_read_boolean_equality(parser_data *pd)
 			}
 			else
 			{
-				return v0;
+				return NULL;
 			}
 		}
 		else
@@ -730,38 +759,35 @@ var *parser_read_boolean_equality(parser_data *pd)
 			}
 		}
 
+		parser_eat_whitespace(pd);
+
 		// try to read the next term
-		v1 = parser_read_boolean_comparison(pd);
+		parser_read_boolean_comparison(pd);
 
 		// perform the boolean operations
 		if (memcmp(oper, "==\0", 3) == 0)
         {
-			var_set_double(v0, var_cmp(v0, v1));
+			//var_set_double(v0, var_cmp(v0, v1));
+			bc_add_cmd(BCO_CMP);
 		}
 		else if (memcmp(oper, "!=\0", 3) == 0)
         {
-			var_set_double(v0, !var_cmp(v0, v1));
+			//var_set_double(v0, !var_cmp(v0, v1));
+			bc_add_cmd(BCO_CMP_NOT);
 		}
 		else if (memcmp(oper, "=\0", 2) == 0)
         {
-        	if (!v0->name)
-        	{
-        		parser_error(pd, "Schnieblie operations are not allowed.");
-        	}
-
-        	// copy everything except name from v1 to v0
-        	op_copy(v0, v1);
-            var_sync(v0);
+            bc_add_cmd(BCO_SET);
 		}
 		else
 		{
 			parser_error(pd, "Unknown operation.");
 		}
 
-		var_free(v1);
+		parser_eat_whitespace(pd);
 	}
 
-	return v0;
+	return NULL;
 }
 
 
@@ -769,17 +795,17 @@ var *parser_read_boolean_and(parser_data *pd)
 {
 	// tries to read a boolean comparison operator (<, >, <=, >=)
 	// as the first operand of the expression
-	var *v0 = parser_read_boolean_equality(pd);
+	parser_read_boolean_equality(pd);
+
+	parser_eat_whitespace(pd);
 
 	// grab the next character and check if it matches an 'and'
 	// operation. If so, match and perform and operations until
 	// there are no more to perform
 	char c = parser_peek(pd);
 
-	while (c == '&')
+	/*while (c == '&')
     {
-        var *v1;
-
 		// eat the first '&'
 		parser_skip(pd);
 
@@ -788,35 +814,37 @@ var *parser_read_boolean_and(parser_data *pd)
 		if (c != '&') parser_error(pd, "Expected '&' to follow '&' in logical and operation!");
 		parser_skip(pd);
 
+		parser_eat_whitespace(pd);
+
 		// read the second operand of the
-		v1 = parser_read_boolean_equality(pd);
+		parser_read_boolean_equality(pd);
 
 		// perform the operation, returning 1.0 for TRUE and 0.0 for FALSE
 		var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
 
+        parser_eat_whitespace(pd);
+
 		// grab the next character to continue trying to perform 'and' operations
 		c = parser_peek(pd);
+	}*/
 
-		var_free(v1);
-	}
-
-	return v0;
+	return NULL;
 }
 
 var *parser_read_boolean_or(parser_data *pd)
 {
 	// read the first term
-	var *v0 = parser_read_boolean_and(pd);
+	parser_read_boolean_and(pd);
+
+	parser_eat_whitespace(pd);
 
 	// grab the next character and check if it matches an 'or'
 	// operation. If so, match and perform and operations until
 	// there are no more to perform
 	char c = parser_peek(pd);
 
-	while (c == '|')
+	/*while (c == '|')
     {
-        var *v1;
-
 		// match the first '|' character
 		parser_skip(pd);
 
@@ -825,19 +853,21 @@ var *parser_read_boolean_or(parser_data *pd)
 		if (c != '|') parser_error(pd, "Expected '|' to follow '|' in logical or operation!");
 		parser_skip(pd);
 
+		parser_eat_whitespace(pd);
+
 		// read the second operand
-		v1 = parser_read_boolean_and(pd);
+		parser_read_boolean_and(pd);
 
 		// perform the 'or' operation
 		var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
 
+        parser_eat_whitespace(pd);
+
 		// grab the next character to continue trying to match
 		// 'or' operations
 		c = parser_peek(pd);
-
-		var_free(v1);
-	}
+	}*/
 
 	// return the resulting value
-	return v0;
+	return NULL;
 }

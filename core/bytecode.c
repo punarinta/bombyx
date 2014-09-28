@@ -69,10 +69,14 @@ void bc_ready()
     bytecode[bc_pos] = 0;
     bc_pos = 0;
 
-    bc_stack_pos = 0;
+    // prepare stack
+    bc_stack_size = 0;
     for (unsigned int i = 0; i < 256; i++)
     {
-        bc_stack[i] = NULL;
+        bc_stack[i].type = 0;
+        bc_stack[i].data_size = 0;
+        bc_stack[i].name = NULL;
+        bc_stack[i].data = NULL;
     }
 }
 

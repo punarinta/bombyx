@@ -47,9 +47,9 @@ exit(0);*/
             bc_pos += size;
             break;
 
-            case BCO_VAR_SET:
+            case BCO_SET:
             if (skip_mode) break;
-            if (verbose) puts("BCO_VAR_SET");
+            if (verbose) puts("BCO_SET");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             if (!v1.name)
@@ -134,6 +134,27 @@ exit(0);*/
             run_flag[gl_level] = 3;  // RUN_WHILE
             break;
 
+            case BCO_IF:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_IF");
+            ++gl_level;
+
+            run_flag[gl_level] = 1;  // RUN_IF
+            break;
+
+            case BCO_ELSE:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_ELSE");
+
+            ++gl_level;
+
+            if (run_flag[gl_level] == 2)
+            {
+
+            }
+            else skip_mode = 1;
+            break;
+
             case BCO_CEIT:
             if (skip_mode) break;
             if (verbose) puts("BCO_CEIT");
@@ -141,9 +162,30 @@ exit(0);*/
 
             if (!var_extract_double(&v1))
             {
+                if (run_flag[gl_level] == 1) run_flag[gl_level] = 2;    // RUN_ELSE
                 skip_mode = 1;
             }
             var_unset(&v1);
+            break;
+
+            case BCO_CMP:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_CMP");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            bc_stack[bc_stack_size++] = var_as_double(var_cmp(&v1, &v2));
+            var_unset(&v1);
+            var_unset(&v2);
+            break;
+
+            case BCO_CMP_NOT:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_CMP_NOT");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            bc_stack[bc_stack_size++] = var_as_double(!var_cmp(&v1, &v2));
+            var_unset(&v1);
+            var_unset(&v2);
             break;
 
             case BCO_ADD:

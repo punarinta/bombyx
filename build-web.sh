@@ -2,7 +2,6 @@
 
 g++ \
 core/*.c \
-larva.c \
 web.cpp \
 \
 -std=c++11 \

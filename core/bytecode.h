@@ -7,21 +7,21 @@
 #define BC_INITIAL_SIZE     25000
 #define BC_GROW_SIZE        10000
 
+#define BCO_IDLE            0
 #define BCO_VAR             1
 #define BCO_VARX            2
 #define BCO_AS_STRING       3
 #define BCO_AS_DOUBLE       4
 #define BCO_AS_VAR          5
-#define BCO_PRINT           6
-#define BCO_MICROTIME       7
-#define BCO_VAR_SET         8
-#define BCO_ADD             10
-#define BCO_SUB             11
-#define BCO_MUL             12
-#define BCO_DIV             13
-#define BCO_INCR            14
-#define BCO_DECR            15
-#define BCO_SWAP            16
+#define BCO_SET             10
+#define BCO_ADD             11
+#define BCO_SUB             12
+#define BCO_MUL             13
+#define BCO_DIV             14
+#define BCO_INCR            15
+#define BCO_DECR            16
+#define BCO_CMP             17
+#define BCO_CMP_NOT         18
 #define BCO_IF              20
 #define BCO_ELSE            21
 #define BCO_WHILE           22
@@ -30,13 +30,16 @@
 #define BCO_RETURNX         25
 #define BCO_BLOCK_START     26
 #define BCO_BLOCK_END       27
-#define BCO_CEIT        28      // Compare and Execute If True
+#define BCO_CEIT            28      // Compare and Execute If True
+#define BCO_PRINT           200
+#define BCO_MICROTIME       201
+#define BCO_SWAP            202
 
 unsigned int bc_pos;
 unsigned int bc_length;
-char *bytecode;
-var *bc_stack[256];
-unsigned int bc_stack_pos;
+BYTE *bytecode;
+var bc_stack[256];
+unsigned int bc_stack_size;
 
 void bc_init();
 void bc_free();

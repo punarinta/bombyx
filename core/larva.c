@@ -1,15 +1,9 @@
-#include "common.h"
+#include "../common.h"
 #include "larva.h"
-#include "core/var.h"
-#include "core/block.h"
-#include "core/sys.h"
-#include "core/bytecode.h"
-
-BYTE keywcmp(char *a, char *b, size_t n)
-{
-    while (n --> 0) if (a[n] != b[n]) return 1;
-    return 0;
-}
+#include "var.h"
+#include "block.h"
+#include "sys.h"
+#include "bytecode.h"
 
 /**
  *  Sets up the processor
@@ -28,7 +22,6 @@ void larva_init(char *incoming_code, unsigned int len)
     code_length = 0;
     code = malloc(len * sizeof(char));
     BYTE quotes_on = 0;
-    BYTE transfer_space = 0;
 
     bc_init();
 
@@ -38,23 +31,7 @@ void larva_init(char *incoming_code, unsigned int len)
     {
         if (incoming_code[i] == '\'') quotes_on = !quotes_on;
 
-        if (!quotes_on && (incoming_code[i] == ' ' || incoming_code[i] == '\t'))
-        {
-            if ((code_length >= 3 && !keywcmp(&code[code_length - 3], "var", 3))
-            ||  (code_length >= 5 && !keywcmp(&code[code_length - 5], "block", 5))
-            ||  (code_length >= 6 && !keywcmp(&code[code_length - 6], "return", 6))
-            )
-            {
-                code[code_length] = incoming_code[i];
-            }
-            else continue;
-        }
-        else if (i < len - 1 && code_length && code[code_length - 1] == '\n' && incoming_code[i] == '\n')
-        {
-            // skip multiple newlines
-            continue;
-        }
-        else if (i < len - 1 && incoming_code[i] == '\\')
+        if (i < len - 1 && incoming_code[i] == '\\')
         {
             if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
             else if (incoming_code[i + 1] == 't') code[code_length] = '\t';
@@ -78,8 +55,6 @@ void larva_init(char *incoming_code, unsigned int len)
 
         ++code_length;
     }
-
-    started_at = get_microtime();
 
     larva_chew();
 }
@@ -176,7 +151,7 @@ void larva_chew()
 /**
  *  Processes code buffer
  */
-var *larva_digest()
+void larva_digest()
 {
     var_t *token_var;
     char token[PARSER_MAX_TOKEN_SIZE];
@@ -197,21 +172,7 @@ var *larva_digest()
         // start with the most often operator
         if (!memcmp(token, "}\0", 2))
         {
-            // if you met a bracket and 'run_flag' on this level is zero, then this is a function end
-            if (!run_flag[gl_level])
-            {
-                return NULL;
-            }
-
-            if (run_flag[gl_level] == 3)
-            {
-                code_pos = ret_point[gl_level];
-                // we go level up to check 'while' condition again
-                --gl_level;
-                goto re_while;
-            }
-
-            --gl_level;
+            bc_add_cmd(BCO_BLOCK_END);
         }
         else if (!memcmp(token, "var\0", 4))
         {
@@ -231,17 +192,16 @@ var *larva_digest()
                 larva_error(0);
             }
 
-            // should be no var -- create it
-            token_var = var_add(vars, token, VAR_STRING, NULL);
-
-            if (!token_var)
-            {
-                fprintf(stderr, "Variable '%s' already exists.", token);
-                larva_error(0);
-            }
+            // skip spaces
+            if (code[code_pos] == ' ') ++code_pos;
 
             // variable is just initialized, but not defined
-            if (code[code_pos] == '\n') continue;
+            if (code[code_pos] == '\n')
+            {
+                bc_add_cmd(BCO_VAR);
+                bc_add_token(token);
+                continue;
+            }
 
             if (code[code_pos] == ',')
             {
@@ -251,24 +211,16 @@ var *larva_digest()
 
             if (code[code_pos] != '=')
             {
-                fprintf(stderr, "Operator '=' expected, found '%c'", code[code_pos]);
+                fprintf(stderr, "Operator '=' expected, found '%c' '%s'", code[code_pos], token);
                 larva_error(0);
             }
 
             ++code_pos;
 
-            // equalize
-            var *parse_result = parse();
+            parse();
 
-            if (!parse_result)
-            {
-                larva_error("Operator '=' expects an value to follow");
-            }
-
-            if (parse_result->name) free(parse_result->name);
-            parse_result->name = strdup(token);
-            var_sync(parse_result);
-            var_free(parse_result);
+            bc_add_cmd(BCO_VARX);
+            bc_add_token(token);
 
             // we have one more var to init
             if (code[code_pos] == ',')
@@ -282,26 +234,23 @@ var *larva_digest()
             if (gl_level == 0)
             {
                 if (verbose) puts("Returning from zero level. Bye-bye!");
-                return NULL;
+                return;
             }
 
             // read space
             ++code_pos;
 
-            var *r = parse();
-
-            // this var CANNOT have a name
-            if (r->name)
-            {
-                free(r->name);
-                r->name = NULL;
-            }
+            parse();
 
             if (verbose) fprintf(stdout, "Returning from level %u...\n", gl_level);
 
-            return r;
+            return;
         }
-        else if (!memcmp(token, "block\0", 6)) larva_skip_block();
+        else if (!memcmp(token, "block\0", 6))
+        {
+            bc_add_cmd(BCO_BLOCK);
+            while (code[code_pos]) if (code[code_pos++] == '{') break;
+        }
         else if (!memcmp(token, "if\0", 3))
         {
             unsigned long expr_start = code_pos, level = 0;
@@ -322,23 +271,10 @@ var *larva_digest()
             memcpy(expr, code + expr_start, diff + 1);
             expr[diff] = '\0';
 
-            var *x = parse_expression(expr, diff);
+            bc_add_cmd(BCO_IF);
+            parse_expression(expr, diff);
+            bc_add_cmd(BCO_CEIT);
             free(expr);
-
-            // compare and unset 'x'
-            if (!var_to_double(x))
-            {
-                run_flag[gl_level + 1] = 2;  // RUN_ELSE
-                larva_skip_block();
-            }
-            else
-            {
-                // find where if-block begins
-                while (code[code_pos]) if (code[code_pos++] == '{') break;
-
-                // start running this block
-                run_flag[++gl_level] = 1;  // RUN_THIS
-            }
         }
         else if (!memcmp(token, "while\0", 6))
         {
@@ -356,54 +292,37 @@ var *larva_digest()
             }
 
             size_t diff = code_pos - expr_start;
-            level_expr[gl_level] = malloc(diff + 1);
-            memcpy(level_expr[gl_level], code + expr_start, diff + 1);
-            level_expr[gl_level][diff] = '\0';
+            char *expr = malloc(diff + 1);
+            memcpy(expr, code + expr_start, diff + 1);
+            expr[diff] = '\0';
 
-            re_while:;
-
-            var *x = parse_expression(level_expr[gl_level], diff);
-
-            // compare and unset 'x'
-            if (var_to_double(x))
-            {
-                // find where while-block begins
-                while (code[code_pos]) if (code[code_pos++] == '{') break;
-
-                gl_level++;
-
-                ret_point[gl_level] = expr_start;
-                run_flag[gl_level] = 3;  // RUN_WHILE
-            }
-            else
-            {
-                free(level_expr[gl_level]);
-                larva_skip_block();
-            }
+            bc_add_cmd(BCO_WHILE);
+            parse_expression(expr, diff);
+            bc_add_cmd(BCO_CEIT);
+            free(expr);
         }
         else if (!memcmp(token, "else\0", 5))
         {
-            if (run_flag[gl_level + 1] == 1) larva_skip_block();
+            /*if (run_flag[gl_level + 1] == 1) larva_skip_block();
             else
             {
                 // find where else-block begins
                 while (code[code_pos]) if (code[code_pos++] == '{') break;
                 run_flag[++gl_level] = 1;
-            }
+            }*/
+            bc_add_cmd(BCO_ELSE);
         }
         else if (!memcmp(token, "{\0", 2))
         {
-            larva_error("Blocks should be named or preceded by control statements.");
+            bc_add_cmd(BCO_BLOCK_START);
         }
         else
         {
             code_pos = line_start;
             // result is not fed anywhere, free it
-            var_free(parse());
+            parse();
         }
     }
-
-    return NULL;
 }
 
 void larva_read_token(char *token)
@@ -478,8 +397,8 @@ void larva_stop()
     {
         puts("================= DUMP ===============");
         larva_poo();
-        puts("=============== BYTECODE =============");
-        bc_poo();
+    //    puts("=============== BYTECODE =============");
+    //    bc_poo();
         puts("======================================");
     }
 
@@ -500,7 +419,7 @@ void larva_poo()
     unsigned int i;
     char types[][10] = {"UNSET", "DOUBLE", "STRING", "BLOCK", "ARRAY", "A-ARRAY", "PTR"};
 
-    var *v;
+    var v;
     var_t *v_list;
     block_t *b_list;
 
@@ -511,8 +430,7 @@ void larva_poo()
             fprintf(stdout, "'%s' [%s of size %u] = ", v_list->name, types[v_list->type], v_list->data_size);
 
             v = var_as_var_t(v_list);
-            var_echo(v);
-            var_free(v);
+            var_echo(&v);
             putc('\n', stdout);
         }
     }

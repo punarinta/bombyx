@@ -1,6 +1,6 @@
 #include "var.h"
 #include "sys.h"
-#include "../larva.h"
+#include "larva.h"
 #include "../common.h"
 
 /*

@@ -1,34 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
-#include "larva.h"
+#include "core/larva.h"
 
 int main(int argc, char *argv[])
 {
-/*
-    // TESTING AREA
-
-    #include <sys/time.h>
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    double t1 = tv.tv_sec * 1000000L + tv.tv_usec;
-
-    char *a; int n = 1000000, b = n;
-    while (b--)
-    {
-        a = malloc(28);
-        free(a);
-    }
-
-    gettimeofday(&tv, NULL);
-    double t2 = tv.tv_sec * 1000000L + tv.tv_usec;
-
-    printf("\n1 malloc-free consumes %.6g us\n", (t2 - t1)/n);
-    return 0;
-
-    // END OF TESTING AREA
-*/
-
     verbose = 0;
     gl_error = 0;
     char *source;
@@ -102,7 +78,10 @@ int main(int argc, char *argv[])
         else
         {
             larva_init(source, newLen);
-            var_free(larva_digest());
+            larva_digest();
+
+            larva_silk();
+
             larva_stop();
         }
     }

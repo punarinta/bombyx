@@ -125,56 +125,49 @@ void var_table_delete(var_table_t *hashtable)
 }
 
 
-
-var *var_as_double(double a)
+var var_as_double(double a)
 {
-    var *v = malloc(sizeof(var));
-    v->name = NULL;
-    v->type = VAR_DOUBLE;
-    v->data_size = sizeof(double);
-    v->data = malloc(sizeof(double));
-    memcpy(v->data, &a, sizeof(double));
+    var v;
+    v.name = NULL;
+    v.type = VAR_DOUBLE;
+    v.data_size = sizeof(double);
+    v.data = malloc(sizeof(double));
+    memcpy(v.data, &a, sizeof(double));
 
     return v;
 }
 
-var *var_as_var_t(var_t *vt)
+/*
+    Be careful: name is not copied, but assigned!
+*/
+var var_as_var_t(var_t *vt)
 {
-    if (!vt) return NULL;
+    var v;
 
-    var *v = malloc(sizeof(var));
-
-    v->data_size = vt->data_size;
-    v->type = vt->type;
-
-    if (vt->name)
-    {
-        size_t len = strlen(vt->name) + 1;
-        v->name = malloc(len);
-        memcpy(v->name, vt->name, len);
-    }
-    else v->name = NULL;
+    v.data_size = vt->data_size;
+    v.type = vt->type;
+    v.name = vt->name;
 
     if (vt->data)
     {
-        v->data = malloc(vt->data_size);
-        memcpy(v->data, vt->data, vt->data_size);
+        v.data = malloc(vt->data_size);
+        memcpy(v.data, vt->data, vt->data_size);
     }
-    else v->data = NULL;
+    else v.data = NULL;
 
     return v;
 }
 
-var *var_as_string(char *a)
+var var_as_string(char *a)
 {
-    var *v = malloc(sizeof(var));
-    v->name = NULL;
-    v->type = VAR_STRING;
+    var v;
+    v.name = NULL;
+    v.type = VAR_STRING;
 
     unsigned int len = strlen(a) + 1;
-    v->data = malloc(len);
-    v->data_size = len;
-    memcpy(v->data, a, len);
+    v.data = malloc(len);
+    v.data_size = len;
+    memcpy(v.data, a, len);
 
     return v;
 }
@@ -237,7 +230,7 @@ double var_extract_double(var *a)
 }
 
 /*
-    Unsets the variable
+    Frees variable memory
 */
 inline void var_free(var *a)
 {
@@ -245,6 +238,20 @@ inline void var_free(var *a)
     if (a->name) free(a->name);
     if (a->data) free(a->data);
     free(a);
+}
+
+inline void var_unset(var *a)
+{
+    if (a->data) free(a->data);
+}
+
+inline var var_unset_ret(var a)
+{
+    if (a.name) free(a.name);
+    if (a.data) free(a.data);
+    a.name = NULL;
+    a.data = NULL;
+    return a;
 }
 
 void var_echo(var *a)
