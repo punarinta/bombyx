@@ -28,6 +28,8 @@ void bc_add_token(char *token)
 
     bytecode[bc_pos++] = size;
     memcpy(bytecode + bc_pos, token, size);
+
+    bc_pos += size;
 }
 
 void bc_add_double(double x)
@@ -37,6 +39,8 @@ void bc_add_double(double x)
     if (bc_pos >= bc_length - size) bc_grow();
 
     memcpy(bytecode + bc_pos, &x, size);
+
+    bc_pos += size;
 }
 
 void bc_add_string(char *str)
@@ -46,8 +50,10 @@ void bc_add_string(char *str)
     if (bc_pos >= bc_length - size - 2) bc_grow();
 
     bytecode[bc_pos++] = size;
-    bytecode[bc_pos++] = size % 256;
+    bytecode[bc_pos++] = size / 256;
     memcpy(bytecode + bc_pos, str, size);
+
+    bc_pos += size;
 }
 
 void bc_grow()
@@ -56,10 +62,26 @@ void bc_grow()
     bytecode = (char *) realloc(bytecode, bc_length);
 }
 
+void bc_ready()
+{
+    bc_length = bc_pos + 1;
+    bytecode = (char *) realloc(bytecode, bc_length);
+    bytecode[bc_pos] = 0;
+    bc_pos = 0;
+
+    bc_stack_pos = 0;
+    for (unsigned int i = 0; i < 256; i++)
+    {
+        bc_stack[i] = NULL;
+    }
+}
+
 void bc_poo()
 {
-    for (unsigned int i = 0; i < bc_pos; i++)
+    for (unsigned int i = 0; i < bc_length; i++)
     {
-        fprintf(stdout, "%04X: %c\n", i, bytecode[i]);
+        fprintf(stdout, "%04d: ", i);
+        if (isalpha(bytecode[i]) || isdigit(bytecode[i]) || bytecode[i]=='_') fprintf(stdout, "%c\n", bytecode[i]);
+        else fprintf(stdout, "[%03d]\n", bytecode[i]);
     }
 }
