@@ -56,7 +56,7 @@ exit(0);*/
             continue;
         }
 
-        ++bc_ops;
+        if (!skip_mode) ++bc_ops;
 
         switch (bytecode[bc_pos++])
         {
@@ -159,6 +159,16 @@ exit(0);*/
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             bc_pos += size;
+
+            if (parent_block)
+            {
+                char *parent_name = parent_block->name;
+                memcpy(token + strlen(parent_name) + 1, token, size);
+                memcpy(token, parent_name, strlen(parent_name));
+                token[strlen(parent_name)] = '.';
+                token[strlen(parent_name) + 1 + size] = '\0';
+            }
+
             parent_block = block_add(blocks, token, bc_pos, parent_block);
 
             // replace the block definition with nulls and skipmode
@@ -203,7 +213,6 @@ exit(0);*/
                 }
                 else if (run_flag[gl_level] == RUN_BLOCK)
                 {
-                    bc_pos = ret_point[gl_level];
 
                     // clear stack manually
                     stack_clear();
@@ -211,9 +220,10 @@ exit(0);*/
                     // push null to stack
                     // TODO: replace 0 with NULL
                     bc_stack[bc_stack_size++] = var_as_double(0);
+                    parent_block = parent_block->parent;
 
+                    bc_pos = ret_point[gl_level];
                     --gl_level;
-
                     break;
                 }
                 else
@@ -222,8 +232,6 @@ exit(0);*/
                     --gl_level;
                 }
             }
-
-            // parent_block = parent_block->parent; // this should be done only on block's end
 
             // clear stack from garbage
             stack_clear();
@@ -239,10 +247,13 @@ exit(0);*/
             if (skip_mode) break;
             if (verbose) puts("BCO_RETURN");
 
-            if (bc_stack_size)
+            if (bc_stack_size > 1)
             {
                 // stack has got something during the RETURN parsing
                 v1 = bc_stack[--bc_stack_size];
+
+                // just in case, as stack can have more than 1 atom
+                stack_clear();
             }
             else
             {
@@ -250,9 +261,8 @@ exit(0);*/
                 v1 = var_as_double(0);
             }
 
-            // just in case, as stack can have more than 1 atom
-            stack_clear();
             bc_stack[bc_stack_size++] = v1;
+            parent_block = parent_block->parent;
 
             // get da fukk out
             bc_pos = ret_point[gl_level];

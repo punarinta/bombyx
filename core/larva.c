@@ -61,52 +61,20 @@ void larva_init(char *incoming_code, unsigned int len)
 
 void larva_chew()
 {
-    int not_allowed = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
 
     while (code[code_pos])
     {
         larva_read_token(token);
 
-        if (!strcmp(token, "block"))
+        if (!memcmp(token, "use\0", 4))
         {
             larva_read_token(token);
 
-            if (not_allowed)
-            {
-                fprintf(stderr, "Block '%s' is declared within control statement.", token);
-                larva_error(0);
-            }
-
-            /*// if this block haz parents, copy parent_name before own name
-            if (parent_block)
-            {
-                size_t tl = strlen(token);
-                char *parent_name = parent_block->name;
-                memcpy(token + strlen(parent_name) + 1, token, tl);
-                memcpy(token, parent_name, strlen(parent_name));
-                token[strlen(parent_name)] = '.';
-                token[strlen(parent_name) + 1 + tl] = '\0';
-            }
-
-            // check what's the status of this var
-            if (block_lookup(blocks, token))
-            {
-                fprintf(stderr, "Block '%s' already exists.", token);
-                larva_error(0);
-            }*/
-
-            // scan for '{'
-            while (code[code_pos]) if (code[code_pos++] == '{') break;
-        }
-        else if (!strcmp(token, "use"))
-        {
-            larva_read_token(token);
-
-            void *lib_handle;
-            double (*fn)(int *);
             int x;
             char *error;
+            void *lib_handle;
+            double (*fn)(int *);
 
             lib_handle = dlopen(token, RTLD_LAZY);
 
@@ -128,16 +96,6 @@ void larva_chew()
 
             dlclose(lib_handle);
         }
-        else if (!strcmp(token, "if") || !strcmp(token, "else") || !strcmp(token, "while") )
-        {
-            ++not_allowed;
-            while (code[code_pos]) if (code[code_pos++] == '{') break;
-        }
-        else if (!strcmp(token, "}"))
-        {
-            if (not_allowed) --not_allowed;
-            //else parent_block = parent_block->parent;
-        }
     }
 
     code_pos = 0;
@@ -148,9 +106,7 @@ void larva_chew()
  */
 void larva_digest()
 {
-    var_t *token_var;
     char token[PARSER_MAX_TOKEN_SIZE];
-    char oper[PARSER_MAX_TOKEN_SIZE];
 
     while (code[code_pos])
     {
@@ -219,12 +175,9 @@ void larva_digest()
         }
         else if (!memcmp(token, "return\0", 7))
         {
-            if (gl_level == 0)
-            {
-
-            }
-
             bc_add_cmd(BCO_CLEAR_STACK);
+
+            // parse until newline
             parse();
             bc_add_cmd(BCO_RETURN);
         }
@@ -237,6 +190,7 @@ void larva_digest()
         else if (!memcmp(token, "if\0", 3))
         {
             unsigned long expr_start = code_pos, level = 0;
+
             // find expression
             while (code[code_pos])
             {
@@ -262,6 +216,7 @@ void larva_digest()
         else if (!memcmp(token, "while\0", 6))
         {
             unsigned long expr_start = code_pos, level = 0;
+
             // find expression
             while (code[code_pos])
             {
@@ -286,13 +241,6 @@ void larva_digest()
         }
         else if (!memcmp(token, "else\0", 5))
         {
-            /*if (run_flag[gl_level + 1] == 1) larva_skip_block();
-            else
-            {
-                // find where else-block begins
-                while (code[code_pos]) if (code[code_pos++] == '{') break;
-                run_flag[++gl_level] = 1;
-            }*/
             bc_add_cmd(BCO_ELSE);
         }
         else if (!memcmp(token, "{\0", 2))
@@ -302,7 +250,6 @@ void larva_digest()
         else
         {
             code_pos = line_start;
-            // result is not fed anywhere, free it
             parse();
         }
 

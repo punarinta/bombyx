@@ -7,6 +7,8 @@
 #define BC_INITIAL_SIZE     25000
 #define BC_GROW_SIZE        10000
 
+// TODO: group fully skippable operations to have the same bit
+
 #define BCO_IDLE            0
 #define BCO_VAR             1
 #define BCO_VARX            2
