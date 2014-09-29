@@ -149,6 +149,8 @@ void larva_digest()
 
             if (code[code_pos] == ',')
             {
+                bc_add_cmd(BCO_VAR);
+                bc_add_token(token);
                 ++code_pos;
                 goto re_read_var;
             }
