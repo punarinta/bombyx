@@ -138,7 +138,7 @@ void larva_chew()
         else if (!strcmp(token, "}"))
         {
             if (not_allowed) --not_allowed;
-            else parent_block = parent_block->parent;
+            //else parent_block = parent_block->parent;
         }
     }
 

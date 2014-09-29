@@ -80,7 +80,8 @@ exit(0);*/
             break;
 
             case BCO_AS_STRING:
-            size = bytecode[bc_pos++] + bytecode[bc_pos++] * 256;
+            size = bytecode[bc_pos + 1] + bytecode[bc_pos + 2] * 256;
+            bc_pos += 2;
             if (skip_mode)
             {
                 bc_pos += size;
@@ -163,6 +164,8 @@ exit(0);*/
                     --gl_level;
                 }
             }
+
+            parent_block = parent_block->parent;
 
             // clear stack from garbage
             while (bc_stack_size) var_unset(&bc_stack[--bc_stack_size]);

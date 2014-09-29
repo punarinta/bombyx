@@ -59,13 +59,13 @@ void bc_add_string(char *str)
 void bc_grow()
 {
     bc_length += BC_GROW_SIZE;
-    bytecode = (char *) realloc(bytecode, bc_length);
+    bytecode = (unsigned char *) realloc(bytecode, bc_length);
 }
 
 void bc_ready()
 {
     bc_length = bc_pos + 1;
-    bytecode = (char *) realloc(bytecode, bc_length);
+    bytecode = (unsigned char *) realloc(bytecode, bc_length);
     bytecode[bc_pos] = 0;
     bc_pos = 0;
 
