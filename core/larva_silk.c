@@ -5,6 +5,24 @@
 #include "sys.h"
 #include "bytecode.h"
 
+void stack_push(var v)
+{
+    v.level = gl_level;
+    bc_stack[bc_stack_size++] = v;
+}
+
+/*
+    Must be called before the level is left
+*/
+void stack_clear()
+{
+    while (bc_stack_size)
+    {
+        if (bc_stack[bc_stack_size].level < gl_level) break;
+        var_unset(&bc_stack[--bc_stack_size]);
+    }
+}
+
 // execute byte-code
 void larva_silk()
 {
@@ -21,7 +39,7 @@ void larva_silk()
 
     bc_ready();
 
-   /* puts("=============== BYTECODE =============");
+    /*puts("=============== BYTECODE =============");
     bc_poo();
     puts("======================================");
 exit(0);*/
@@ -32,6 +50,14 @@ exit(0);*/
 
     while (bc_pos < bc_length)
     {
+        if (bytecode[bc_pos] == BCO_IDLE)
+        {
+            ++bc_pos;
+            continue;
+        }
+
+        ++bc_ops;
+
         switch (bytecode[bc_pos++])
         {
             case BCO_AS_VAR:
@@ -59,10 +85,10 @@ exit(0);*/
             	larva_error("Schnieblie operations are not allowed.");
             }
 
-            // copy everything except name from v1 to v0
             op_copy(&v1, &v2);
             var_sync(&v1);
             var_unset(&v2);
+
             // back to stack
             bc_stack[bc_stack_size++] = v1;
             break;
@@ -80,7 +106,7 @@ exit(0);*/
             break;
 
             case BCO_AS_STRING:
-            size = bytecode[bc_pos + 1] + bytecode[bc_pos + 2] * 256;
+            size = bytecode[bc_pos] + bytecode[bc_pos + 1] * 256;
             bc_pos += 2;
             if (skip_mode)
             {
@@ -114,38 +140,53 @@ exit(0);*/
             }
             else
             {
-                ret_point[gl_level++] = bc_pos;
+                ++gl_level;
+                ret_point[gl_level] = bc_pos;
             	// step into
-            	run_flag[gl_level] = 0;
+            	run_flag[gl_level] = RUN_BLOCK;
             	bc_pos = this_block->pos;
             }
             break;
 
-            case BCO_BLOCK:
-            if (skip_mode) break;
-            if (verbose) puts("BCO_BLOCK");
+            case BCO_BLOCK_DEF:
             size = bytecode[bc_pos++];
+            if (skip_mode)
+            {
+                bc_pos += size;
+                break;
+            }
+            if (verbose) puts("BCO_BLOCK_DEF");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             bc_pos += size;
             parent_block = block_add(blocks, token, bc_pos, parent_block);
 
+            // replace the block definition with nulls and skipmode
+            memset(bytecode + bc_pos - size - 2, BCO_IDLE, size + 1);
+            bytecode[bc_pos - 1] = BCO_SKIP;
+
             ++gl_level;
+
             // we don't need it now
             skip_mode = 1;
+            break;
+
+            case BCO_SKIP:
+            if (skip_mode) break;
+            skip_mode = 1;
+            if (verbose) puts("BCO_SKIP");
             break;
 
             case BCO_BLOCK_START:
             if (skip_mode)
             {
                 ++level;
+                break;
             }
-            if (skip_mode) break;
             if (verbose) puts("BCO_BLOCK_START");
             break;
 
             case BCO_BLOCK_END:
-            if (verbose) puts("BCO_BLOCK_END");
             if (skip_mode)
             {
                 if (--level == 0) skip_mode = 0;
@@ -153,22 +194,69 @@ exit(0);*/
             }
             else
             {
+                if (verbose) puts("BCO_BLOCK_END");
+
                 // if we had WHILE on this level, go back and check it again
-                if (run_flag[gl_level] == 3)
+                if (run_flag[gl_level] == RUN_WHILE)
                 {
                     bc_pos = ret_point[gl_level--];
                 }
+                else if (run_flag[gl_level] == RUN_BLOCK)
+                {
+                    bc_pos = ret_point[gl_level];
+
+                    // clear stack manually
+                    stack_clear();
+
+                    // push null to stack
+                    // TODO: replace 0 with NULL
+                    bc_stack[bc_stack_size++] = var_as_double(0);
+
+                    --gl_level;
+
+                    break;
+                }
                 else
                 {
-                    // just up?
+                    // just up (e.g. IF)
                     --gl_level;
                 }
             }
 
-            parent_block = parent_block->parent;
+            // parent_block = parent_block->parent; // this should be done only on block's end
 
             // clear stack from garbage
-            while (bc_stack_size) var_unset(&bc_stack[--bc_stack_size]);
+            stack_clear();
+            break;
+
+            case BCO_CLEAR_STACK:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_CLEAR_STACK");
+            stack_clear();
+            break;
+
+            case BCO_RETURN:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_RETURN");
+
+            if (bc_stack_size)
+            {
+                // stack has got something during the RETURN parsing
+                v1 = bc_stack[--bc_stack_size];
+            }
+            else
+            {
+                // stack is empty
+                v1 = var_as_double(0);
+            }
+
+            // just in case, as stack can have more than 1 atom
+            stack_clear();
+            bc_stack[bc_stack_size++] = v1;
+
+            // get da fukk out
+            bc_pos = ret_point[gl_level];
+            --gl_level;
             break;
 
             case BCO_WHILE:
@@ -177,7 +265,7 @@ exit(0);*/
             ++gl_level;
 
             ret_point[gl_level] = bc_pos - 1;
-            run_flag[gl_level] = 3;  // RUN_WHILE
+            run_flag[gl_level] = RUN_WHILE;
             break;
 
             case BCO_IF:
@@ -185,7 +273,7 @@ exit(0);*/
             if (verbose) puts("BCO_IF");
             ++gl_level;
 
-            run_flag[gl_level] = 1;  // RUN_IF
+            run_flag[gl_level] = RUN_IF;
             break;
 
             case BCO_ELSE:
@@ -194,11 +282,7 @@ exit(0);*/
 
             ++gl_level;
 
-            if (run_flag[gl_level] == 2)
-            {
-
-            }
-            else skip_mode = 1;
+            if (run_flag[gl_level] == RUN_IF) skip_mode = 1;
             break;
 
             case BCO_CEIT:
@@ -208,7 +292,7 @@ exit(0);*/
 
             if (!var_extract_double(&v1))
             {
-                if (run_flag[gl_level] == 1) run_flag[gl_level] = 2;    // RUN_ELSE
+                if (run_flag[gl_level] == RUN_IF) run_flag[gl_level] = RUN_ELSE;
                 skip_mode = 1;
             }
             var_unset(&v1);
@@ -293,8 +377,9 @@ exit(0);*/
                 bc_pos += size;
                 break;
             }
+            if (verbose) puts("BCO_VAR");
             memcpy(token, bytecode + bc_pos, size);
-            token[size + 1] = 0;
+            token[size] = 0;
             var_add(vars, token, VAR_STRING, NULL);
             bc_pos += size;
             break;
@@ -323,6 +408,7 @@ exit(0);*/
 
             case BCO_PRINT:
             if (skip_mode) break;
+            if (verbose) puts("BCO_PRINT");
             v1 = bc_stack[--bc_stack_size];
             var_echo(&v1);
             var_unset(&v1);

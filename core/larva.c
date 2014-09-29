@@ -66,8 +66,6 @@ void larva_chew()
 
     while (code[code_pos])
     {
-        if (isspace(code[code_pos])) { ++code_pos; continue; }
-
         larva_read_token(token);
 
         if (!strcmp(token, "block"))
@@ -156,13 +154,6 @@ void larva_digest()
 
     while (code[code_pos])
     {
-        // find first significant character
-        if (isspace(code[code_pos]))
-        {
-            ++code_pos;
-            continue;
-        }
-
         size_t line_start = code_pos;
         larva_read_token(token);
 
@@ -190,7 +181,7 @@ void larva_digest()
             }
 
             // skip spaces
-            if (code[code_pos] == ' ') ++code_pos;
+            while (code[code_pos] == ' ') ++code_pos;
 
             // variable is just initialized, but not defined
             if (code[code_pos] == '\n')
@@ -230,26 +221,18 @@ void larva_digest()
         {
             if (gl_level == 0)
             {
-                if (verbose) puts("Returning from zero level. Bye-bye!");
-                return;
+
             }
 
-            // read space
-            ++code_pos;
-
+            bc_add_cmd(BCO_CLEAR_STACK);
             parse();
-
-            if (verbose) fprintf(stdout, "Returning from level %u...\n", gl_level);
-
-            return;
+            bc_add_cmd(BCO_RETURN);
         }
         else if (!memcmp(token, "block\0", 6))
         {
             larva_read_token(token);
-            bc_add_cmd(BCO_BLOCK);
+            bc_add_cmd(BCO_BLOCK_DEF);
             bc_add_token(token);
-
-            while (code[code_pos]) if (code[code_pos++] == '{') break;
         }
         else if (!memcmp(token, "if\0", 3))
         {
@@ -322,6 +305,8 @@ void larva_digest()
             // result is not fed anywhere, free it
             parse();
         }
+
+        ++code_pos;
     }
 }
 
@@ -397,7 +382,10 @@ void larva_stop()
     {
         puts("================= DUMP ===============");
         larva_poo();
-    //    puts("=============== BYTECODE =============");
+        puts("=============== BYTECODE =============");
+        printf("Ops count = %u.\n", bc_ops);
+        printf("Code size = %u byte(s).\n", bc_length);
+        printf("Stack size = %u.\n", bc_stack_size);
     //    bc_poo();
         puts("======================================");
     }

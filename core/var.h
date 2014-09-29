@@ -20,6 +20,7 @@ typedef unsigned int  DWORD;
 typedef struct
 {
     BYTE type;
+    BYTE level;         // used to clear garbage from this level
     char *name;
     char *data;
     DWORD data_size;

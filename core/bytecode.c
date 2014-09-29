@@ -68,6 +68,7 @@ void bc_ready()
     bytecode = (unsigned char *) realloc(bytecode, bc_length);
     bytecode[bc_pos] = 0;
     bc_pos = 0;
+    bc_ops = 0;
 
     // prepare stack
     bc_stack_size = 0;

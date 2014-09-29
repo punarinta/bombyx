@@ -3,6 +3,11 @@
 
 #include "var.h"
 
+#define RUN_IF          1
+#define RUN_ELSE        2
+#define RUN_WHILE       3
+#define RUN_BLOCK       4
+
 void larva_init();
 void larva_chew();
 void larva_digest();

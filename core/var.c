@@ -127,7 +127,7 @@ void var_table_delete(var_table_t *hashtable)
 
 var var_as_double(double a)
 {
-    var v;
+    var v = {0};
     v.name = NULL;
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
@@ -142,7 +142,7 @@ var var_as_double(double a)
 */
 var var_as_var_t(var_t *vt)
 {
-    var v;
+    var v = {0};
 
     v.data_size = vt->data_size;
     v.type = vt->type;
@@ -160,7 +160,7 @@ var var_as_var_t(var_t *vt)
 
 var var_as_string(char *a)
 {
-    var v;
+    var v = {0};
     v.name = NULL;
     v.type = VAR_STRING;
 

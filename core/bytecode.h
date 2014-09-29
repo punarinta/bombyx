@@ -25,17 +25,19 @@
 #define BCO_IF              20
 #define BCO_ELSE            21
 #define BCO_WHILE           22
-#define BCO_BLOCK           23
+#define BCO_BLOCK_DEF       23
 #define BCO_RETURN          24
-#define BCO_RETURNX         25
+#define BCO_CLEAR_STACK     25
 #define BCO_BLOCK_START     26
 #define BCO_BLOCK_END       27
 #define BCO_CEIT            28      // Compare and Execute If True
 #define BCO_CALL            29
+#define BCO_SKIP            30
 #define BCO_PRINT           200
 #define BCO_MICROTIME       201
 #define BCO_SWAP            202
 
+unsigned int bc_ops;
 unsigned int bc_pos;
 unsigned int bc_length;
 BYTE *bytecode;
