@@ -15,6 +15,7 @@
 #define BCO_AS_STRING       3
 #define BCO_AS_DOUBLE       4
 #define BCO_AS_VAR          5
+
 #define BCO_SET             10
 #define BCO_ADD             11
 #define BCO_SUB             12
@@ -22,22 +23,27 @@
 #define BCO_DIV             14
 #define BCO_INCR            15
 #define BCO_DECR            16
-#define BCO_CMP             17
-#define BCO_CMP_NOT         18
-#define BCO_IF              20
-#define BCO_ELSE            21
-#define BCO_WHILE           22
-#define BCO_BLOCK_DEF       23
-#define BCO_RETURN          24
-#define BCO_CLEAR_STACK     25
-#define BCO_BLOCK_START     26
-#define BCO_BLOCK_END       27
-#define BCO_CEIT            28      // Compare and Execute If True
-#define BCO_CALL            29
-#define BCO_SKIP            30
+#define BCO_UNARY_MINUS     17
+#define BCO_INVERT          18
+#define BCO_CMP             19
+#define BCO_CMP_NOT         20
+
+#define BCO_IF              40
+#define BCO_ELSE            41
+#define BCO_WHILE           42
+#define BCO_BLOCK_DEF       43
+#define BCO_RETURN          44
+#define BCO_CLEAR_STACK     45
+#define BCO_BLOCK_START     46
+#define BCO_BLOCK_END       47
+#define BCO_CEIT            48      // Compare and Execute If True
+#define BCO_CALL            49
+#define BCO_SKIP            50
+
 #define BCO_PRINT           200
 #define BCO_MICROTIME       201
 #define BCO_SWAP            202
+
 
 unsigned int bc_ops;
 unsigned int bc_pos;

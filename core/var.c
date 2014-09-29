@@ -128,7 +128,7 @@ void var_table_delete(var_table_t *hashtable)
 var var_as_double(double a)
 {
     var v = {0};
-    v.name = NULL;
+    //v.name = NULL;
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
     v.data = malloc(sizeof(double));
@@ -161,7 +161,7 @@ var var_as_var_t(var_t *vt)
 var var_as_string(char *a)
 {
     var v = {0};
-    v.name = NULL;
+    //v.name = NULL;
     v.type = VAR_STRING;
 
     unsigned int len = strlen(a) + 1;
@@ -256,32 +256,35 @@ inline var var_unset_ret(var a)
 
 void var_echo(var *a)
 {
-    if (!a)
+    if (a)
+    {
+        switch (a->type)
+        {
+            case VAR_UNSET:
+            fputs("UNSET", stdout);
+            break;
+
+            case VAR_STRING:
+            if (a->data && a->data_size) fputs(a->data, stdout);
+            else fputs("NULL", stdout);
+            break;
+
+            case VAR_DOUBLE:
+            fprintf(stdout, "%.6g", var_extract_double(a));
+            break;
+
+            default:
+            if (verbose)
+            {
+                fprintf(stdout, "\nvar_echo() failed, type = %d, data = ", a->type);
+                if (a->data) puts(a->data);
+                else puts("NULL");
+            }
+            break;
+        }
+    }
+    else
     {
         fputs("(null)", stdout);
-    }
-    else switch (a->type)
-    {
-        case VAR_UNSET:
-        fputs("UNSET", stdout);
-        break;
-
-        case VAR_STRING:
-        if (a->data && a->data_size) fputs(a->data, stdout);
-        else fputs("NULL", stdout);
-        break;
-
-        case VAR_DOUBLE:
-        fprintf(stdout, "%.6g", var_extract_double(a));
-        break;
-
-        default:
-        if (verbose)
-        {
-            fprintf(stdout, "\nvar_echo() failed, type = %d, data = ", a->type);
-            if (a->data) puts(a->data);
-            else puts("NULL");
-        }
-        break;
     }
 }

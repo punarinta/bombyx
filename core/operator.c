@@ -203,7 +203,7 @@ void op_divide(var *a, var *b)
 /*
     Inverts the var.
 */
-void op_invert(var *a)
+void op_unary_minus(var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
@@ -236,6 +236,23 @@ void op_invert(var *a)
             --end;
         }
         #undef XOR_SWAP
+    }
+    else
+    {
+        larva_error("Inversion operator is not defined for the given operand.");
+    }
+}
+
+void op_invert(var *a)
+{
+    if (a->type == VAR_DOUBLE)
+    {
+        double xa;
+        memcpy(&xa, a->data, sizeof(double));
+
+        xa = xa ? 0 : 1;
+
+        memcpy(a->data, &xa, sizeof(double));
     }
     else
     {

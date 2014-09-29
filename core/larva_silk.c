@@ -380,6 +380,18 @@ exit(0);*/
             op_decrement(&bc_stack[bc_stack_size - 1]);
             break;
 
+            case BCO_INVERT:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_INVERT");
+            op_invert(&bc_stack[bc_stack_size - 1]);
+            break;
+
+            case BCO_UNARY_MINUS:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_UNARY_MINUS");
+            op_unary_minus(&bc_stack[bc_stack_size - 1]);
+            break;
+
             case BCO_VAR:
             size = bytecode[bc_pos++];
             if (skip_mode)

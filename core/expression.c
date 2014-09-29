@@ -309,8 +309,6 @@ var *parser_read_builtin(parser_data *pd)
             {
 				parser_read_boolean_or(pd);
                 bc_add_cmd(BCO_PRINT);
-				//var_echo(v0);
-				// returns its argument (still doubtful)
 			}
 			else if (memcmp(token, "swap\0", 5) == 0)
             {
@@ -343,7 +341,6 @@ var *parser_read_builtin(parser_data *pd)
 			}
 			else if (memcmp(token, "microtime\0", 10) == 0)
             {
-				//v0 = var_as_double(get_microtime());
 				bc_add_cmd(BCO_MICROTIME);
 			}
 			else
@@ -354,28 +351,6 @@ var *parser_read_builtin(parser_data *pd)
 
 				bc_add_cmd(BCO_CALL);
 				bc_add_token(token);
-
-				/*block_t *this_block = block_lookup(blocks, token);
-		        if (!this_block)
-		        {
-		            sprintf(temp_error, "Unknown function '%s'.", token);
-		            parser_error(pd, temp_error);
-		        }
-				else
-				{
-					if (verbose) fprintf(stdout, "Moving to pos %u\n", this_block->pos);
-
-					// memorize
-					ret_point[gl_level++] = code_pos;
-
-					// step into
-					run_flag[gl_level] = 0;
-					code_pos = this_block->pos;
-					larva_digest();
-
-					// get back
-					code_pos = ret_point[--gl_level];
-				}*/
 			}
 
 			// eat closing bracket of function call
@@ -383,29 +358,8 @@ var *parser_read_builtin(parser_data *pd)
 		}
 		else
 		{
-		    //v0 = NULL;
-
 		    bc_add_cmd(BCO_AS_VAR);
             bc_add_token(token);
-
-		/*	// no opening bracket, indicates a variable lookup
-			var_t *vt = var_lookup(vars, token);
-
-            if (vt)
-            {
-                // NB: no sync, just copy vars[i] to a temporary var.
-              	if (!vt->type)
-              	{
-              	    sprintf(temp_error, "Variable '%s' was not set.", token);
-                    parser_error(pd, temp_error);
-              	}
-              	v0 = var_as_var_t(vt);
-            }
-            else
-            {
-                sprintf(temp_error, "Unknown variable '%s'.", token);
-                parser_error(pd, temp_error);
-            }*/
 		}
 	}
 	else
@@ -464,8 +418,7 @@ var *parser_read_unary(parser_data *pd)
 		parser_eat_whitespace(pd);
 		parser_read_paren(pd);
 
-		// extract and unset v0
-	//	v0 = (fabs(var_to_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? var_as_double(0.0) : var_as_double(1.0);
+		bc_add_cmd(BCO_INVERT);
 	}
 	else if (c == '-')
     {
@@ -483,7 +436,7 @@ var *parser_read_unary(parser_data *pd)
 			parser_skip(pd);
 			parser_eat_whitespace(pd);
 			parser_read_paren(pd);
-		//	op_invert(v0);
+			bc_add_cmd(BCO_UNARY_MINUS);
 		}
 	}
 	else if (c == '+')
@@ -610,9 +563,8 @@ var *parser_read_expr(parser_data *pd)
 
 		if (c == '-' && parser_peek(pd) != '-')
 		{
-		    // here's a potential bug: v0 = parser_read_term(pd) cannot be moved out of the comparison for some reason
 			parser_read_term(pd);
-		//	op_invert(v0);
+			bc_add_cmd(BCO_UNARY_MINUS);
 		}
 		else parser_read_term(pd);
 	}

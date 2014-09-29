@@ -67,6 +67,7 @@ void op_subtract(var *, var *);
 void op_multiply(var *, var *);
 void op_divide(var *, var *);
 void op_invert(var *);
+void op_unary_minus(var *);
 void op_increment(var *);
 void op_decrement(var *);
 
