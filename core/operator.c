@@ -311,6 +311,14 @@ void op_decrement(var *a)
     var_sync(a);
 }
 
+void op_and(var *a, var *b)
+{
+}
+
+void op_or(var *a, var *b)
+{
+}
+
 /*
     '1' is 'equal'
 */

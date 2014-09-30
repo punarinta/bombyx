@@ -27,6 +27,12 @@
 #define BCO_INVERT          18
 #define BCO_CMP             19
 #define BCO_CMP_NOT         20
+#define BCO_AND             21
+#define BCO_OR              22
+#define BCO_LESS            23
+#define BCO_LESS_EQ         24
+#define BCO_MORE            25
+#define BCO_MORE_EQ         26
 
 #define BCO_IF              40
 #define BCO_ELSE            41

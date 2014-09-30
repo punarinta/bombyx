@@ -209,8 +209,6 @@ var *parser_read_double(parser_data *pd)
         double d = strtod(token, NULL);
         bc_add_cmd(BCO_AS_DOUBLE);
         bc_add_double(d);
-
-        //val = var_as_double(d);
     }
 
     // return the parsed value
@@ -588,14 +586,12 @@ var *parser_read_expr(parser_data *pd)
 		if (c == '+')
         {
 			parser_read_term(pd);
-		//	op_add(v0, term);
 			bc_add_cmd(BCO_ADD);
 		}
 		else if (c == '-')
         {
         	// reset name for v0
 			parser_read_term(pd);
-		//	op_subtract(v0, term);
 			bc_add_cmd(BCO_SUB);
 		}
 
@@ -645,18 +641,22 @@ var *parser_read_boolean_comparison(parser_data *pd)
 		if (memcmp(oper, "<\0", 2) == 0)
         {
 			//val = var_is_less(v0, v1);
+			bc_add_cmd(BCO_LESS);
 		}
 		else if (memcmp(oper, ">\0", 2) == 0)
         {
 			//val = var_is_more(v0, v1);
+			bc_add_cmd(BCO_MORE);
 		}
 		else if (memcmp(oper, "<=\0", 3) == 0)
         {
 			//val = var_is_less_equal(v0, v1);
+			bc_add_cmd(BCO_LESS_EQ);
 		}
 		else if (memcmp(oper, ">=\0", 3) == 0)
         {
 			//val = var_is_more_equal(v0, v1);
+			bc_add_cmd(BCO_MORE_EQ);
 		}
 		else
 		{
@@ -664,8 +664,6 @@ var *parser_read_boolean_comparison(parser_data *pd)
 		}
 
 		parser_eat_whitespace(pd);
-
-		//var_set_double(v0, val);
 	}
 
 	return NULL;
@@ -720,12 +718,10 @@ var *parser_read_boolean_equality(parser_data *pd)
 		// perform the boolean operations
 		if (memcmp(oper, "==\0", 3) == 0)
         {
-			//var_set_double(v0, var_cmp(v0, v1));
 			bc_add_cmd(BCO_CMP);
 		}
 		else if (memcmp(oper, "!=\0", 3) == 0)
         {
-			//var_set_double(v0, !var_cmp(v0, v1));
 			bc_add_cmd(BCO_CMP_NOT);
 		}
 		else if (memcmp(oper, "=\0", 2) == 0)
@@ -757,14 +753,14 @@ var *parser_read_boolean_and(parser_data *pd)
 	// there are no more to perform
 	char c = parser_peek(pd);
 
-	/*while (c == '&')
+	while (c == '&')
     {
 		// eat the first '&'
 		parser_skip(pd);
 
 		// check for and eat the second '&'
 		c = parser_peek(pd);
-		if (c != '&') parser_error(pd, "Expected '&' to follow '&' in logical and operation!");
+		if (c != '&') parser_error(pd, "Expected '&' to follow '&' in logical AND operation!");
 		parser_skip(pd);
 
 		parser_eat_whitespace(pd);
@@ -773,13 +769,14 @@ var *parser_read_boolean_and(parser_data *pd)
 		parser_read_boolean_equality(pd);
 
 		// perform the operation, returning 1.0 for TRUE and 0.0 for FALSE
-		var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		//var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		bc_add_cmd(BCO_AND);
 
         parser_eat_whitespace(pd);
 
 		// grab the next character to continue trying to perform 'and' operations
 		c = parser_peek(pd);
-	}*/
+	}
 
 	return NULL;
 }
@@ -796,14 +793,14 @@ var *parser_read_boolean_or(parser_data *pd)
 	// there are no more to perform
 	char c = parser_peek(pd);
 
-	/*while (c == '|')
+	while (c == '|')
     {
 		// match the first '|' character
 		parser_skip(pd);
 
 		// check for and match the second '|' character
 		c = parser_peek(pd);
-		if (c != '|') parser_error(pd, "Expected '|' to follow '|' in logical or operation!");
+		if (c != '|') parser_error(pd, "Expected '|' to follow '|' in logical OR operation!");
 		parser_skip(pd);
 
 		parser_eat_whitespace(pd);
@@ -812,14 +809,15 @@ var *parser_read_boolean_or(parser_data *pd)
 		parser_read_boolean_and(pd);
 
 		// perform the 'or' operation
-		var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		//var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
+		bc_add_cmd(BCO_OR);
 
         parser_eat_whitespace(pd);
 
 		// grab the next character to continue trying to match
 		// 'or' operations
 		c = parser_peek(pd);
-	}*/
+	}
 
 	// return the resulting value
 	return NULL;

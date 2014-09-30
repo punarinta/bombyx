@@ -70,6 +70,8 @@ void op_invert(var *);
 void op_unary_minus(var *);
 void op_increment(var *);
 void op_decrement(var *);
+void op_and(var *, var *);
+void op_or(var *, var *);
 
 double var_to_double(var *);
 double var_extract_double(var *);

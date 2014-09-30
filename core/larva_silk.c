@@ -327,6 +327,66 @@ exit(0);*/
             var_unset(&v2);
             break;
 
+            case BCO_MORE:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_MORE");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            bc_stack[bc_stack_size++] = var_as_double(var_is_more(&v1, &v2));
+            var_unset(&v1);
+            var_unset(&v2);
+            break;
+
+            case BCO_MORE_EQ:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_MORE_EQ");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            bc_stack[bc_stack_size++] = var_as_double(var_is_more_equal(&v1, &v2));
+            var_unset(&v1);
+            var_unset(&v2);
+            break;
+
+            case BCO_LESS:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_LESS");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            bc_stack[bc_stack_size++] = var_as_double(var_is_less(&v1, &v2));
+            var_unset(&v1);
+            var_unset(&v2);
+            break;
+
+            case BCO_LESS_EQ:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_LESS_EQ");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            bc_stack[bc_stack_size++] = var_as_double(var_is_less_equal(&v1, &v2));
+            var_unset(&v1);
+            var_unset(&v2);
+            break;
+
+            case BCO_AND:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_AND");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            op_and(&v1, &v2);
+            var_free(&v2);
+            bc_stack[bc_stack_size++] = v1;
+            break;
+
+            case BCO_OR:
+            if (skip_mode) break;
+            if (verbose) puts("BCO_OR");
+            v2 = bc_stack[--bc_stack_size];
+            v1 = bc_stack[--bc_stack_size];
+            op_or(&v1, &v2);
+            var_free(&v2);
+            bc_stack[bc_stack_size++] = v1;
+            break;
+
             case BCO_ADD:
             if (skip_mode) break;
             if (verbose) puts("BCO_ADD");
