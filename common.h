@@ -10,7 +10,10 @@
 #include "core/block.h"
 #include "core/expression.h"
 
-#ifdef __linux__
+#define BOMBYX_DEBUG  1
+#define BOMBYX_MCHECK 0
+
+#if BOMBYX_MCHECK
     #include <mcheck.h>
 #endif
 
@@ -20,9 +23,7 @@
 #define MIN_BLOCKS       	1000
 #define MAX_BLOCKS       	100000
 
-#define ERR_NO_MEMORY       1
-#define ERR_SYNTAX          2
-#define ERR_TOO_LONG        3
+#define BOMBYX_STACK_SIZE   256
 
 var_table_t *vars;
 block_table_t *blocks;
@@ -33,9 +34,8 @@ unsigned int gl_error;
 jmp_buf error_exit;
 BYTE verbose;
 BYTE gl_level;
-unsigned int gl_block;
-BYTE run_flag[256];     // this is only for statements, not for blocks
-DWORD ret_point[256];
+BYTE run_flag[BOMBYX_STACK_SIZE];     // this is only for statements, not for blocks
+DWORD ret_point[BOMBYX_STACK_SIZE];
 
 char *code;
 unsigned int code_pos;

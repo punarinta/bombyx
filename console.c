@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 
     // TODO: save argc/argv into vars
 
-#ifdef __linux__
+#if BOMBYX_MCHECK
     mtrace();
 #endif
 
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
     free(source);
 
-#ifdef __linux__
+#if BOMBYX_MCHECK
     muntrace();
 #endif
 

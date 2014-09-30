@@ -346,7 +346,7 @@ void larva_stop()
 
     bc_free();
 
-#ifndef __APPLE__
+#if BOMBYX_MCHECK
     muntrace();
 #endif
 }

@@ -72,7 +72,7 @@ void bc_ready()
 
     // prepare stack
     bc_stack_size = 0;
-    for (unsigned int i = 0; i < 256; i++)
+    for (unsigned int i = 0; i < BOMBYX_STACK_SIZE; i++)
     {
         bc_stack[i].type = 0;
         bc_stack[i].data_size = 0;

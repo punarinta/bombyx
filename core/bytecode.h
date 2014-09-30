@@ -49,7 +49,7 @@ unsigned int bc_ops;
 unsigned int bc_pos;
 unsigned int bc_length;
 BYTE *bytecode;
-var bc_stack[256];
+var bc_stack[BOMBYX_STACK_SIZE];
 unsigned int bc_stack_size;
 
 void bc_init();
