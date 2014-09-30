@@ -34,7 +34,6 @@ void larva_silk()
     BYTE level = 0;
     BYTE skip_mode = 0;
     gl_level = 0;
-    char temp_error[256];
     block_t *parent_block = NULL;
 
     bc_ready();
