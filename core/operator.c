@@ -96,10 +96,9 @@ void op_add(var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_DOUBLE)
     {
         double xb;
-        char *converted = calloc(256, sizeof(char));
+        char *converted = malloc(256);
         memcpy(&xb, b->data, sizeof(double));
-        sprintf(converted, "%.6g", xb);
-        unsigned int len = strlen(converted);
+        unsigned int len = sprintf(converted, "%.6g", xb);
 
         r.data_size = a->data_size + len;
         r.data = malloc(r.data_size);
@@ -111,7 +110,7 @@ void op_add(var *a, var *b)
         // realloc
         free(a->data);
         a->data = malloc(r.data_size);
-        strcpy(a->data, r.data);
+        memcpy(a->data, r.data, r.data_size);
         a->data_size = r.data_size;
 
         free(converted);
@@ -119,10 +118,9 @@ void op_add(var *a, var *b)
     else if (a->type == VAR_DOUBLE && b->type == VAR_STRING)
     {
         double xa;
-        char *converted = calloc(256, sizeof(char));
+        char *converted = malloc(256);
         memcpy(&xa, a->data, sizeof(double));
-        sprintf(converted, "%.6g", xa);
-        unsigned int len = strlen(converted);
+        unsigned int len = sprintf(converted, "%.6g", xa);
 
         r.data_size = len + b->data_size;
         r.data = malloc(r.data_size);
@@ -132,7 +130,7 @@ void op_add(var *a, var *b)
         // realloc
         free(a->data);
         a->data = malloc(r.data_size);
-        strcpy(a->data, r.data);
+        memcpy(a->data, r.data, r.data_size);
         a->type = VAR_STRING;
         a->data_size = r.data_size;
 
