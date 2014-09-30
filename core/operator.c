@@ -12,7 +12,7 @@ void var_sync(var *a)
     var_t *v = var_lookup(vars, a->name);
     if (v)
     {
-        if (v->data_size == a->data_size)
+        if (v->data_size == a->data_size && v->type == a->type)
         {
             memcpy(v->data, a->data, a->data_size);
         }
@@ -30,6 +30,11 @@ void var_sync(var *a)
             memcpy(v->data, a->data, a->data_size);
         }
     }
+    else
+    {
+        sprintf(temp_error, "Variable '%s' not found.", a->name);
+        larva_error(temp_error);
+    }
 }
 
 void op_copy(var *a, var *b)
@@ -38,7 +43,7 @@ void op_copy(var *a, var *b)
     {
         if (b->data)
         {
-            if (a->data_size == b->data_size)
+            if (a->data_size == b->data_size && a->type == b->type)
             {
                 memcpy(a->data, b->data, b->data_size);
             }
@@ -361,12 +366,3 @@ BYTE var_is_less_equal(var *a, var *b)
     }
     return 0;
 }
-
-/*
-var *var_array_element(var *a, unsigned int i)
-{
-    var *a = NULL;
-
-    return a;
-}
-*/
