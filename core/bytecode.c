@@ -49,7 +49,7 @@ void bc_add_string(char *str)
 
     if (bc_pos >= bc_length - size - 2) bc_grow();
 
-    bytecode[bc_pos++] = size;
+    bytecode[bc_pos++] = size % 256;
     bytecode[bc_pos++] = size / 256;
     memcpy(bytecode + bc_pos, str, size);
 
