@@ -58,7 +58,6 @@ var var_as_double(double);
 var var_as_string(char *);
 var var_as_var_t(var_t *);
 void var_set_double(var *, double);
-void var_set_string(var *, char *);
 
 void var_sync(var *);
 void op_copy(var *, var *);
