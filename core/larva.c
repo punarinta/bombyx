@@ -346,7 +346,7 @@ void larva_stop()
 
     bc_free();
 
-#if BOMBYX_MCHECK
+#ifdef BOMBYX_MCHECK
     muntrace();
 #endif
 }

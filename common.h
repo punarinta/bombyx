@@ -10,10 +10,16 @@
 #include "core/block.h"
 #include "core/expression.h"
 
-#define BOMBYX_DEBUG  1
-#define BOMBYX_MCHECK 0
+// #define BOMBYX_DEBUG
+// #define BOMBYX_MCHECK
 
-#if BOMBYX_MCHECK
+#ifdef BOMBYX_DEBUG
+    #define debug_verbose_puts(s) if (verbose) puts(s);
+#else
+    #define debug_verbose_puts(s)
+#endif
+
+#ifdef BOMBYX_MCHECK
     #include <mcheck.h>
 #endif
 

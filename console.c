@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 
     // TODO: save argc/argv into vars
 
-#if BOMBYX_MCHECK
+#ifdef BOMBYX_MCHECK
     mtrace();
 #endif
 
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
     free(source);
 
-#if BOMBYX_MCHECK
+#ifdef BOMBYX_MCHECK
     muntrace();
 #endif
 

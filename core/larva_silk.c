@@ -66,7 +66,7 @@ exit(0);*/
                 bc_pos += size;
                 break;
             }
-            if (verbose) puts("BCO_AS_VAR");
+            debug_verbose_puts("BCO_AS_VAR");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             vt = var_lookup(vars, token);
@@ -76,7 +76,7 @@ exit(0);*/
 
             case BCO_SET:
             if (skip_mode) break;
-            if (verbose) puts("BCO_SET");
+            debug_verbose_puts("BCO_SET");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             if (!v1.name)
@@ -98,7 +98,7 @@ exit(0);*/
                 bc_pos += sizeof(double);
                 break;
             }
-            if (verbose) puts("BCO_AS_DOUBLE");
+            debug_verbose_puts("BCO_AS_DOUBLE");
             memcpy(&d, bytecode + bc_pos, sizeof(double));
             bc_stack[bc_stack_size++] = var_as_double(d);
             bc_pos += sizeof(double);
@@ -112,7 +112,7 @@ exit(0);*/
                 bc_pos += size;
                 break;
             }
-            if (verbose) puts("BCO_AS_STRING");
+            debug_verbose_puts("BCO_AS_STRING");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             bc_stack[bc_stack_size++] = var_as_string(token, size);
@@ -121,7 +121,7 @@ exit(0);*/
 
             case BCO_CALL:
             if (skip_mode) break;
-            if (verbose) puts("BCO_CALL");
+            debug_verbose_puts("BCO_CALL");
             size = bytecode[bc_pos++];
             if (skip_mode)
             {
@@ -154,7 +154,7 @@ exit(0);*/
                 bc_pos += size;
                 break;
             }
-            if (verbose) puts("BCO_BLOCK_DEF");
+            debug_verbose_puts("BCO_BLOCK_DEF");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             bc_pos += size;
@@ -183,7 +183,7 @@ exit(0);*/
             case BCO_SKIP:
             if (skip_mode) break;
             skip_mode = 1;
-            if (verbose) puts("BCO_SKIP");
+            debug_verbose_puts("BCO_SKIP");
             break;
 
             case BCO_BLOCK_START:
@@ -192,7 +192,7 @@ exit(0);*/
                 ++level;
                 break;
             }
-            if (verbose) puts("BCO_BLOCK_START");
+            debug_verbose_puts("BCO_BLOCK_START");
             break;
 
             case BCO_BLOCK_END:
@@ -203,7 +203,7 @@ exit(0);*/
             }
             else
             {
-                if (verbose) puts("BCO_BLOCK_END");
+                debug_verbose_puts("BCO_BLOCK_END");
 
                 // if we had WHILE on this level, go back and check it again
                 if (run_flag[gl_level] == RUN_WHILE)
@@ -238,13 +238,13 @@ exit(0);*/
 
             case BCO_CLEAR_STACK:
             if (skip_mode) break;
-            if (verbose) puts("BCO_CLEAR_STACK");
+            debug_verbose_puts("BCO_CLEAR_STACK");
             stack_clear();
             break;
 
             case BCO_RETURN:
             if (skip_mode) break;
-            if (verbose) puts("BCO_RETURN");
+            debug_verbose_puts("BCO_RETURN");
 
             if (bc_stack_size > 1)
             {
@@ -270,7 +270,7 @@ exit(0);*/
 
             case BCO_WHILE:
             if (skip_mode) break;
-            if (verbose) puts("BCO_WHILE");
+            debug_verbose_puts("BCO_WHILE");
             ++gl_level;
 
             ret_point[gl_level] = bc_pos - 1;
@@ -279,7 +279,7 @@ exit(0);*/
 
             case BCO_IF:
             if (skip_mode) break;
-            if (verbose) puts("BCO_IF");
+            debug_verbose_puts("BCO_IF");
             ++gl_level;
 
             run_flag[gl_level] = RUN_IF;
@@ -287,7 +287,7 @@ exit(0);*/
 
             case BCO_ELSE:
             if (skip_mode) break;
-            if (verbose) puts("BCO_ELSE");
+            debug_verbose_puts("BCO_ELSE");
 
             ++gl_level;
 
@@ -296,7 +296,7 @@ exit(0);*/
 
             case BCO_CEIT:
             if (skip_mode) break;
-            if (verbose) puts("BCO_CEIT");
+            debug_verbose_puts("BCO_CEIT");
             v1 = bc_stack[--bc_stack_size];
 
             if (!var_is_true(&v1))
@@ -309,7 +309,7 @@ exit(0);*/
 
             case BCO_CMP:
             if (skip_mode) break;
-            if (verbose) puts("BCO_CMP");
+            debug_verbose_puts("BCO_CMP");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             bc_stack[bc_stack_size++] = var_as_double(var_cmp(&v1, &v2));
@@ -319,7 +319,7 @@ exit(0);*/
 
             case BCO_CMP_NOT:
             if (skip_mode) break;
-            if (verbose) puts("BCO_CMP_NOT");
+            debug_verbose_puts("BCO_CMP_NOT");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             bc_stack[bc_stack_size++] = var_as_double(!var_cmp(&v1, &v2));
@@ -329,7 +329,7 @@ exit(0);*/
 
             case BCO_MORE:
             if (skip_mode) break;
-            if (verbose) puts("BCO_MORE");
+            debug_verbose_puts("BCO_MORE");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             bc_stack[bc_stack_size++] = var_as_double(var_is_more(&v1, &v2));
@@ -339,7 +339,7 @@ exit(0);*/
 
             case BCO_MORE_EQ:
             if (skip_mode) break;
-            if (verbose) puts("BCO_MORE_EQ");
+            debug_verbose_puts("BCO_MORE_EQ");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             bc_stack[bc_stack_size++] = var_as_double(var_is_more_equal(&v1, &v2));
@@ -349,7 +349,7 @@ exit(0);*/
 
             case BCO_LESS:
             if (skip_mode) break;
-            if (verbose) puts("BCO_LESS");
+            debug_verbose_puts("BCO_LESS");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             bc_stack[bc_stack_size++] = var_as_double(var_is_less(&v1, &v2));
@@ -359,7 +359,7 @@ exit(0);*/
 
             case BCO_LESS_EQ:
             if (skip_mode) break;
-            if (verbose) puts("BCO_LESS_EQ");
+            debug_verbose_puts("BCO_LESS_EQ");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             bc_stack[bc_stack_size++] = var_as_double(var_is_less_equal(&v1, &v2));
@@ -369,7 +369,7 @@ exit(0);*/
 
             case BCO_AND:
             if (skip_mode) break;
-            if (verbose) puts("BCO_AND");
+            debug_verbose_puts("BCO_AND");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_and(&v1, &v2);
@@ -379,7 +379,7 @@ exit(0);*/
 
             case BCO_OR:
             if (skip_mode) break;
-            if (verbose) puts("BCO_OR");
+            debug_verbose_puts("BCO_OR");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_or(&v1, &v2);
@@ -389,7 +389,7 @@ exit(0);*/
 
             case BCO_ADD:
             if (skip_mode) break;
-            if (verbose) puts("BCO_ADD");
+            debug_verbose_puts("BCO_ADD");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_add(&v1, &v2);
@@ -399,7 +399,7 @@ exit(0);*/
 
             case BCO_SUB:
             if (skip_mode) break;
-            if (verbose) puts("BCO_SUB");
+            debug_verbose_puts("BCO_SUB");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_subtract(&v1, &v2);
@@ -409,7 +409,7 @@ exit(0);*/
 
             case BCO_MUL:
             if (skip_mode) break;
-            if (verbose) puts("BCO_MUL");
+            debug_verbose_puts("BCO_MUL");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_multiply(&v1, &v2);
@@ -419,7 +419,7 @@ exit(0);*/
 
             case BCO_DIV:
             if (skip_mode) break;
-            if (verbose) puts("BCO_DIV");
+            debug_verbose_puts("BCO_DIV");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_divide(&v1, &v2);
@@ -429,25 +429,25 @@ exit(0);*/
 
             case BCO_INCR:
             if (skip_mode) break;
-            if (verbose) puts("BCO_INCR");
+            debug_verbose_puts("BCO_INCR");
             op_increment(&bc_stack[bc_stack_size - 1]);
             break;
 
             case BCO_DECR:
             if (skip_mode) break;
-            if (verbose) puts("BCO_DECR");
+            debug_verbose_puts("BCO_DECR");
             op_decrement(&bc_stack[bc_stack_size - 1]);
             break;
 
             case BCO_INVERT:
             if (skip_mode) break;
-            if (verbose) puts("BCO_INVERT");
+            debug_verbose_puts("BCO_INVERT");
             op_invert(&bc_stack[bc_stack_size - 1]);
             break;
 
             case BCO_UNARY_MINUS:
             if (skip_mode) break;
-            if (verbose) puts("BCO_UNARY_MINUS");
+            debug_verbose_puts("BCO_UNARY_MINUS");
             op_unary_minus(&bc_stack[bc_stack_size - 1]);
             break;
 
@@ -458,7 +458,7 @@ exit(0);*/
                 bc_pos += size;
                 break;
             }
-            if (verbose) puts("BCO_VAR");
+            debug_verbose_puts("BCO_VAR");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             var_add(vars, token, VAR_STRING, NULL);
@@ -472,7 +472,7 @@ exit(0);*/
                 bc_pos += size;
                 break;
             }
-            if (verbose) puts("BCO_VARX");
+            debug_verbose_puts("BCO_VARX");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             vt = var_add(vars, token, VAR_STRING, NULL);
@@ -488,7 +488,7 @@ exit(0);*/
 
             case BCO_PRINT:
             if (skip_mode) break;
-            if (verbose) puts("BCO_PRINT");
+            debug_verbose_puts("BCO_PRINT");
             v1 = bc_stack[--bc_stack_size];
             var_echo(&v1);
             var_unset(&v1);
@@ -496,7 +496,7 @@ exit(0);*/
 
             case BCO_MICROTIME:
             if (skip_mode) break;
-            if (verbose) puts("BCO_MICROTIME");
+            debug_verbose_puts("BCO_MICROTIME");
             bc_stack[bc_stack_size++] = var_as_double(get_microtime());
             break;
         }
