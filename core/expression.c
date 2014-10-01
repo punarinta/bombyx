@@ -4,7 +4,7 @@
 #include "sys.h"
 #include "larva.h"
 
-var *parse()
+void parse()
 {
     BYTE quote_opened = 0;
     BYTE br_level = 0;
@@ -33,10 +33,8 @@ var *parse()
     memcpy(expression, code + expression_start, expression_size);
     expression[expression_size] = '\0';
 
-    var *result = parse_expression(expression, expression_size);
+    parse_expression(expression, expression_size);
     free(expression);
-
-    return NULL;
 }
 
 
@@ -45,9 +43,9 @@ var *parse()
         James Gregson (james.gregson@gmail.com)
  ******************************************************/
 
-var *parse_expression(const char *expr, size_t size)
+void parse_expression(const char *expr, size_t size)
 {
-    if (!expr[0]) return NULL;
+    if (!expr[0]) return;
 
     parser_data pd;
     pd.str = expr;
@@ -70,11 +68,9 @@ var *parse_expression(const char *expr, size_t size)
 	    var_echo(val);
 	    puts("]");
 	}*/
-
-    return NULL;
 }
 
-var *parser_parse(parser_data *pd)
+void parser_parse(parser_data *pd)
 {
 	// set the jump position and launch the parser
 	if (!setjmp(pd->err_jmp_buf))
@@ -85,16 +81,11 @@ var *parser_parse(parser_data *pd)
         if (pd->pos < pd->len - 1)
         {
             parser_error(pd, "Failed to reach end of input expression, likely malformed input");
-
-            // this is just to shut the compiler, in fact this line is never reached
-            return NULL;
         }
-        else return NULL;
 	}
 	else
 	{
-		// error was returned, output a nan silently
-		return NULL;
+		parser_error(pd, "Setjmp failed. It's dangerous to continue.");
 	}
 }
 
@@ -104,7 +95,7 @@ void parser_error(parser_data *pd, const char *err)
 	longjmp(pd->err_jmp_buf, 1);
 }
 
-inline char parser_peek(parser_data *pd)
+char parser_peek(parser_data *pd)
 {
     unsigned int p = pd->pos;
 	if (p < pd->len) return pd->str[p];
@@ -113,7 +104,7 @@ inline char parser_peek(parser_data *pd)
 	return 0;
 }
 
-inline char parser_peek_n(parser_data *pd, int n)
+char parser_peek_n(parser_data *pd, int n)
 {
 	if (pd->pos+n < pd->len) return pd->str[pd->pos+n];
 	parser_error(pd, "Tried to read past end of string!");
@@ -121,7 +112,7 @@ inline char parser_peek_n(parser_data *pd, int n)
 	return 0;
 }
 
-inline char parser_eat(parser_data *pd)
+char parser_eat(parser_data *pd)
 {
 	if (pd->pos < pd->len) return pd->str[pd->pos++];
 	parser_error(pd, "Tried to read past end of string!");
@@ -129,21 +120,21 @@ inline char parser_eat(parser_data *pd)
 	return 0;
 }
 
-inline void parser_eat_whitespace( parser_data *pd )
+void parser_eat_whitespace( parser_data *pd )
 {
 	while (isspace(parser_peek(pd))) parser_eat(pd);
 }
 
-inline void parser_skip(parser_data *pd)
+void parser_skip(parser_data *pd)
 {
 	if (pd->pos < pd->len) pd->pos++;
 	else parser_error(pd, "Tried to read past end of string!");
 }
 
-var *parser_read_double(parser_data *pd)
+void parser_read_double(parser_data *pd)
 {
-	char c, token[PARSER_MAX_TOKEN_SIZE];
 	int pos = 0;
+	char c, token[PARSER_MAX_TOKEN_SIZE];
 
 	// read a leading sign
 	c = parser_peek(pd);
@@ -200,22 +191,16 @@ var *parser_read_double(parser_data *pd)
         // null-terminate the string
         token[pos] = '\0';
 
-        //double d_val;
-
         // check that a double-precision was read, otherwise throw an error
-    //    if (pos == 0 || sscanf(token, "%lf", &d_val) != 1) parser_error(pd, "Failed to read operand");
         if (pos == 0) parser_error(pd, "Failed to read operand");
 
         double d = strtod(token, NULL);
         bc_add_cmd(BCO_AS_DOUBLE);
         bc_add_double(d);
     }
-
-    // return the parsed value
-	return NULL;
 }
 
-var *parser_read_argument(parser_data *pd)
+void parser_read_argument(parser_data *pd)
 {
     parser_eat_whitespace(pd);
 	// read the argument
@@ -227,9 +212,6 @@ var *parser_read_argument(parser_data *pd)
 	if (parser_peek(pd) == ',') parser_skip(pd);
 
 	parser_eat_whitespace(pd);
-
-	// return result
-	return NULL;
 }
 
 int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
@@ -246,9 +228,12 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 		if (*num_args >= PARSER_MAX_ARGUMENT_COUNT) parser_error(pd, "Exceeded maximum argument count for function call, increase PARSER_MAX_ARGUMENT_COUNT and recompile!");
 
 		// read the argument and add it to the list of arguments
-		var *this_arg = parser_read_expr(pd);
+		/*var *this_arg = parser_read_expr(pd);
 		args[*num_args] = *this_arg;
-		*num_args = *num_args + 1;
+		*num_args = *num_args + 1;*/
+
+        // no need to memorize args, they will be in the stack
+		parser_read_expr(pd);
 
 		parser_eat_whitespace(pd);
 
@@ -278,7 +263,7 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 	return PARSER_TRUE;
 }
 
-var *parser_read_builtin(parser_data *pd)
+void parser_read_builtin(parser_data *pd)
 {
 	int num_args, pos = 0;
 	char c, token[PARSER_MAX_TOKEN_SIZE];
@@ -367,12 +352,9 @@ var *parser_read_builtin(parser_data *pd)
 	}
 
 	parser_eat_whitespace(pd);
-
-	// return the value
-	return NULL;
 }
 
-var *parser_read_paren(parser_data *pd)
+void parser_read_paren(parser_data *pd)
 {
 	// check if the expression has a parenthesis
 	if (parser_peek(pd) == '(')
@@ -400,12 +382,9 @@ var *parser_read_paren(parser_data *pd)
 	}
 
 	parser_eat_whitespace(pd);
-
-	// return the result
-	return NULL;
 }
 
-var *parser_read_unary(parser_data *pd)
+void parser_read_unary(parser_data *pd)
 {
 	char c = parser_peek(pd);
 
@@ -461,11 +440,9 @@ var *parser_read_unary(parser_data *pd)
 	}
 
 	parser_eat_whitespace(pd);
-
-	return NULL;
 }
 
-var *parser_read_power(parser_data *pd)
+void parser_read_power(parser_data *pd)
 {
 	// read the first operand
 	parser_read_unary(pd);
@@ -506,12 +483,9 @@ var *parser_read_power(parser_data *pd)
 		var_free(v1);
         var_free(s);
 	}*/
-
-	// return the result
-	return NULL;
 }
 
-var *parser_read_term(parser_data *pd)
+void parser_read_term(parser_data *pd)
 {
 	// read the first operand
 	parser_read_power(pd);
@@ -545,11 +519,9 @@ var *parser_read_term(parser_data *pd)
 		// update the character
 		c = parser_peek(pd);
 	}
-
-	return NULL;
 }
 
-var *parser_read_expr(parser_data *pd)
+void parser_read_expr(parser_data *pd)
 {
 	char c = parser_peek(pd);
 
@@ -600,12 +572,9 @@ var *parser_read_expr(parser_data *pd)
 		// update the character being tested in the while loop
 		c = parser_peek(pd);
 	}
-
-	// return expression result
-	return NULL;
 }
 
-var *parser_read_boolean_comparison(parser_data *pd)
+void parser_read_boolean_comparison(parser_data *pd)
 {
     parser_eat_whitespace(pd);
 
@@ -640,22 +609,18 @@ var *parser_read_boolean_comparison(parser_data *pd)
 		// perform the boolean operations
 		if (memcmp(oper, "<\0", 2) == 0)
         {
-			//val = var_is_less(v0, v1);
 			bc_add_cmd(BCO_LESS);
 		}
 		else if (memcmp(oper, ">\0", 2) == 0)
         {
-			//val = var_is_more(v0, v1);
 			bc_add_cmd(BCO_MORE);
 		}
 		else if (memcmp(oper, "<=\0", 3) == 0)
         {
-			//val = var_is_less_equal(v0, v1);
 			bc_add_cmd(BCO_LESS_EQ);
 		}
 		else if (memcmp(oper, ">=\0", 3) == 0)
         {
-			//val = var_is_more_equal(v0, v1);
 			bc_add_cmd(BCO_MORE_EQ);
 		}
 		else
@@ -665,11 +630,9 @@ var *parser_read_boolean_comparison(parser_data *pd)
 
 		parser_eat_whitespace(pd);
 	}
-
-	return NULL;
 }
 
-var *parser_read_boolean_equality(parser_data *pd)
+void parser_read_boolean_equality(parser_data *pd)
 {
 	parser_eat_whitespace(pd);
 
@@ -693,10 +656,8 @@ var *parser_read_boolean_equality(parser_data *pd)
 				oper[0] = parser_eat(pd);
 				oper[1] = parser_eat(pd);
 			}
-			else
-			{
-				return NULL;
-			}
+			// TODO: analyse this case
+			else return;
 		}
 		else
 		{
@@ -735,12 +696,10 @@ var *parser_read_boolean_equality(parser_data *pd)
 
 		parser_eat_whitespace(pd);
 	}
-
-	return NULL;
 }
 
 
-var *parser_read_boolean_and(parser_data *pd)
+void parser_read_boolean_and(parser_data *pd)
 {
 	// tries to read a boolean comparison operator (<, >, <=, >=)
 	// as the first operand of the expression
@@ -777,11 +736,9 @@ var *parser_read_boolean_and(parser_data *pd)
 		// grab the next character to continue trying to perform 'and' operations
 		c = parser_peek(pd);
 	}
-
-	return NULL;
 }
 
-var *parser_read_boolean_or(parser_data *pd)
+void parser_read_boolean_or(parser_data *pd)
 {
 	// read the first term
 	parser_read_boolean_and(pd);
@@ -818,7 +775,4 @@ var *parser_read_boolean_or(parser_data *pd)
 		// 'or' operations
 		c = parser_peek(pd);
 	}
-
-	// return the resulting value
-	return NULL;
 }

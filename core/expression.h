@@ -6,7 +6,7 @@
 #include "../common.h"
 #include "larva.h"
 
-var *parse();
+void parse();
 
 /******************************************************
         The code below is based on a parser by
@@ -73,14 +73,14 @@ typedef struct
  @param[in] expr expression to parse
  @return expression value
  */
-var *parse_expression( const char *expr, size_t size);
+void parse_expression( const char *expr, size_t size);
 
 /**
  @brief primary public routine for the library
  @param[in] expr expression to parse
  @return expression value
  */
-var *parser_parse( parser_data *pd );
+void parser_parse( parser_data *pd );
 
 /**
  @brief error function for the parser, simply bails on the code
@@ -112,7 +112,7 @@ void parser_skip(parser_data *pd);
  @param[in] pd input parser_data structure to operate on
  @return parsed value as var precision floating point number
  */
-var *parser_read_var( parser_data *pd );
+void parser_read_var( parser_data *pd );
 
 /**
  @brief reads arguments for the builtin functions, auxilliary function for 
@@ -120,70 +120,70 @@ var *parser_read_var( parser_data *pd );
  @param[in] pd input parser_data structure to operate upon
  @return value of the argument that was read
  */
-var *parser_read_argument( parser_data *pd );
+void parser_read_argument( parser_data *pd );
 
 /**
  @brief reads and calls built-in functions, like sqrt(.), pow(.), etc.
  @param[in] pd input parser_data structure to operate upon
  @return resulting value
 */
-var *parser_read_builtin( parser_data *pd );
+void parser_read_builtin( parser_data *pd );
 
 /**
  @brief attempts to read an expression in parentheses, or failing that a literal value
  @param[in] pd input parser_data structure to operate upon
  @return expression/literal value
  */
-var *parser_read_paren( parser_data *pd );
+void parser_read_paren( parser_data *pd );
 
 /**
  @brief attempts to read a unary operation, or failing that, a parenthetical or literal value
  @param[in] pd input parser_data structure to operate upon
  @return expression/literal value
 */
-var *parser_read_unary( parser_data *pd );
+void parser_read_unary( parser_data *pd );
 
 /**
  @brief attempts to read an exponentiation operator, or failing that, a parenthetical expression 
  @param[in] pd input parser_data structure to operate upon
  @return exponentiation value
  */
-var *parser_read_power( parser_data *pd );
+void parser_read_power( parser_data *pd );
 	
 /**
  @brief reads a term in an expression
  @param[in] pd input parser_data structure to operate on
  @return value of the term
  */
-var *parser_read_term( parser_data *pd );
+void parser_read_term( parser_data *pd );
 
 /**
  @brief attempts to read an expression
  @param[in] pd input parser_data structure
  @return expression value
  */
-var *parser_read_expr( parser_data *pd );
+void parser_read_expr( parser_data *pd );
 
 /**
  @brief reads and performs a boolean comparison operations (<,>,<=,>=,==) if found
  @param[in] pd input parser_data structure
  @return sub-expression value
  */
-var *parser_read_boolean_comparison( parser_data *pd );
+void parser_read_boolean_comparison( parser_data *pd );
 
 /**
  @brief reads and performs a boolean 'and' operation (if found)
  @param[in] pd input parser_data structure
  @return sub-expression value
 */
-var *parser_read_boolean_and( parser_data *pd );
+void parser_read_boolean_and( parser_data *pd );
 	
 /**
  @brief reads and performs a boolean or operation (if found)
  @param[in] pd input parser_data structure
  @return expression value
 */
-var *parser_read_boolean_or( parser_data *pd );
+void parser_read_boolean_or( parser_data *pd );
 
 #ifdef __cplusplus
 };
