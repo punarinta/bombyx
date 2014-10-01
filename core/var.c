@@ -128,7 +128,6 @@ void var_table_delete(var_table_t *hashtable)
 var var_as_double(double a)
 {
     var v = {0};
-    //v.name = NULL;
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
     v.data = malloc(sizeof(double));
@@ -161,7 +160,6 @@ var var_as_var_t(var_t *vt)
 var var_as_string(char *a)
 {
     var v = {0};
-    //v.name = NULL;
     v.type = VAR_STRING;
 
     unsigned int len = strlen(a) + 1;
@@ -174,27 +172,15 @@ var var_as_string(char *a)
 
 void var_set_double(var *v, double a)
 {
-    if (!v) return;
+    larva_error("var_set_double() is obsolete");
+/*    if (!v) return;
 
     if (v->data) free(v->data);
 
     v->type = VAR_DOUBLE;
     v->data = malloc(sizeof(double));
     v->data_size = sizeof(double);
-    memcpy(v->data, &a, sizeof(double));
-}
-
-void var_set_string(var *v, char *a)
-{
-    if (!v) return;
-
-    if (v->data) free(v->data);
-
-    unsigned int len = strlen(a) + 1;
-    v->type = VAR_STRING;
-    v->data = malloc(len);
-    v->data_size = len;
-    memcpy(v->data, a, len);
+    memcpy(v->data, &a, sizeof(double));*/
 }
 
 /*
@@ -245,14 +231,14 @@ inline void var_unset(var *a)
     if (a->data) free(a->data);
 }
 
-inline var var_unset_ret(var a)
+/*inline var var_unset_ret(var a)
 {
     if (a.name) free(a.name);
     if (a.data) free(a.data);
     a.name = NULL;
     a.data = NULL;
     return a;
-}
+}*/
 
 void var_echo(var *a)
 {
