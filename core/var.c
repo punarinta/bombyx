@@ -136,7 +136,8 @@ void var_sync(var *a)
     {
         if (v->data_size == a->data_size && v->type == a->type)
         {
-            memcpy(v->data, a->data, a->data_size);
+            if (a->type == VAR_DOUBLE) *(double *)v->data = *(double *)a->data;
+            else memcpy(v->data, a->data, a->data_size);
         }
         else
         {
@@ -165,7 +166,7 @@ var var_as_double(double a)
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
     v.data = malloc(sizeof(double));
-    memcpy(v.data, &a, sizeof(double));
+    *(double *)v.data = a;
 
     return v;
 }
@@ -191,62 +192,16 @@ var var_as_var_t(var_t *vt)
     return v;
 }
 
-var var_as_string(char *a)
+var var_as_string(char *a, size_t len)
 {
     var v = {0};
     v.type = VAR_STRING;
 
-    unsigned int len = strlen(a) + 1;
-    v.data = malloc(len);
+    v.data = malloc(++len);
     v.data_size = len;
     memcpy(v.data, a, len);
 
     return v;
-}
-
-void var_set_double(var *v, double a)
-{
-    larva_error("var_set_double() is obsolete");
-/*    if (!v) return;
-
-    if (v->data) free(v->data);
-
-    v->type = VAR_DOUBLE;
-    v->data = malloc(sizeof(double));
-    v->data_size = sizeof(double);
-    memcpy(v->data, &a, sizeof(double));*/
-}
-
-/*
-    Destroys the variable
-    Returns it's double
-*/
-double var_to_double(var *a)
-{
-    double d;
-
-    if (!a || !a->data) return 0;
-
-    if (a->type == VAR_DOUBLE) memcpy(&d, a->data, sizeof(double));
-    else if (a->type == VAR_STRING) d = atof(a->data);
-    else d = 0;
-
-    var_free(a);
-
-    return d;
-}
-
-double var_extract_double(var *a)
-{
-    double d;
-
-    if (!a || !a->data) return 0;
-
-    if (a->type == VAR_DOUBLE) memcpy(&d, a->data, sizeof(double));
-    else if (a->type == VAR_STRING) d = atof(a->data);
-    else d = 0;
-
-    return d;
 }
 
 /*
@@ -265,15 +220,6 @@ inline void var_unset(var *a)
     if (a->data) free(a->data);
 }
 
-/*inline var var_unset_ret(var a)
-{
-    if (a.name) free(a.name);
-    if (a.data) free(a.data);
-    a.name = NULL;
-    a.data = NULL;
-    return a;
-}*/
-
 void var_echo(var *a)
 {
     if (a)
@@ -290,7 +236,7 @@ void var_echo(var *a)
             break;
 
             case VAR_DOUBLE:
-            fprintf(stdout, "%.6g", var_extract_double(a));
+            fprintf(stdout, "%.6g", *(double *)a->data);
             break;
 
             default:

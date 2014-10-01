@@ -27,14 +27,14 @@ void stack_clear()
 void larva_silk()
 {
     double d;
-    var v1, v2;
     var_t *vt;
-    size_t size = 0;
-    char token[PARSER_MAX_TOKEN_SIZE];
-    BYTE level = 0;
-    BYTE skip_mode = 0;
+    var v1, v2;
     gl_level = 0;
+    BYTE level = 0;
+    size_t size = 0;
+    BYTE skip_mode = 0;
     block_t *parent_block = NULL;
+    char token[PARSER_MAX_TOKEN_SIZE];
 
     bc_ready();
 
@@ -115,7 +115,7 @@ exit(0);*/
             if (verbose) puts("BCO_AS_STRING");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
-            bc_stack[bc_stack_size++] = var_as_string(token);
+            bc_stack[bc_stack_size++] = var_as_string(token, size);
             bc_pos += size;
             break;
 

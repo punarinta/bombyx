@@ -52,12 +52,10 @@ void var_table_delete(var_table_t *);
 void var_echo(var *);
 void var_free(var *);
 void var_unset(var *);
-var var_unset_ret(var);
 
 var var_as_double(double);
-var var_as_string(char *);
+var var_as_string(char *, size_t);
 var var_as_var_t(var_t *);
-void var_set_double(var *, double);
 
 void var_sync(var *);
 void op_copy(var *, var *);
@@ -71,9 +69,6 @@ void op_increment(var *);
 void op_decrement(var *);
 void op_and(var *, var *);
 void op_or(var *, var *);
-
-double var_to_double(var *);
-double var_extract_double(var *);
 
 BYTE var_is_true(var *);
 BYTE var_cmp(var *, var *);
