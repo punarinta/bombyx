@@ -56,6 +56,15 @@ exit(0);*/
         }
 
         if (!skip_mode) ++bc_ops;
+        else
+        {
+            if (bytecode[bc_pos] & IS_BCO_SKIPPABLE)
+            {
+                // bytecode >=32 --> can be skipped right now
+                ++bc_pos;
+                continue;
+            }
+        }
 
         switch (bytecode[bc_pos++])
         {
@@ -75,7 +84,6 @@ exit(0);*/
             break;
 
             case BCO_SET:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_SET");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -120,7 +128,6 @@ exit(0);*/
             break;
 
             case BCO_CALL:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_CALL");
             size = bytecode[bc_pos++];
             if (skip_mode)
@@ -181,7 +188,6 @@ exit(0);*/
             break;
 
             case BCO_SKIP:
-            if (skip_mode) break;
             skip_mode = 1;
             debug_verbose_puts("BCO_SKIP");
             break;
@@ -237,13 +243,11 @@ exit(0);*/
             break;
 
             case BCO_CLEAR_STACK:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_CLEAR_STACK");
             stack_clear();
             break;
 
             case BCO_RETURN:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_RETURN");
 
             if (bc_stack_size > 1)
@@ -269,7 +273,6 @@ exit(0);*/
             break;
 
             case BCO_WHILE:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_WHILE");
             ++gl_level;
 
@@ -278,7 +281,6 @@ exit(0);*/
             break;
 
             case BCO_IF:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_IF");
             ++gl_level;
 
@@ -286,7 +288,6 @@ exit(0);*/
             break;
 
             case BCO_ELSE:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_ELSE");
 
             ++gl_level;
@@ -295,7 +296,6 @@ exit(0);*/
             break;
 
             case BCO_CEIT:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_CEIT");
             v1 = bc_stack[--bc_stack_size];
 
@@ -308,7 +308,6 @@ exit(0);*/
             break;
 
             case BCO_CMP:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_CMP");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -318,7 +317,6 @@ exit(0);*/
             break;
 
             case BCO_CMP_NOT:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_CMP_NOT");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -328,7 +326,6 @@ exit(0);*/
             break;
 
             case BCO_MORE:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_MORE");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -338,7 +335,6 @@ exit(0);*/
             break;
 
             case BCO_MORE_EQ:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_MORE_EQ");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -348,7 +344,6 @@ exit(0);*/
             break;
 
             case BCO_LESS:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_LESS");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -358,7 +353,6 @@ exit(0);*/
             break;
 
             case BCO_LESS_EQ:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_LESS_EQ");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -368,7 +362,6 @@ exit(0);*/
             break;
 
             case BCO_AND:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_AND");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -378,7 +371,6 @@ exit(0);*/
             break;
 
             case BCO_OR:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_OR");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -388,7 +380,6 @@ exit(0);*/
             break;
 
             case BCO_ADD:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_ADD");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -398,7 +389,6 @@ exit(0);*/
             break;
 
             case BCO_SUB:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_SUB");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -408,7 +398,6 @@ exit(0);*/
             break;
 
             case BCO_MUL:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_MUL");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -418,7 +407,6 @@ exit(0);*/
             break;
 
             case BCO_DIV:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_DIV");
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
@@ -428,25 +416,21 @@ exit(0);*/
             break;
 
             case BCO_INCR:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_INCR");
             op_increment(&bc_stack[bc_stack_size - 1]);
             break;
 
             case BCO_DECR:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_DECR");
             op_decrement(&bc_stack[bc_stack_size - 1]);
             break;
 
             case BCO_INVERT:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_INVERT");
             op_invert(&bc_stack[bc_stack_size - 1]);
             break;
 
             case BCO_UNARY_MINUS:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_UNARY_MINUS");
             op_unary_minus(&bc_stack[bc_stack_size - 1]);
             break;
@@ -482,12 +466,11 @@ exit(0);*/
             v1 = bc_stack[--bc_stack_size];
             v1.name = token;
             var_sync(&v1);
-            // unset does not unset name, so no worries about the token
+            // this will not unset name, so no worries about the token
             var_unset(&v1);
             break;
 
             case BCO_PRINT:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_PRINT");
             v1 = bc_stack[--bc_stack_size];
             var_echo(&v1);
@@ -495,7 +478,6 @@ exit(0);*/
             break;
 
             case BCO_MICROTIME:
-            if (skip_mode) break;
             debug_verbose_puts("BCO_MICROTIME");
             bc_stack[bc_stack_size++] = var_as_double(get_microtime());
             break;
