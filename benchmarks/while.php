@@ -5,7 +5,7 @@ $n = 10000;
 
 while (--$n)
 {
-    $a = 'hello, world!';
+    $a = 42;
 }
 
 // multiplication and formatting do not count as they go after the subtraction

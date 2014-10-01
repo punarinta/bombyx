@@ -195,6 +195,7 @@ void parser_read_double(parser_data *pd)
         if (pos == 0) parser_error(pd, "Failed to read operand");
 
         double d = strtod(token, NULL);
+
         bc_add_cmd(BCO_AS_DOUBLE);
         bc_add_double(d);
     }

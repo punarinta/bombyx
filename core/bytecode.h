@@ -63,7 +63,7 @@ void bc_init();
 void bc_free();
 void bc_add_cmd(BYTE);
 void bc_add_token(char *);
-void bc_add_double(double x);
+void bc_add_double(double);
 void bc_add_string(char *);
 void bc_grow();
 void bc_ready();

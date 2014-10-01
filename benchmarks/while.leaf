@@ -2,7 +2,7 @@ var t = microtime(), n = 10000, a
 
 while(--n)
 {
-    a = 'hello, world!'
+    a = 42
 }
 
 print('\nExecution took: ' + (microtime() - t) + ' microsecond(s).\n')

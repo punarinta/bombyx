@@ -95,13 +95,13 @@ exit(0);*/
             case BCO_AS_DOUBLE:
             if (skip_mode)
             {
-                bc_pos += 8;
+                bc_pos += sizeof(double);
                 break;
             }
             if (verbose) puts("BCO_AS_DOUBLE");
-            memcpy(&d, bytecode + bc_pos, 8);
+            memcpy(&d, bytecode + bc_pos, sizeof(double));
             bc_stack[bc_stack_size++] = var_as_double(d);
-            bc_pos += 8;
+            bc_pos += sizeof(double);
             break;
 
             case BCO_AS_STRING:
@@ -299,7 +299,7 @@ exit(0);*/
             if (verbose) puts("BCO_CEIT");
             v1 = bc_stack[--bc_stack_size];
 
-            if (!var_extract_double(&v1))
+            if (!var_is_true(&v1))
             {
                 if (run_flag[gl_level] == RUN_IF) run_flag[gl_level] = RUN_ELSE;
                 skip_mode = 1;
@@ -501,4 +501,6 @@ exit(0);*/
             break;
         }
     }
+
+    stack_clear();
 }

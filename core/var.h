@@ -75,6 +75,7 @@ void op_or(var *, var *);
 double var_to_double(var *);
 double var_extract_double(var *);
 
+BYTE var_is_true(var *);
 BYTE var_cmp(var *, var *);
 BYTE var_is_more(var *, var *);
 BYTE var_is_less(var *, var *);

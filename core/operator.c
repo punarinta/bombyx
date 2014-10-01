@@ -12,6 +12,8 @@ void op_copy(var *a, var *b)
             if (a->data_size == b->data_size && a->type == b->type)
             {
                 memcpy(a->data, b->data, b->data_size);
+                // it's done :)
+                return;
             }
             else
             {
@@ -56,13 +58,7 @@ void op_add(var *a, var *b)
     }
     else if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
-        double xa, xb;
-        memcpy(&xa, a->data, sizeof(double));
-        memcpy(&xb, b->data, sizeof(double));
-
-        xa += xb;
-
-        memcpy(a->data, &xa, sizeof(double));
+        *(double *)a->data += *(double *)b->data;
     }
     else if (a->type == VAR_STRING && b->type == VAR_DOUBLE)
     {
@@ -119,13 +115,7 @@ void op_subtract(var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
-        double xa, xb;
-        memcpy(&xa, a->data, sizeof(double));
-        memcpy(&xb, b->data, sizeof(double));
-
-        xa -= xb;
-
-        memcpy(a->data, &xa, sizeof(double));
+        *(double *)a->data -= *(double *)b->data;
     }
     else
     {
@@ -137,13 +127,7 @@ void op_multiply(var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
-        double xa, xb;
-        memcpy(&xa, a->data, sizeof(double));
-        memcpy(&xb, b->data, sizeof(double));
-
-        xa *= xb;
-
-        memcpy(a->data, &xa, sizeof(double));
+        *(double *)a->data *= *(double *)b->data;
     }
     else
     {
@@ -155,13 +139,7 @@ void op_divide(var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
-        double xa, xb;
-        memcpy(&xa, a->data, sizeof(double));
-        memcpy(&xb, b->data, sizeof(double));
-
-        xa /= xb;
-
-        memcpy(a->data, &xa, sizeof(double));
+        *(double *)a->data /= *(double *)b->data;
     }
     else
     {
@@ -176,18 +154,13 @@ void op_unary_minus(var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
-        double xa;
-        memcpy(&xa, a->data, sizeof(double));
-
-        xa = -xa;
-
-        memcpy(a->data, &xa, sizeof(double));
+        *(double *)a->data = -*(double *)a->data;
     }
     else if (a->type == VAR_STRING)
     {
         // revert a string
         char *ptr = a->data;
-        char *end = a->data + strlen(a->data) - 1;
+        char *end = a->data + a->data_size - 2;
 
         #define XOR_SWAP(a, b) do\
         {\
@@ -216,12 +189,7 @@ void op_invert(var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
-        double xa;
-        memcpy(&xa, a->data, sizeof(double));
-
-        xa = xa ? 0 : 1;
-
-        memcpy(a->data, &xa, sizeof(double));
+        *(double *)a->data = *(double *)a->data ? 0 : 1;
     }
     else
     {
@@ -242,10 +210,7 @@ void op_increment(var *a)
 
     if (a->type == VAR_DOUBLE)
     {
-        double xa;
-        memcpy(&xa, a->data, sizeof(double));
-        ++xa;
-        memcpy(a->data, &xa, sizeof(double));
+        ++*(double *)a->data;
     }
     else
     {
@@ -264,10 +229,7 @@ void op_decrement(var *a)
 
     if (a->type == VAR_DOUBLE)
     {
-        double xa;
-        memcpy(&xa, a->data, sizeof(double));
-        --xa;
-        memcpy(a->data, &xa, sizeof(double));
+        --*(double *)a->data;
     }
     else
     {
@@ -283,6 +245,17 @@ void op_and(var *a, var *b)
 
 void op_or(var *a, var *b)
 {
+}
+
+BYTE var_is_true(var *a)
+{
+    if (a->type == VAR_DOUBLE) return *(double *)a->data == 0 ? 0 : 1;
+    else if (a->type == VAR_STRING) return a->data_size == 0 ? 0 : 1;
+    else
+    {
+        larva_error("Comparison operator is not defined for the given operand type.");
+    }
+    return 0;
 }
 
 /*
@@ -301,7 +274,7 @@ BYTE var_cmp(var *a, var *b)
 
 BYTE var_is_more(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) > (double)(*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data > *(double *)b->data;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
     {
@@ -312,7 +285,7 @@ BYTE var_is_more(var *a, var *b)
 
 BYTE var_is_less(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) < (double)(*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data < *(double *)b->data;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
     {
@@ -323,7 +296,7 @@ BYTE var_is_less(var *a, var *b)
 
 BYTE var_is_more_equal(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) >= (double)(*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data >= *(double *)b->data;
     else
     {
         larva_error("Operator '>=' is defined for numbers only.");
@@ -333,7 +306,7 @@ BYTE var_is_more_equal(var *a, var *b)
 
 BYTE var_is_less_equal(var *a, var *b)
 {
-    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return (double)(*a->data) <= (double)(*b->data);
+    if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data <= *(double *)b->data;
     else
     {
         larva_error("Operator '<=' is defined for numbers only.");

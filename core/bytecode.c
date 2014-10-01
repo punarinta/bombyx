@@ -34,13 +34,13 @@ void bc_add_token(char *token)
 
 void bc_add_double(double x)
 {
-    unsigned int size = sizeof(double);
+    if (bc_pos >= bc_length - sizeof(double)) bc_grow();
 
-    if (bc_pos >= bc_length - size) bc_grow();
+    *(double *)(bytecode + bc_pos) = x;
 
-    memcpy(bytecode + bc_pos, &x, size);
+    //memcpy(bytecode + bc_pos, &x, sizeof(double));
 
-    bc_pos += size;
+    bc_pos += sizeof(double);
 }
 
 void bc_add_string(char *str)
