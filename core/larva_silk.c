@@ -480,11 +480,10 @@ exit(0);*/
             bc_pos += size;
 
             v1 = bc_stack[--bc_stack_size];
-            v1.name = strdup(token);
+            v1.name = token;
             var_sync(&v1);
+            // unset does not unset name, so no worries about the token
             var_unset(&v1);
-            // unset does not unset name
-            free(v1.name);
             break;
 
             case BCO_PRINT:
