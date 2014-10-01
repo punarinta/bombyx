@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        // fclose(fp);
+        fclose(fp);
 
         setjmp(error_exit);
 
