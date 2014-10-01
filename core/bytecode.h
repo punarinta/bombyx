@@ -4,8 +4,9 @@
 #include "../common.h"
 #include "var.h"
 
-#define BC_INITIAL_SIZE     25000
-#define BC_GROW_SIZE        10000
+#define BC_INITIAL_SIZE         25000
+#define BC_GROW_SIZE            10000
+#define POOL_OF_DOUBLES_SIZE    1024
 
 // TODO: group fully skippable operations to have the same bit
 
