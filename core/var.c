@@ -125,6 +125,40 @@ void var_table_delete(var_table_t *hashtable)
 }
 
 
+/*
+    Synchronizes var with vars[] if necessary
+    Var is NOT modified
+*/
+void var_sync(var *a)
+{
+    var_t *v = var_lookup(vars, a->name);
+    if (v)
+    {
+        if (v->data_size == a->data_size && v->type == a->type)
+        {
+            memcpy(v->data, a->data, a->data_size);
+        }
+        else
+        {
+            v->type = a->type;
+            v->data_size = a->data_size;
+
+            if (v->data)
+            {
+                free(v->data);
+            }
+
+            v->data = malloc(a->data_size);
+            memcpy(v->data, a->data, a->data_size);
+        }
+    }
+    else
+    {
+        sprintf(temp_error, "Variable '%s' not found.", a->name);
+        larva_error(temp_error);
+    }
+}
+
 var var_as_double(double a)
 {
     var v = {0};
