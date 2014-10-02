@@ -10,22 +10,16 @@
  */
 void larva_init(char *incoming_code, unsigned int len)
 {
-    vars_count   = MIN_VARIABLES;
     blocks_count = MIN_BLOCKS;
-    vars         = var_table_create(MIN_VARIABLES);
+    vars_count   = MIN_VARIABLES;
     blocks       = block_table_create(MIN_BLOCKS);
+    vars         = var_table_create(MIN_VARIABLES);
 
-    gl_level = 0;
-    run_flag[0] = 0;
-
-    code_pos = 0;
     code_length = 0;
-    code = malloc(len * sizeof(char));
     BYTE quotes_on = 0;
+    code = malloc(len * sizeof(char));
 
     bc_init();
-
-    // TODO: include all the necessary files
 
     for (unsigned int i = 0; i < len; ++i)
     {
@@ -42,7 +36,7 @@ void larva_init(char *incoming_code, unsigned int len)
         {
             if (i < len - 1 && incoming_code[i + 1] == '#')
             {
-                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') {++i; break;}
+                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') { ++i; break; }
             }
             else while (i++ < len) if (incoming_code[i] == '\n') break;
             
@@ -56,12 +50,15 @@ void larva_init(char *incoming_code, unsigned int len)
         ++code_length;
     }
 
-    larva_chew();
+    // larva_chew();
 }
 
 void larva_chew()
 {
+    code_pos = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
+
+    // TODO: include all the necessary files
 
     while (code[code_pos])
     {
@@ -97,8 +94,6 @@ void larva_chew()
             dlclose(lib_handle);
         }
     }
-
-    code_pos = 0;
 }
 
 /**
@@ -106,6 +101,7 @@ void larva_chew()
  */
 void larva_digest()
 {
+    code_pos = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
 
     while (code[code_pos])

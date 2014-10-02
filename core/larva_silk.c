@@ -31,6 +31,7 @@ void larva_silk()
     var v1, v2;
     gl_level = 0;
     BYTE level = 0;
+    run_flag[0] = 0;    // do we need this?
     size_t size = 0;
     BYTE skip_mode = 0;
     block_t *parent_block = NULL;
