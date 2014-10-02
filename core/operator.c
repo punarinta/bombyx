@@ -204,11 +204,6 @@ void op_invert(var *a)
 */
 void op_increment(var *a)
 {
-    if (!a->name)
-    {
-        larva_error("Operator '++' requires a variable.");
-    }
-
     if (a->type == VAR_DOUBLE)
     {
         ++*(double *)a->data;
@@ -218,16 +213,11 @@ void op_increment(var *a)
         larva_error("Operator '++' is not defined for the given operand type.");
     }
 
-    var_sync(a);
+    if (a->name) var_sync(a);
 }
 
 void op_decrement(var *a)
 {
-    if (!a->name)
-    {
-        larva_error("Operator '--' requires a variable.");
-    }
-
     if (a->type == VAR_DOUBLE)
     {
         --*(double *)a->data;
@@ -237,7 +227,7 @@ void op_decrement(var *a)
         larva_error("Operator '--' is not defined for the given operand type.");
     }
 
-    var_sync(a);
+    if (a->name) var_sync(a);
 }
 
 void op_and(var *a, var *b)

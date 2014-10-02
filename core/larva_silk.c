@@ -49,13 +49,18 @@ exit(0);*/
 
     while (bc_pos < bc_length)
     {
-        if (bytecode[bc_pos] == BCO_IDLE)
+        /*if (bytecode[bc_pos] == BCO_IDLE)
         {
             ++bc_pos;
             continue;
-        }
+        }*/
 
-        if (!skip_mode) ++bc_ops;
+        if (!skip_mode)
+        {
+#ifdef BOMBYX_DEBUG
+            ++bc_ops;
+#endif
+        }
         else
         {
             if (bytecode[bc_pos] & IS_BCO_SKIPPABLE)
@@ -107,7 +112,8 @@ exit(0);*/
                 break;
             }
             debug_verbose_puts("BCO_AS_DOUBLE");
-            memcpy(&d, bytecode + bc_pos, sizeof(double));
+           // memcpy(&d, bytecode + bc_pos, sizeof(double));
+            d = *(double *)(bytecode + bc_pos);
             bc_stack[bc_stack_size++] = var_as_double(d);
             bc_pos += sizeof(double);
             break;
@@ -218,12 +224,11 @@ exit(0);*/
                 }
                 else if (run_flag[gl_level] == RUN_BLOCK)
                 {
-
                     // clear stack manually
                     stack_clear();
 
                     // push null to stack
-                    // TODO: replace 0 with NULL
+                    // TODO: replace 0 with NULL VAR_STRING
                     bc_stack[bc_stack_size++] = var_as_double(0);
                     parent_block = parent_block->parent;
 
@@ -366,7 +371,7 @@ exit(0);*/
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_and(&v1, &v2);
-            var_free(&v2);
+            var_unset(&v2);
             bc_stack[bc_stack_size++] = v1;
             break;
 
@@ -375,7 +380,7 @@ exit(0);*/
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_or(&v1, &v2);
-            var_free(&v2);
+            var_unset(&v2);
             bc_stack[bc_stack_size++] = v1;
             break;
 
@@ -402,7 +407,7 @@ exit(0);*/
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_multiply(&v1, &v2);
-            var_free(&v2);
+            var_unset(&v2);
             bc_stack[bc_stack_size++] = v1;
             break;
 
@@ -411,7 +416,7 @@ exit(0);*/
             v2 = bc_stack[--bc_stack_size];
             v1 = bc_stack[--bc_stack_size];
             op_divide(&v1, &v2);
-            var_free(&v2);
+            var_unset(&v2);
             bc_stack[bc_stack_size++] = v1;
             break;
 
@@ -460,7 +465,7 @@ exit(0);*/
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             vt = var_add(vars, token, VAR_STRING, NULL);
-            if (!vt) vt = var_lookup(vars, token);
+            //if (!vt) vt = var_lookup(vars, token);
             bc_pos += size;
 
             v1 = bc_stack[--bc_stack_size];
