@@ -7,8 +7,8 @@ block myLogin
 {
     param username, password
 
-    var result = mysql.query(db, 'SELECT password FROM user WHERE username = ?', username)
-    var row = mysql.fetch_row(result)
+    var result = mysql.query(db, 'SELECT password FROM user WHERE username = ?', username),
+        row = mysql.fetch_row(result)
 
     return (web.secret(password, salt) == row[0])
 }
