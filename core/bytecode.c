@@ -1,4 +1,5 @@
 #include "bytecode.h"
+#include "challoc.h"
 
 void bc_init()
 {
@@ -11,6 +12,8 @@ void bc_free()
 {
     if (bytecode) free(bytecode);
     bytecode = NULL;
+
+    chdestroy(&pool_of_doubles);
 }
 
 void bc_add_cmd(BYTE cmd)
@@ -37,8 +40,6 @@ void bc_add_double(double x)
     if (bc_pos >= bc_length - sizeof(double)) bc_grow();
 
     *(double *)(bytecode + bc_pos) = x;
-
-    //memcpy(bytecode + bc_pos, &x, sizeof(double));
 
     bc_pos += sizeof(double);
 }
@@ -79,6 +80,8 @@ void bc_ready()
         bc_stack[i].name = NULL;
         bc_stack[i].data = NULL;
     }
+
+    pool_of_doubles = chcreate(POOL_OF_DOUBLES_SIZE, sizeof(double));
 }
 
 void bc_poo()

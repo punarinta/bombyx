@@ -50,7 +50,6 @@ int var_delete(var_table_t *, char *);
 void var_table_delete(var_table_t *);
 
 void var_echo(var *);
-void var_free(var *);
 void var_unset(var *);
 
 var var_as_double(double);

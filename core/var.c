@@ -1,5 +1,6 @@
 #include "var.h"
 #include "sys.h"
+#include "bytecode.h"
 #include "../common.h"
 
 var_table_t *var_table_create(int size)
@@ -146,7 +147,8 @@ void var_sync(var *a)
 
             if (v->data)
             {
-                free(v->data);
+                if (v->type == VAR_DOUBLE) chfree(pool_of_doubles, v->data);
+                else free(v->data);
             }
 
             v->data = malloc(a->data_size);
@@ -165,7 +167,7 @@ var var_as_double(double a)
     var v = {0};
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
-    v.data = malloc(sizeof(double));
+    v.data = challoc(pool_of_doubles);
     *(double *)v.data = a;
 
     return v;
@@ -184,7 +186,8 @@ var var_as_var_t(var_t *vt)
 
     if (vt->data)
     {
-        v.data = malloc(vt->data_size);
+        if (v.type == VAR_DOUBLE) v.data = challoc(pool_of_doubles);
+        else v.data = malloc(vt->data_size);
         memcpy(v.data, vt->data, vt->data_size);
     }
     else v.data = NULL;
@@ -204,20 +207,13 @@ var var_as_string(char *a, size_t len)
     return v;
 }
 
-/*
-    Frees variable memory
-*/
-inline void var_free(var *a)
-{
-    if (!a) return;
-    if (a->name) free(a->name);
-    if (a->data) free(a->data);
-    free(a);
-}
-
 inline void var_unset(var *a)
 {
-    if (a->data) free(a->data);
+    if (a->data)
+    {
+        if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
+        else free(a->data);
+    }
 }
 
 void var_echo(var *a)

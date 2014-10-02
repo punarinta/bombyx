@@ -41,8 +41,7 @@ static ChunkAllocator* get_first_allocator_with_free_chunk(ChunkAllocator* start
             return iter;
         }
 
-          /* all allocators are full, so we append a new one and return
-           * it */
+        /* all allocators are full, so we append a new one and return it */
         if (iter->next == NULL)
         {
             iter->next = chcreate(iter->n_chunks, iter->chunk_size);
@@ -68,8 +67,7 @@ static void push_chunk_to_first_free_stack(ChunkAllocator* root, void* p)
         }
     }
 
-   /* if we get here, there was no room for storing p in any allocator
-    * reachable from root */
+    /* if we get here, there was no room for storing p in any allocator reachable from root */
     assert(0);
 }
 
@@ -81,7 +79,6 @@ void* challoc(ChunkAllocator* root)
      
     return root->chunks[--root->current_chunk];
 }
-
 
 void chfree(ChunkAllocator* root, void* p)
 {

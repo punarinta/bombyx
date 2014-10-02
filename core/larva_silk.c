@@ -55,13 +55,7 @@ exit(0);*/
             continue;
         }*/
 
-        if (!skip_mode)
-        {
-#ifdef BOMBYX_DEBUG
-            ++bc_ops;
-#endif
-        }
-        else
+        if (skip_mode)
         {
             if (bytecode[bc_pos] & IS_BCO_SKIPPABLE)
             {
@@ -70,6 +64,12 @@ exit(0);*/
                 continue;
             }
         }
+#ifdef BOMBYX_DEBUG
+        else
+        {
+            ++bc_ops;
+        }
+#endif
 
         switch (bytecode[bc_pos++])
         {
@@ -112,14 +112,13 @@ exit(0);*/
                 break;
             }
             debug_verbose_puts("BCO_AS_DOUBLE");
-           // memcpy(&d, bytecode + bc_pos, sizeof(double));
             d = *(double *)(bytecode + bc_pos);
             bc_stack[bc_stack_size++] = var_as_double(d);
             bc_pos += sizeof(double);
             break;
 
             case BCO_AS_STRING:
-            size = bytecode[bc_pos] + bytecode[bc_pos + 1] * 256;
+            size = bytecode[bc_pos] + (bytecode[bc_pos + 1] << 8);
             bc_pos += 2;
             if (skip_mode)
             {

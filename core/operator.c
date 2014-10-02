@@ -1,6 +1,7 @@
 #include "var.h"
 #include "sys.h"
 #include "larva.h"
+#include "bytecode.h"
 #include "../common.h"
 
 void op_copy(var *a, var *b)
@@ -18,7 +19,9 @@ void op_copy(var *a, var *b)
             }
             else
             {
-                free(a->data);
+                if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
+                else free(a->data);
+
                 a->data = malloc(b->data_size);
                 memcpy(a->data, b->data, b->data_size);
             }
@@ -52,7 +55,7 @@ void op_add(var *a, var *b)
         memcpy(r.data, a->data, a->data_size - 1);
         memcpy(r.data + a->data_size - 1, b->data, b->data_size);   // copy together with EOS
 
-        free(a->data);
+        var_unset(a);
         a->data = malloc(r.data_size);
         strcpy(a->data, r.data);
         a->data_size = r.data_size;
@@ -76,7 +79,7 @@ void op_add(var *a, var *b)
         r.data[r.data_size - 1] = 0;
 
         // realloc
-        free(a->data);
+        var_unset(a);
         a->data = malloc(r.data_size);
         memcpy(a->data, r.data, r.data_size);
         a->data_size = r.data_size;
@@ -96,7 +99,7 @@ void op_add(var *a, var *b)
         memcpy(r.data + len, b->data, b->data_size);
 
         // realloc
-        free(a->data);
+        var_unset(a);
         a->data = malloc(r.data_size);
         memcpy(a->data, r.data, r.data_size);
         a->type = VAR_STRING;
