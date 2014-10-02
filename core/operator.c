@@ -73,7 +73,7 @@ void op_add(var *a, var *b)
         memcpy(r.data, a->data, a->data_size - 1);
         memcpy(r.data + a->data_size - 1, converted, len);
 
-        r.data[r.data_size - 1] = '\0';
+        r.data[r.data_size - 1] = 0;
 
         // realloc
         free(a->data);
@@ -132,7 +132,7 @@ void op_multiply(var *a, var *b)
     }
     else
     {
-        larva_error("Operator '-' is not defined for given operands.");
+        larva_error("Operator '*' is not defined for given operands.");
     }
 }
 
@@ -144,13 +144,10 @@ void op_divide(var *a, var *b)
     }
     else
     {
-        larva_error("Operator '-' is not defined for given operands.");
+        larva_error("Operator '/' is not defined for given operands.");
     }
 }
 
-/*
-    Inverts the var.
-*/
 void op_unary_minus(var *a)
 {
     if (a->type == VAR_DOUBLE)
@@ -170,8 +167,7 @@ void op_unary_minus(var *a)
             a ^= b;\
         } while (0)
 
-        // walk inwards from both ends of the string, 
-        // swapping until we get to the middle
+        // walk inwards from both ends of the string, swapping until we get to the middle
         while (ptr < end)
         {
             XOR_SWAP(*ptr, *end);
@@ -182,10 +178,13 @@ void op_unary_minus(var *a)
     }
     else
     {
-        larva_error("Inversion operator is not defined for the given operand.");
+        larva_error("Unary minus operator is not defined for the given operand.");
     }
 }
 
+/*
+    Logical negation
+*/
 void op_invert(var *a)
 {
     if (a->type == VAR_DOUBLE)
@@ -198,10 +197,6 @@ void op_invert(var *a)
     }
 }
 
-/*
-    Increments the variable
-    Returns its value back
-*/
 void op_increment(var *a)
 {
     if (a->type == VAR_DOUBLE)
@@ -232,16 +227,18 @@ void op_decrement(var *a)
 
 void op_and(var *a, var *b)
 {
+    // TODO: implement
 }
 
 void op_or(var *a, var *b)
 {
+    // TODO: implement
 }
 
 BYTE var_is_true(var *a)
 {
-    if (a->type == VAR_DOUBLE) return *(double *)a->data == 0 ? 0 : 1;
-    else if (a->type == VAR_STRING) return a->data_size == 0 ? 0 : 1;
+    if (a->type == VAR_DOUBLE) return *(double *)a->data != 0;
+    else if (a->type == VAR_STRING) return a->data_size > 1;
     else
     {
         larva_error("Comparison operator is not defined for the given operand type.");
