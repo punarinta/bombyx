@@ -178,7 +178,7 @@ var var_as_double(double a)
 */
 var var_as_var_t(var_t *vt)
 {
-    var v = {0};
+    var v;
 
     v.data_size = vt->data_size;
     v.type = vt->type;
@@ -186,9 +186,16 @@ var var_as_var_t(var_t *vt)
 
     if (vt->data)
     {
-        if (v.type == VAR_DOUBLE) v.data = challoc(pool_of_doubles);
-        else v.data = malloc(vt->data_size);
-        memcpy(v.data, vt->data, vt->data_size);
+        if (v.type == VAR_DOUBLE)
+        {
+            v.data = challoc(pool_of_doubles);
+            *(double *)v.data = *(double *)vt->data;
+        }
+        else
+        {
+            v.data = malloc(vt->data_size);
+            memcpy(v.data, vt->data, vt->data_size);
+        }
     }
     else v.data = NULL;
 
