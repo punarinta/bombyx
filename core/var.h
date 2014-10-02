@@ -66,6 +66,7 @@ void op_increment(var *);
 void op_decrement(var *);
 void op_and(var *, var *);
 void op_or(var *, var *);
+void op_swap(var *, var *);
 
 BYTE var_is_true(var *);
 BYTE var_cmp(var *, var *);

@@ -232,8 +232,8 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 
 		// read the argument and add it to the list of arguments
 		/*var *this_arg = parser_read_expr(pd);
-		args[*num_args] = *this_arg;
-		*num_args = *num_args + 1;*/
+		args[*num_args] = *this_arg;*/
+		*num_args = *num_args + 1;
 
         // no need to memorize args, they will be in the stack
 		parser_read_expr(pd);
@@ -334,7 +334,9 @@ void parser_read_builtin(parser_data *pd)
 			    // this is a 'block' function call
 
 				parser_read_argument_list(pd, &num_args, args);
-
+				bc_add_cmd(BCO_REVERSE_STACK);
+				// insert 1 byte
+                bc_add_cmd((BYTE) num_args);
 				bc_add_cmd(BCO_CALL);
 				bc_add_token(token);
 			}

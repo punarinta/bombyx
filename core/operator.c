@@ -238,6 +238,13 @@ void op_decrement(var *a)
     if (a->ref) op_copy(&((var_t *)a->ref)->v, a);
 }
 
+void op_swap(var *a, var *b)
+{
+    var t = *a;
+    *a = *b;
+    *b = t;
+}
+
 void op_and(var *a, var *b)
 {
     // TODO: implement

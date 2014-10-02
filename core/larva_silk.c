@@ -39,10 +39,10 @@ void larva_silk()
 
     bc_ready();
 
-    /*puts("=============== BYTECODE =============");
+    puts("=============== BYTECODE =============");
     bc_poo();
     puts("======================================");
-exit(0);*/
+exit(0);
 
     started_at = get_microtime();
 
@@ -247,6 +247,21 @@ exit(0);*/
             case BCO_CLEAR_STACK:
             debug_verbose_puts("BCO_CLEAR_STACK");
             stack_clear();
+            break;
+
+            case BCO_REVERSE_STACK:
+            debug_verbose_puts("BCO_REVERSE_STACK");
+            if (skip_mode)
+            {
+                ++bc_pos;
+                break;
+            }
+            size = bytecode[bc_pos++];
+            size_t iter = size / 2;
+            while (iter--)
+            {
+                op_swap(&bc_stack[bc_stack_size - 1 - iter], &bc_stack[bc_stack_size - size + iter]);
+            }
             break;
 
             case BCO_RETURN:

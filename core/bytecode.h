@@ -25,6 +25,7 @@
 #define BCO_BLOCK_DEF       7
 #define BCO_BLOCK_START     8
 #define BCO_BLOCK_END       9
+#define BCO_REVERSE_STACK   10
 
 #define BCO_SET             32
 #define BCO_ADD             33
