@@ -85,6 +85,11 @@ int main(int argc, char *argv[])
             larva_stop();
         }
     }
+    else
+    {
+        fputs("File does not exist.\n", stderr);
+        return -1;
+    }
 
     free(source);
 
