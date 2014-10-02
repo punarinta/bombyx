@@ -28,10 +28,7 @@ typedef struct
 
 typedef struct _var_t_
 {
-    BYTE type;
-    char *name;
-    char *data;
-    DWORD data_size;
+    var v;
     struct _var_t_ *next;
     struct _block_t_ *parent;
 } var_t;

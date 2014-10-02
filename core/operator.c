@@ -33,10 +33,19 @@ void op_copy(var *a, var *b)
     }
     else
     {
+        // 'a' is empty
         if (b->data)
         {
-            a->data = malloc(b->data_size);
-            memcpy(a->data, b->data, b->data_size);
+            if (b->type == VAR_DOUBLE)
+            {
+                a->data = challoc(pool_of_doubles);
+                *(double *)a->data = *(double *)b->data;
+            }
+            else
+            {
+                a->data = malloc(b->data_size);
+                memcpy(a->data, b->data, b->data_size);
+            }
         }
     }
 

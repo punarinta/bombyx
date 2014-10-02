@@ -43,7 +43,7 @@ var_t *var_lookup(var_table_t *hashtable, char *str)
 
     for (list = hashtable->table[hashval]; list != NULL; list = list->next)
     {
-        if (strcmp(str, list->name) == 0) return list;
+        if (strcmp(str, list->v.name) == 0) return list;
     }
 
     return NULL;
@@ -63,10 +63,12 @@ var_t *var_add(var_table_t *hashtable, char *str, BYTE type, block_t *parent)
     if (current_list != NULL) return NULL;
 
     /* Insert into list */
-    new_list->data = NULL;
-    new_list->data_size = 0;
-    new_list->name = strdup(str);
-    new_list->type = type;
+    new_list->v.data = NULL;
+    new_list->v.data_size = 0;
+    new_list->v.name = strdup(str);
+    new_list->v.type = type;
+    // TODO: figure out shit with level
+    new_list->v.level = 0;
     new_list->parent = parent;
     new_list->next = hashtable->table[hashval];
     hashtable->table[hashval] = new_list;
@@ -84,7 +86,7 @@ int var_delete(var_table_t *hashtable, char *str)
      * that points to it
      */
     for (prev = NULL, list = hashtable->table[hashval];
-        list != NULL && strcmp(str, list->name);
+        list != NULL && strcmp(str, list->v.name);
         prev = list,
         list = list->next);
     
@@ -95,8 +97,8 @@ int var_delete(var_table_t *hashtable, char *str)
     if (prev == NULL) hashtable->table[hashval] = list->next;
     else prev->next = list->next; 
     
-    if (list->name) free(list->name);
-    if (list->data) free(list->data);
+    if (list->v.name) free(list->v.name);
+    if (list->v.data) free(list->v.data);
     free(list);
 
     return 0;
@@ -115,8 +117,8 @@ void var_table_delete(var_table_t *hashtable)
         {
             temp = list;
             list = list->next;
-            if (temp->name) free(temp->name);
-            if (temp->data) free(temp->data);
+            if (temp->v.name) free(temp->v.name);
+            if (temp->v.data && temp->v.type != VAR_DOUBLE) free(temp->v.data);
             free(temp);
         }
     }
@@ -132,28 +134,10 @@ void var_table_delete(var_table_t *hashtable)
 */
 void var_sync(var *a)
 {
-    var_t *v = var_lookup(vars, a->name);
-    if (v)
+    var_t *vt = var_lookup(vars, a->name);
+    if (vt)
     {
-        if (v->data_size == a->data_size && v->type == a->type)
-        {
-            if (a->type == VAR_DOUBLE) *(double *)v->data = *(double *)a->data;
-            else memcpy(v->data, a->data, a->data_size);
-        }
-        else
-        {
-            v->type = a->type;
-            v->data_size = a->data_size;
-
-            if (v->data)
-            {
-                if (v->type == VAR_DOUBLE) chfree(pool_of_doubles, v->data);
-                else free(v->data);
-            }
-
-            v->data = malloc(a->data_size);
-            memcpy(v->data, a->data, a->data_size);
-        }
+        op_copy(&vt->v, a);
     }
     else
     {
@@ -178,26 +162,10 @@ var var_as_double(double a)
 */
 var var_as_var_t(var_t *vt)
 {
-    var v;
+    var v = {0};
+    v.name = vt->v.name;
 
-    v.data_size = vt->data_size;
-    v.type = vt->type;
-    v.name = vt->name;
-
-    if (vt->data)
-    {
-        if (v.type == VAR_DOUBLE)
-        {
-            v.data = challoc(pool_of_doubles);
-            *(double *)v.data = *(double *)vt->data;
-        }
-        else
-        {
-            v.data = malloc(vt->data_size);
-            memcpy(v.data, vt->data, vt->data_size);
-        }
-    }
-    else v.data = NULL;
+    op_copy(&v, &vt->v);
 
     return v;
 }
@@ -206,7 +174,6 @@ var var_as_string(char *a, size_t len)
 {
     var v = {0};
     v.type = VAR_STRING;
-
     v.data = malloc(++len);
     v.data_size = len;
     memcpy(v.data, a, len);

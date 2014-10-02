@@ -364,10 +364,9 @@ void larva_poo()
     {
         for (v_list = vars->table[i]; v_list != NULL; v_list = v_list->next)
         {
-            fprintf(stdout, "'%s' [%s of size %u] = ", v_list->name, types[v_list->type], v_list->data_size);
+            fprintf(stdout, "'%s' [%s of size %u] = ", v_list->v.name, types[v_list->v.type], v_list->v.data_size);
 
-            v = var_as_var_t(v_list);
-            var_echo(&v);
+            var_echo(&v_list->v);
             putc('\n', stdout);
         }
     }
