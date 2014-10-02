@@ -73,7 +73,7 @@ static void push_chunk_to_first_free_stack(ChunkAllocator* root, void* p)
 
 void* challoc(ChunkAllocator* root)
 {
-    if (!root) return NULL;
+    // We assume that root is not NULL
 
     root = get_first_allocator_with_free_chunk(root);
      
@@ -82,7 +82,7 @@ void* challoc(ChunkAllocator* root)
 
 void chfree(ChunkAllocator* root, void* p)
 {
-    if (!root) return;
+    // We assume that root is not NULL
 
     /* all memory in this allocator is free already */
     if (root->current_chunk == 0)
