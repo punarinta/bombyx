@@ -51,6 +51,7 @@ void op_copy(var *a, var *b)
 
     a->data_size = b->data_size;
     a->type = b->type;
+    a->ref = b->ref;
 }
 
 void op_add(var *a, var *b)
@@ -220,7 +221,7 @@ void op_increment(var *a)
         larva_error("Operator '++' is not defined for the given operand type.");
     }
 
-    if (a->name) var_sync(a);
+    if (a->ref) op_copy(&((var_t *)a->ref)->v, a);
 }
 
 void op_decrement(var *a)
@@ -234,7 +235,7 @@ void op_decrement(var *a)
         larva_error("Operator '--' is not defined for the given operand type.");
     }
 
-    if (a->name) var_sync(a);
+    if (a->ref) op_copy(&((var_t *)a->ref)->v, a);
 }
 
 void op_and(var *a, var *b)

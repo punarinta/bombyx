@@ -24,6 +24,7 @@ typedef struct
     char *name;
     char *data;
     DWORD data_size;
+    void *ref;
 } var;
 
 typedef struct _var_t_

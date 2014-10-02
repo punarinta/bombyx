@@ -91,18 +91,15 @@ exit(0);*/
             case BCO_SET:
             debug_verbose_puts("BCO_SET");
             v2 = bc_stack[--bc_stack_size];
-            v1 = bc_stack[--bc_stack_size];
-            if (!v1.name)
+            if (!bc_stack[bc_stack_size - 1].ref)
             {
-            	larva_error("Schnieblie operations are not allowed.");
+            	larva_error("Left part of an equation should be a variable.");
             }
 
-            op_copy(&v1, &v2);
-            var_sync(&v1);
-            var_unset(&v2);
+            // note: v1 stays inside the stack
 
-            // back to stack
-            bc_stack[bc_stack_size++] = v1;
+            op_copy(&((var_t *)bc_stack[bc_stack_size - 1].ref)->v, &v2);
+            var_unset(&v2);
             break;
 
             case BCO_AS_DOUBLE:

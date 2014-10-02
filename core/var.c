@@ -134,15 +134,22 @@ void var_table_delete(var_table_t *hashtable)
 */
 void var_sync(var *a)
 {
-    var_t *vt = var_lookup(vars, a->name);
-    if (vt)
+    if (a->ref)
     {
-        op_copy(&vt->v, a);
+        op_copy(&((var_t *)a->ref)->v, a);
     }
-    else
+    else if (a->name)
     {
-        sprintf(temp_error, "Variable '%s' not found.", a->name);
-        larva_error(temp_error);
+        var_t *vt = var_lookup(vars, a->name);
+        if (vt)
+        {
+            op_copy(&vt->v, a);
+        }
+        else
+        {
+            sprintf(temp_error, "Variable '%s' not found.", a->name);
+            larva_error(temp_error);
+        }
     }
 }
 
@@ -166,6 +173,7 @@ var var_as_var_t(var_t *vt)
     v.name = vt->v.name;
 
     op_copy(&v, &vt->v);
+    v.ref = vt;
 
     return v;
 }
