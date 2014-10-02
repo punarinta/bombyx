@@ -15,6 +15,8 @@ void parse()
     // find expression end, note that newline does don't count if it's inside a string
     while (code_pos < code_length)
     {
+        if (!code[code_pos]) break;
+
         if (!quote_opened)
         {
             if (code[code_pos] == '\n') break;

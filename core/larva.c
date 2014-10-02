@@ -136,7 +136,7 @@ void larva_digest()
             while (code[code_pos] == ' ') ++code_pos;
 
             // variable is just initialized, but not defined
-            if (code[code_pos] == '\n')
+            if (code[code_pos] == '\n' || !code[code_pos])
             {
                 bc_add_cmd(BCO_VAR);
                 bc_add_token(token);
