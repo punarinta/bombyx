@@ -34,6 +34,7 @@ void larva_silk()
     run_flag[0] = 0;    // do we need this?
     size_t size = 0;
     BYTE skip_mode = 0;
+    size_t param_count = 0;
     block_t *parent_block = NULL;
     char token[PARSER_MAX_TOKEN_SIZE];
 
@@ -262,6 +263,7 @@ void larva_silk()
             {
                 op_swap(&bc_stack[bc_stack_size - 1 - iter], &bc_stack[bc_stack_size - size + iter]);
             }
+            param_count = size;
             break;
 
             case BCO_RETURN:
@@ -497,6 +499,12 @@ void larva_silk()
                 break;
             }
             debug_verbose_puts("BCO_PARAM");
+
+            if (!(param_count--))
+            {
+                larva_error("Block was called with less arguments than you are fetching.");
+            }
+
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             vt = var_add(vars, token, VAR_STRING, NULL);
