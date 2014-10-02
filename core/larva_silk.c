@@ -523,6 +523,11 @@ void larva_silk()
             debug_verbose_puts("BCO_MICROTIME");
             bc_stack[bc_stack_size++] = var_as_double(get_microtime());
             break;
+
+            case BCO_AS_VOID:
+            debug_verbose_puts("BCO_AS_VOID");
+            memset(&bc_stack[bc_stack_size++], 0, sizeof(var));
+            break;
         }
     }
 

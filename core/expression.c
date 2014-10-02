@@ -196,10 +196,17 @@ void parser_read_double(parser_data *pd)
         // check that a double-precision was read, otherwise throw an error
         if (pos == 0) parser_error(pd, "Failed to read operand");
 
-        double d = strtod(token, NULL);
+        if (pos == 1 && token[0] == '_')
+        {
+            bc_add_cmd(BCO_AS_VOID);
+        }
+        else
+        {
+            double d = strtod(token, NULL);
 
-        bc_add_cmd(BCO_AS_DOUBLE);
-        bc_add_double(d);
+            bc_add_cmd(BCO_AS_DOUBLE);
+            bc_add_double(d);
+        }
     }
 }
 
@@ -298,32 +305,7 @@ void parser_read_builtin(parser_data *pd)
 			}
 			else if (memcmp(token, "swap\0", 5) == 0)
             {
-            	/*v0 = parser_read_argument(pd);
-				v1 = parser_read_argument(pd);
-
-				var_t *i0 = var_lookup(vars, v0->name),
-				      *i1 = var_lookup(vars, v1->name);
-
-                // exchange data, data_size, type
-                BYTE temp_type = i0->type;
-                i0->type = i1->type;
-                i1->type = temp_type;
-
-                char *temp_data = malloc(i0->data_size);
-                memcpy(temp_data, i0->data, i0->data_size);
-                if (i0->data) free(i0->data);
-                i0->data = malloc(i1->data_size);
-                memcpy(i0->data, i1->data, i1->data_size);
-                if (i1->data) free(i1->data);
-                i1->data = malloc(i0->data_size);
-                memcpy(i1->data, temp_data, i0->data_size);
-                free(temp_data);
-
-                unsigned int temp_data_size = i0->data_size;
-                i0->data_size = i1->data_size;
-                i1->data_size = temp_data_size;
-
-                var_free(v1);*/
+            	// bc_add_cmd(BCO_SWAP);
 			}
 			else if (memcmp(token, "microtime\0", 10) == 0)
             {
@@ -332,9 +314,14 @@ void parser_read_builtin(parser_data *pd)
 			else
 			{
 			    // this is a 'block' function call
-
 				parser_read_argument_list(pd, &num_args, args);
+				if (num_args > 255)
+				{
+				    parser_error(pd, "Max 255 arguments allowed.");
+				}
+
 				bc_add_cmd(BCO_REVERSE_STACK);
+
 				// insert 1 byte
                 bc_add_cmd((BYTE) num_args);
 				bc_add_cmd(BCO_CALL);

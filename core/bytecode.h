@@ -57,6 +57,7 @@
 #define BCO_PRINT           200
 #define BCO_MICROTIME       201
 #define BCO_SWAP            202
+#define BCO_AS_VOID         203
 
 
 unsigned int bc_ops;
