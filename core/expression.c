@@ -196,17 +196,9 @@ void parser_read_double(parser_data *pd)
         // check that a double-precision was read, otherwise throw an error
         if (pos == 0) parser_error(pd, "Failed to read operand");
 
-        if (pos == 1 && token[0] == '_')
-        {
-            bc_add_cmd(BCO_AS_VOID);
-        }
-        else
-        {
-            double d = strtod(token, NULL);
-
-            bc_add_cmd(BCO_AS_DOUBLE);
-            bc_add_double(d);
-        }
+        double d = strtod(token, NULL);
+        bc_add_cmd(BCO_AS_DOUBLE);
+        bc_add_double(d);
     }
 }
 
@@ -333,8 +325,15 @@ void parser_read_builtin(parser_data *pd)
 		}
 		else
 		{
-		    bc_add_cmd(BCO_AS_VAR);
-            bc_add_token(token);
+		    if (!memcmp(token, "_\0", 2))
+		    {
+                bc_add_cmd(BCO_AS_VOID);
+		    }
+		    else
+		    {
+                bc_add_cmd(BCO_AS_VAR);
+                bc_add_token(token);
+		    }
 		}
 	}
 	else
