@@ -462,7 +462,6 @@ exit(0);*/
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             vt = var_add(vars, token, VAR_STRING, NULL);
-            //if (!vt) vt = var_lookup(vars, token);
             bc_pos += size;
 
             v1 = bc_stack[--bc_stack_size];
