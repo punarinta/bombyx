@@ -1,8 +1,8 @@
-var xy = microtime(), n = 1000, a
-
-while(--n)
+block A
 {
-    a = 'hello, world!'
+    param x, y, z
+
+    return x + 2 * y + 3 * z
 }
 
-print('\nExecution took: ' + (microtime() - xy) + ' microsecond(s).\n')
+var r = A(3, 4, 5)

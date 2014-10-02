@@ -39,10 +39,10 @@ void larva_silk()
 
     bc_ready();
 
-    puts("=============== BYTECODE =============");
+/*    puts("=============== BYTECODE =============");
     bc_poo();
-    puts("======================================");
-exit(0);
+    puts("======================================");*/
+//exit(0);
 
     started_at = get_microtime();
 
@@ -267,7 +267,7 @@ exit(0);
             case BCO_RETURN:
             debug_verbose_puts("BCO_RETURN");
 
-            if (bc_stack_size > 1)
+            if (bc_stack_size >= 1)
             {
                 // stack has got something during the RETURN parsing
                 v1 = bc_stack[--bc_stack_size];
@@ -280,6 +280,9 @@ exit(0);
                 // stack is empty
                 v1 = var_as_double(0);
             }
+
+            // no reference can be inherited during return
+            v1.ref = NULL;
 
             bc_stack[bc_stack_size++] = v1;
             parent_block = parent_block->parent;
@@ -484,6 +487,21 @@ exit(0);
             var_sync(&v1);
             // this will not unset name, so no worries about the token
             var_unset(&v1);
+            break;
+
+            case BCO_PARAM:
+            size = bytecode[bc_pos++];
+            if (skip_mode)
+            {
+                bc_pos += size;
+                break;
+            }
+            debug_verbose_puts("BCO_PARAM");
+            memcpy(token, bytecode + bc_pos, size);
+            token[size] = 0;
+            vt = var_add(vars, token, VAR_STRING, NULL);
+            op_copy(&vt->v, &bc_stack[--bc_stack_size]);
+            bc_pos += size;
             break;
 
             case BCO_PRINT:

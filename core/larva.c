@@ -114,8 +114,11 @@ void larva_digest()
         {
             bc_add_cmd(BCO_BLOCK_END);
         }
-        else if (!memcmp(token, "var\0", 4))
+        else if (!memcmp(token, "var\0", 4) || !memcmp(token, "param\0", 6))
         {
+            BYTE is_param = 0;
+            if (!memcmp(token, "param\0", 6)) is_param = 1;
+
             re_read_var:
 
             larva_read_token(token);
@@ -126,6 +129,7 @@ void larva_digest()
                 || !memcmp(token, "block\0", 6)
                 || !memcmp(token, "return\0", 7)
                 || !memcmp(token, "while\0", 6)
+                || !memcmp(token, "param\0", 6)
             )
             {
                 fprintf(stderr, "Token '%s' is reserved and cannot be used as a variable name.", token);
@@ -138,17 +142,22 @@ void larva_digest()
             // variable is just initialized, but not defined
             if (code[code_pos] == '\n' || !code[code_pos])
             {
-                bc_add_cmd(BCO_VAR);
+                bc_add_cmd(is_param ? BCO_PARAM : BCO_VAR);
                 bc_add_token(token);
                 continue;
             }
 
             if (code[code_pos] == ',')
             {
-                bc_add_cmd(BCO_VAR);
+                bc_add_cmd(is_param ? BCO_PARAM : BCO_VAR);
                 bc_add_token(token);
                 ++code_pos;
                 goto re_read_var;
+            }
+
+            if (is_param)
+            {
+                larva_error("Argument default values are yet not supported. Soon. ;)");
             }
 
             if (code[code_pos] != '=')
