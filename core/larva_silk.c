@@ -131,6 +131,11 @@ void larva_silk()
             bc_pos += size;
             break;
 
+            case BCO_ARRAY_INDEX:
+            debug_verbose_puts("BCO_ARRAY_INDEX");
+            //v1 = bc_stack[--bc_stack_size];
+            break;
+
             case BCO_CALL:
             debug_verbose_puts("BCO_CALL");
             size = bytecode[bc_pos++];

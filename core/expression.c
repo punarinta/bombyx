@@ -307,9 +307,9 @@ void parser_read_builtin(parser_data *pd)
 			{
 			    // this is a 'block' function call
 				parser_read_argument_list(pd, &num_args, args);
-				if (num_args > 255)
+				if (num_args > 32)
 				{
-				    parser_error(pd, "Max 255 arguments allowed.");
+				    parser_error(pd, "Max 32 arguments allowed.");
 				}
 
 				if (num_args > 0) bc_add_cmd(BCO_REVERSE_STACK);
@@ -321,8 +321,21 @@ void parser_read_builtin(parser_data *pd)
 			}
 
 			// eat closing bracket of function call
-			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in function call.");
+			if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in a function call.");
 		}
+		else if (parser_peek(pd) == '[')
+        {
+            // eat the bracket
+            parser_skip(pd);
+
+            // TODO: check for operand presence
+
+            parser_read_expr(pd);
+
+            bc_add_cmd(BCO_ARRAY_INDEX);
+
+            if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
+        }
 		else
 		{
 		    if (!memcmp(token, "_\0", 2))

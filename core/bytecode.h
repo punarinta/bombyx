@@ -54,6 +54,7 @@
 #define BCO_CLEAR_STACK     64
 #define BCO_CEIT            65      // Compare and Execute If True
 #define BCO_SKIP            66
+#define BCO_ARRAY_INDEX     67
 
 #define BCO_PRINT           200
 #define BCO_MICROTIME       201
