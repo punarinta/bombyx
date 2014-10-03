@@ -1,8 +1,8 @@
 block A
 {
-    param x, y, z
+    param x, y = 4, z
 
     return x + 2 * y + 3 * z
 }
 
-var r = A(3, 4, 5)
+var r = A(3, _, 5)

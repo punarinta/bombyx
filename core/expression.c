@@ -312,7 +312,7 @@ void parser_read_builtin(parser_data *pd)
 				    parser_error(pd, "Max 255 arguments allowed.");
 				}
 
-				bc_add_cmd(BCO_REVERSE_STACK);
+				if (num_args > 0) bc_add_cmd(BCO_REVERSE_STACK);
 
 				// insert 1 byte
                 bc_add_cmd((BYTE) num_args);

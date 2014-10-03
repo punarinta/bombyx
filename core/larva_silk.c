@@ -18,7 +18,7 @@ void stack_clear()
 {
     while (bc_stack_size)
     {
-        if (bc_stack[bc_stack_size].level < gl_level) break;
+        if (bc_stack[bc_stack_size - 1].level < gl_level) return;
         var_unset(&bc_stack[--bc_stack_size]);
     }
 }
@@ -127,7 +127,7 @@ void larva_silk()
             debug_verbose_puts("BCO_AS_STRING");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
-            bc_stack[bc_stack_size++] = var_as_string(token, size);
+            stack_push(var_as_string(token, size));
             bc_pos += size;
             break;
 
@@ -185,8 +185,6 @@ void larva_silk()
             memset(bytecode + bc_pos - size - 2, BCO_IDLE, size + 1);
             bytecode[bc_pos - 1] = BCO_SKIP;
 
-            ++gl_level;
-
             // we don't need it now
             skip_mode = 1;
             break;
@@ -209,7 +207,6 @@ void larva_silk()
             if (skip_mode)
             {
                 if (--level == 0) skip_mode = 0;
-                --gl_level;
             }
             else
             {
@@ -239,10 +236,9 @@ void larva_silk()
                     // just up (e.g. IF)
                     --gl_level;
                 }
+                // clear stack from garbage
+                stack_clear();
             }
-
-            // clear stack from garbage
-            stack_clear();
             break;
 
             case BCO_CLEAR_STACK:
