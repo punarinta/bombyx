@@ -512,6 +512,41 @@ void larva_silk()
             bc_pos += size;
             break;
 
+            case BCO_PARAMX:
+            size = bytecode[bc_pos++];
+            if (skip_mode)
+            {
+                bc_pos += size;
+                break;
+            }
+            debug_verbose_puts("BCO_PARAMX");
+
+            if (!(param_count--))
+            {
+                larva_error("Block was called with less arguments than you are fetching.");
+            }
+
+            memcpy(token, bytecode + bc_pos, size);
+            token[size] = 0;
+            vt = var_add(vars, token, VAR_STRING, NULL);
+
+            // pop the var from stack anyway
+            v1 = bc_stack[--bc_stack_size];
+            v2 = bc_stack[--bc_stack_size];
+
+            if (v2.type == VAR_UNSET)
+            {
+                op_copy(&vt->v, &v1);
+            }
+            else
+            {
+                op_copy(&vt->v, &v2);
+            }
+            var_unset(&v1);
+            var_unset(&v2);
+            bc_pos += size;
+            break;
+
             case BCO_PRINT:
             debug_verbose_puts("BCO_PRINT");
             v1 = bc_stack[--bc_stack_size];

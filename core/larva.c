@@ -155,11 +155,6 @@ void larva_digest()
                 goto re_read_var;
             }
 
-            if (is_param)
-            {
-                larva_error("Argument default values are yet not supported. Soon. ;)");
-            }
-
             if (code[code_pos] != '=')
             {
                 fprintf(stderr, "Operator '=' expected, found '%c' '%s'", code[code_pos], token);
@@ -170,7 +165,7 @@ void larva_digest()
 
             parse();
 
-            bc_add_cmd(BCO_VARX);
+            bc_add_cmd(is_param ? BCO_PARAMX : BCO_VARX);
             bc_add_token(token);
 
             // we have one more var to init
