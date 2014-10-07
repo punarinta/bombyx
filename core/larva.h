@@ -8,8 +8,8 @@
 #define RUN_WHILE       3
 #define RUN_BLOCK       4
 
-void larva_init();
-void larva_chew();
+void larva_init(char *, size_t);
+char *larva_chew(char *, size_t, size_t*);
 void larva_digest();
 void larva_silk();
 void larva_error(char *);

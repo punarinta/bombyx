@@ -45,8 +45,8 @@ BYTE run_flag[BOMBYX_STACK_SIZE];     // this is only for statements, not for bl
 DWORD ret_point[BOMBYX_STACK_SIZE];
 
 char *code;
-unsigned int code_pos;
-unsigned int code_length;
+size_t code_pos;
+size_t code_length;
 double started_at;
 
 #endif

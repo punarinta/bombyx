@@ -8,63 +8,51 @@
 /**
  *  Sets up the processor
  */
-void larva_init(char *incoming_code, unsigned int len)
+void larva_init(char *incoming_code, size_t len)
 {
     blocks_count = MIN_BLOCKS;
     vars_count   = MIN_VARIABLES;
     blocks       = block_table_create(MIN_BLOCKS);
     vars         = var_table_create(MIN_VARIABLES);
 
-    code_length = 0;
-    BYTE quotes_on = 0;
-    code = malloc(len * sizeof(char));
-
     bc_init();
 
-    for (unsigned int i = 0; i < len; ++i)
-    {
-        if (incoming_code[i] == '\'') quotes_on = !quotes_on;
-
-        if (i < len - 1 && incoming_code[i] == '\\')
-        {
-            if (incoming_code[i + 1] == 'n') code[code_length] = '\n';
-            else if (incoming_code[i + 1] == 't') code[code_length] = '\t';
-            else code_length--;
-            ++i;
-        }
-        else if (incoming_code[i] == '#' && !quotes_on)
-        {
-            if (i < len - 1 && incoming_code[i + 1] == '#')
-            {
-                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') { ++i; break; }
-            }
-            else while (i++ < len) if (incoming_code[i] == '\n') break;
-            
-            continue;
-        }
-        else
-        {
-            code[code_length] = incoming_code[i];
-        }
-
-        ++code_length;
-    }
-
-    // larva_chew();
-}
-
-void larva_chew()
-{
     code_pos = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
 
-    // TODO: include all the necessary files
+    // strip da shit out
+    code = larva_chew(incoming_code, len, &code_length);
 
     while (code[code_pos])
     {
         larva_read_token(token);
 
-        if (!memcmp(token, "use\0", 4))
+        if (!memcmp(token, "include\0", 8))
+        {
+            larva_read_token(token);
+            FILE *fp = fopen(token, "rt");
+            if (!fp)
+            {
+                fprintf(stderr, "Cannot include file '%s'.", token);
+                larva_error(0);
+            }
+
+            fseek(fp, 0L, SEEK_END);
+            long bufsize = ftell(fp);
+            char *source = malloc(bufsize + 1);
+            fseek(fp, 0L, SEEK_SET);
+            size_t file_len = fread(source, sizeof(char), bufsize, fp);
+            //source[file_len++] = '\0';
+
+            size_t dummy;
+            source = larva_chew(source, file_len, &dummy);
+
+            // temporary
+            free(source);
+
+            fclose(fp);
+        }
+        else if (!memcmp(token, "use\0", 4))
         {
             larva_read_token(token);
 
@@ -93,7 +81,50 @@ void larva_chew()
 
             dlclose(lib_handle);
         }
+
+        ++code_pos;
     }
+}
+
+char *larva_chew(char *incoming_code, size_t len, size_t *new_len)
+{
+    BYTE quotes_on = 0;
+    char *new_code = malloc(len);
+
+    *new_len = 0;
+
+    for (unsigned int i = 0; i < len; ++i)
+    {
+        if (incoming_code[i] == '\'') quotes_on = !quotes_on;
+
+        if (i < len - 1 && incoming_code[i] == '\\')
+        {
+            if (incoming_code[i + 1] == 'n') new_code[*new_len] = '\n';
+            else if (incoming_code[i + 1] == 't') new_code[*new_len] = '\t';
+            else --(*new_len);
+            ++i;
+        }
+        else if (incoming_code[i] == '#' && !quotes_on)
+        {
+            if (i < len - 1 && incoming_code[i + 1] == '#')
+            {
+                while (i++ < len) if (incoming_code[i] == '#' && incoming_code[i + 1] == '#') { ++i; break; }
+            }
+            else while (i++ < len) if (incoming_code[i] == '\n') break;
+
+            continue;
+        }
+        else
+        {
+            new_code[*new_len] = incoming_code[i];
+        }
+
+        ++(*new_len);
+    }
+
+    free(incoming_code);
+
+    return new_code;
 }
 
 /**
