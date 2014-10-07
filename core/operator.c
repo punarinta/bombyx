@@ -86,7 +86,7 @@ void op_add(var *a, var *b)
         memcpy(r.data, a->data, a->data_size - 1);
         memcpy(r.data + a->data_size - 1, converted, len);
 
-        r.data[r.data_size - 1] = 0;
+        *((char *) (r.data + r.data_size - 1)) = '\0';
 
         // realloc
         var_unset(a);
