@@ -328,13 +328,19 @@ void parser_read_builtin(parser_data *pd)
             // eat the bracket
             parser_skip(pd);
 
-            // TODO: check for operand presence
+            if (parser_peek(pd) == ']')
+            {
+                // TODO: support element addition via token[]
+                parser_error(pd, "Operator [] requires an operand.");
+            }
+            else
+            {
+                parser_read_expr(pd);
 
-            parser_read_expr(pd);
+                bc_add_cmd(BCO_ARRAY_INDEX);
 
-            bc_add_cmd(BCO_ARRAY_INDEX);
-
-            if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
+                if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
+            }
         }
 		else
 		{
