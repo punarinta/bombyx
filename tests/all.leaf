@@ -111,6 +111,12 @@ print(' - 0x0D** symbols: അഋ→ (must be on one line)\n')
 
 # =========================================
 
+print('Including files...\n')
+
+include 'include_me.leaf'
+
+# =========================================
+
 print('Blocks (b1, b1.b2):\n')
 
 block b1

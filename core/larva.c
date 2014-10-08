@@ -27,12 +27,12 @@ void larva_init(char *incoming_code, size_t len)
     {
         size_t line_start = code_pos;
 
-        while (code[code_pos])
         larva_read_token(token);
 
         if (!memcmp(token, "include\0", 8))
         {
-            larva_read_token(token);
+            larva_read_string_token(token);
+
             FILE *fp = fopen(token, "rt");
             if (!fp)
             {
@@ -337,6 +337,38 @@ void larva_read_token(char *token)
         // either it's a function call or just a command
         if (code[code_pos] == '(' || code[code_pos] == ',' || code[code_pos] == '=' || isspace(code[code_pos])) break;
     }
+
+    memcpy(token, code + start, token_pos);
+
+    token[token_pos] = '\0';
+}
+
+void larva_read_string_token(char *token)
+{
+    while (isspace(code[code_pos])) ++code_pos;
+
+    if (code[code_pos] != '\'')
+    {
+        larva_error("String token should be placed into quotes.");
+    }
+
+    size_t start = ++code_pos, token_pos = 0;
+
+    // read until newline
+    while (++code_pos < code_length)
+    {
+        if (++token_pos == PARSER_MAX_TOKEN_SIZE)
+        {
+            larva_error("Token name is too long.");
+        }
+
+        if (code[code_pos] == '\'') break;
+        if (code[code_pos] == 13)
+        {
+            larva_error("Multiline string tokens are not allowed");
+        }
+    }
+    ++code_pos;
 
     memcpy(token, code + start, token_pos);
 

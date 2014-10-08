@@ -17,5 +17,6 @@ void larva_poo();
 void larva_stop();
 void larva_skip_block();
 void larva_read_token(char *);
+void larva_read_string_token(char *);
 
 #endif
