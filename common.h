@@ -41,7 +41,7 @@ char temp_error[256];
 jmp_buf error_exit;
 BYTE verbose;
 BYTE gl_level;
-BYTE run_flag[BOMBYX_STACK_SIZE];     // this is only for statements, not for blocks
+BYTE run_flag[BOMBYX_STACK_SIZE];       // this is only for statements, not for blocks
 DWORD ret_point[BOMBYX_STACK_SIZE];
 
 char *code;

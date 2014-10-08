@@ -25,6 +25,8 @@ void larva_init(char *incoming_code, size_t len)
 
     while (code[code_pos])
     {
+        size_t line_start = code_pos;
+
         larva_read_token(token);
 
         if (!memcmp(token, "include\0", 8))
@@ -42,10 +44,30 @@ void larva_init(char *incoming_code, size_t len)
             char *source = malloc(bufsize + 1);
             fseek(fp, 0L, SEEK_SET);
             size_t file_len = fread(source, sizeof(char), bufsize, fp);
-            //source[file_len++] = '\0';
 
-            size_t dummy;
-            source = larva_chew(source, file_len, &dummy);
+            // included files do not contain trailing zeroes
+
+            size_t included_size;
+            source = larva_chew(source, file_len, &included_size);
+
+            // now 'source' contains cleaned code from included file
+            // we insert this code into code_pos and increase code_length on its length
+
+            code = realloc(code, code_length + included_size - (code_pos - line_start));
+
+            if (!code)
+            {
+                larva_error("Your system has been hijacked by alohasnackbars.");
+            }
+
+            // move the unprocessed code
+            // thus the trailing zero will be moved to the very end
+            memmove(code + line_start + included_size, code + code_pos, code_length - code_pos);
+
+            // move the included source
+            memmove(code + line_start, source, included_size);
+
+            code_length += (included_size - (code_pos - line_start));
 
             // temporary
             free(source);

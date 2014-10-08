@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+// TODO: check that these two exist
+#include <libgen.h>
+#include <unistd.h>
+
 #include "common.h"
 #include "core/larva.h"
 
@@ -68,6 +73,9 @@ int main(int argc, char *argv[])
         }
 
         fclose(fp);
+
+        // set cwd
+        chdir(dirname(argv[1]));
 
         setjmp(error_exit);
 
