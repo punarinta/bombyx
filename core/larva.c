@@ -27,6 +27,7 @@ void larva_init(char *incoming_code, size_t len)
     {
         size_t line_start = code_pos;
 
+        while (code[code_pos])
         larva_read_token(token);
 
         if (!memcmp(token, "include\0", 8))
@@ -301,6 +302,13 @@ void larva_digest()
         else if (!memcmp(token, "{\0", 2))
         {
             bc_add_cmd(BCO_BLOCK_START);
+        }
+        else if (!memcmp(token, "use\0", 4))
+        {
+            // TODO(?): cut out uses within chew()
+
+            // just skip
+            larva_read_token(token);
         }
         else
         {
