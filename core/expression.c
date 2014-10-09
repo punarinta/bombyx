@@ -336,8 +336,8 @@ void parser_read_builtin(parser_data *pd)
             else
             {
                 parser_read_expr(pd);
-
                 bc_add_cmd(BCO_ARRAY_INDEX);
+                bc_add_token(token);
 
                 if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
             }

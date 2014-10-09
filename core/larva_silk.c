@@ -4,6 +4,7 @@
 #include "block.h"
 #include "sys.h"
 #include "bytecode.h"
+#include "array.h"
 
 void stack_push(var v)
 {
@@ -132,8 +133,29 @@ void larva_silk()
             break;
 
             case BCO_ARRAY_INDEX:
+            size = bytecode[bc_pos++];
+            if (skip_mode)
+            {
+                bc_pos += size;
+                break;
+            }
             debug_verbose_puts("BCO_ARRAY_INDEX");
-            //v1 = bc_stack[--bc_stack_size];
+            memcpy(token, bytecode + bc_pos, size);
+            token[size] = 0;
+
+            v1 = bc_stack[--bc_stack_size];
+            if (v1.type != VAR_STRING)
+            {
+                larva_error("Array key must be a string.");
+            }
+            vt = var_lookup(vars, token);
+            if (vt->v.type != VAR_ARRAY)
+            {
+                fprintf(stderr, "Object '%s' is not an array.", token);
+                larva_error(0);
+            }
+            array_t *array_elem = array_lookup((array_table_t *)vt->v.data, v1.data);
+            stack_push(array_elem->v);
             break;
 
             case BCO_CALL:

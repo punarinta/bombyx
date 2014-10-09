@@ -28,6 +28,7 @@
 #define BCO_REVERSE_STACK   10
 #define BCO_PARAM           11
 #define BCO_PARAMX          12
+#define BCO_ARRAY_INDEX     13
 
 #define BCO_SET             32
 #define BCO_ADD             33
@@ -54,7 +55,6 @@
 #define BCO_CLEAR_STACK     64
 #define BCO_CEIT            65      // Compare and Execute If True
 #define BCO_SKIP            66
-#define BCO_ARRAY_INDEX     67
 
 #define BCO_PRINT           200
 #define BCO_MICROTIME       201

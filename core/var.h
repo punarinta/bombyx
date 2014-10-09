@@ -9,9 +9,8 @@
 #define VAR_UNSET       0
 #define VAR_DOUBLE      1
 #define VAR_STRING      2
-#define VAR_BLOCK    	3
-#define VAR_ARRAY       4
-#define VAR_HASHTABLE   5
+#define VAR_BLOCK    	4
+#define VAR_ARRAY       5
 #define VAR_POINTER     6
 
 typedef unsigned char BYTE;

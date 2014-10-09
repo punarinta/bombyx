@@ -453,7 +453,7 @@ void larva_stop()
 void larva_poo()
 {
     unsigned int i;
-    char types[][10] = {"UNSET", "DOUBLE", "STRING", "BLOCK", "ARRAY", "A-ARRAY", "PTR"};
+    char types[][10] = {"UNSET", "DOUBLE", "STRING", "-reserved-", "BLOCK", "ARRAY", "PTR"};
 
     var v;
     var_t *v_list;
