@@ -221,10 +221,12 @@ void larva_digest()
                 larva_error(0);
             }
 
+            ++code_pos;
+
             // skip spaces
             while (code[code_pos] == ' ') ++code_pos;
 
-            if (code[code_pos] != '{' || code[code_pos] != '[')
+            if (code[code_pos] == '{' || code[code_pos] == '[')
             {
                 // This is madness!
                 // Madness? No. This. Is. JSON!
