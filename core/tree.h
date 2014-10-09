@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "var.h"
 
 typedef struct _tree_t_
 {
@@ -21,7 +22,7 @@ typedef struct _tree_table_t_
 tree_table_t *tree_table_create(int);
 unsigned int tree_hash(tree_table_t *, char *);
 tree_t *tree_lookup(tree_table_t *, char *);
-tree_t *tree_add(tree_table_t *, char *, unsigned int, tree_t *);
+tree_t *tree_add(tree_table_t *, char *, var v);
 int tree_delete(tree_table_t *, char *);
 void tree_table_delete(tree_table_t *);
 

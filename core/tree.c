@@ -47,7 +47,7 @@ tree_t *tree_lookup(tree_table_t *hashtable, char *str)
     return NULL;
 }
 
-tree_t *tree_add(tree_table_t *hashtable, char *str, unsigned int pos, tree_t *parent)
+tree_t *tree_add(tree_table_t *hashtable, char *str, var v)
 {
     tree_t *new_list;
     tree_t *current_list;
@@ -62,8 +62,7 @@ tree_t *tree_add(tree_table_t *hashtable, char *str, unsigned int pos, tree_t *p
 
     /* Insert into list */
     new_list->name = strdup(str);
-    new_list->pos = pos;
-    new_list->parent = parent;
+    new_list->v = v;
     new_list->next = hashtable->table[hashval];
     hashtable->table[hashval] = new_list;
 
