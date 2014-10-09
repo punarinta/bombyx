@@ -194,10 +194,17 @@ var var_as_json(char *a)
 {
     var v = {0};
     v.type = VAR_JSON;
-    json_error_t *error;
-    json_t *jt = json_loads(a, 0, error);
+    json_error_t error;
+    json_t *jt = json_loads(a, 0, &error);  // JSON_DECODE_ANY
+    if (!jt)
+    {
+        sprintf(temp_error, "Cannot decode JSON variable '%s'.", a);
+        larva_error(temp_error);
+    }
+
     v.data_size = sizeof(json_t);
-    v.data = (json_t *)jt;
+    v.data = jt;
+
     return v;
 }
 
@@ -206,12 +213,14 @@ inline void var_unset(var *a)
     if (a->data)
     {
         if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
+        else if (a->type == VAR_JSON) json_decref(a->data);
         else free(a->data);
     }
 }
 
 void var_echo(var *a)
 {
+    char *str;
     if (a)
     {
         switch (a->type)
@@ -227,6 +236,12 @@ void var_echo(var *a)
 
             case VAR_DOUBLE:
             fprintf(stdout, "%.6g", *(double *)a->data);
+            break;
+
+            case VAR_JSON:
+            str = json_dumps((json_t *)a->data, 0);
+            fprintf(stdout, "%s", str);
+            free(str);
             break;
 
             default:

@@ -3,6 +3,7 @@
 #include "larva.h"
 #include "bytecode.h"
 #include "../common.h"
+#include "../vendor/jansson.h"
 
 void op_copy(var *a, var *b)
 {
@@ -13,6 +14,7 @@ void op_copy(var *a, var *b)
             if (a->data_size == b->data_size && a->type == b->type)
             {
                 if (a->type == VAR_DOUBLE) *(double *)a->data = *(double *)b->data;
+                else if (a->type == VAR_JSON) a->data = json_deep_copy(b->data);
                 else memcpy(a->data, b->data, b->data_size);
                 // it's done :)
                 return;
@@ -41,6 +43,7 @@ void op_copy(var *a, var *b)
                 a->data = challoc(pool_of_doubles);
                 *(double *)a->data = *(double *)b->data;
             }
+            else if (b->type == VAR_JSON) a->data = json_deep_copy(b->data);
             else
             {
                 a->data = malloc(b->data_size);

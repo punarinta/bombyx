@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                source[++newLen] = '\0';
+                source[newLen++] = '\0';
             }
         }
         else
@@ -74,8 +74,9 @@ int main(int argc, char *argv[])
 
         fclose(fp);
 
-        // set cwd
-        chdir(dirname(argv[1]));
+        char *dir = dirname(argv[1]);
+        chdir(dir);
+        free(dir);
 
         setjmp(error_exit);
 

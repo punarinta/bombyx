@@ -144,8 +144,9 @@ void larva_silk()
             char *str = malloc(size + 1);
             memcpy(str, bytecode + bc_pos, size);
             str[size] = 0;
-            stack_push(var_as_json(str));
             bc_pos += size;
+            stack_push(var_as_json(str));
+            free(str);
             break;
 
             case BCO_JSON_ACCESS:

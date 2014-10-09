@@ -23,7 +23,7 @@ void larva_init(char *incoming_code, size_t len)
     // strip da shit out
     code = larva_chew(incoming_code, len, &code_length);
 
-    while (code[code_pos])
+    while (code_pos < code_length)
     {
         size_t line_start = code_pos;
 
@@ -118,7 +118,7 @@ void larva_init(char *incoming_code, size_t len)
 char *larva_chew(char *incoming_code, size_t len, size_t *new_len)
 {
     BYTE quotes_on = 0;
-    char *new_code = malloc(len);
+    char *new_code = malloc(len + 1);
 
     *new_len = 0;
 
@@ -246,7 +246,7 @@ void larva_digest()
 
                 free(json_string);
 
-                bc_add_cmd(BCO_PARAMX);
+                bc_add_cmd(BCO_VARX);
                 bc_add_token(token);
             }
             else
