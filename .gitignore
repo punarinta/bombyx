@@ -1,3 +1,5 @@
 /.idea
 bombyx
 bombyx-web
+temp
+vendor/*.a

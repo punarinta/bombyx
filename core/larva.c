@@ -221,12 +221,39 @@ void larva_digest()
                 larva_error(0);
             }
 
-            ++code_pos;
+            // skip spaces
+            while (code[code_pos] == ' ') ++code_pos;
 
-            parse();
+            if (code[code_pos] != '{' || code[code_pos] != '[')
+            {
+                // This is madness!
+                // Madness? No. This. Is. JSON!
 
-            bc_add_cmd(is_param ? BCO_PARAMX : BCO_VARX);
-            bc_add_token(token);
+                size_t json_string_start = code_pos;
+                while (code[code_pos] && code[code_pos] != 13)
+                {
+                    ++code_pos;
+                }
+
+                char *json_string = malloc(code_pos - json_string_start + 1);
+                memcpy(json_string, code + json_string_start, code_pos - json_string_start);
+                json_string[code_pos - json_string_start] = 0;
+
+                bc_add_cmd(BCO_AS_JSON);
+                bc_add_string(json_string);
+
+                free(json_string);
+
+                bc_add_cmd(BCO_PARAMX);
+                bc_add_token(token);
+            }
+            else
+            {
+                parse();
+
+                bc_add_cmd(is_param ? BCO_PARAMX : BCO_VARX);
+                bc_add_token(token);
+            }
 
             // we have one more var to init
             if (code[code_pos] == ',')
@@ -453,7 +480,7 @@ void larva_stop()
 void larva_poo()
 {
     unsigned int i;
-    char types[][10] = {"UNSET", "DOUBLE", "STRING", "-reserved-", "BLOCK", "ARRAY", "PTR"};
+    char types[][10] = {"UNSET", "DOUBLE", "STRING", "-reserved-", "BLOCK", "JSON", "CUSTOM"};
 
     var v;
     var_t *v_list;

@@ -2,6 +2,7 @@
 #include "sys.h"
 #include "bytecode.h"
 #include "../common.h"
+#include "../vendor/jansson.h"
 
 var_table_t *var_table_create(int size)
 {
@@ -186,6 +187,17 @@ var var_as_string(char *a, size_t len)
     v.data_size = len;
     memcpy(v.data, a, len);
 
+    return v;
+}
+
+var var_as_json(char *a)
+{
+    var v = {0};
+    v.type = VAR_JSON;
+    json_error_t *error;
+    json_t *jt = json_loads(a, 0, error);
+    v.data_size = sizeof(json_t);
+    v.data = (json_t *)jt;
     return v;
 }
 

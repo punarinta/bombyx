@@ -5,9 +5,9 @@ core/*.c \
 console.c \
 \
 -std=c99 \
--O0 -g -o bombyx -ldl
+-O0 -g -o bombyx -ldl -Lvendor/ -ljansson
 
-# -O3 -DNDEBUG -o bombyx -ldl
+# -O3 -DNDEBUG -o bombyx -ldl -Lvendor/ -ljansson
 
 # valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite ./bombyx tests/1.leaf -v
 # valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./bombyx tests/1.leaf

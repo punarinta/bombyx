@@ -10,8 +10,8 @@
 #define VAR_DOUBLE      1
 #define VAR_STRING      2
 #define VAR_BLOCK    	4
-#define VAR_ARRAY       5
-#define VAR_POINTER     6
+#define VAR_JSON        5
+#define VAR_CUSTOM      6
 
 typedef unsigned char BYTE;
 typedef unsigned int  DWORD;
@@ -51,6 +51,7 @@ void var_unset(var *);
 
 var var_as_double(double);
 var var_as_string(char *, size_t);
+var var_as_json(char *);
 var var_as_var_t(var_t *);
 
 void var_sync(var *);

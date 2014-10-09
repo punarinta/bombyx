@@ -4,7 +4,7 @@
 #include "block.h"
 #include "sys.h"
 #include "bytecode.h"
-#include "array.h"
+#include "../vendor/jansson.h"
 
 void stack_push(var v)
 {
@@ -132,30 +132,65 @@ void larva_silk()
             bc_pos += size;
             break;
 
-            case BCO_ARRAY_INDEX:
+            case BCO_AS_JSON:
+            size = bytecode[bc_pos] + (bytecode[bc_pos + 1] << 8);
+            bc_pos += 2;
+            if (skip_mode)
+            {
+                bc_pos += size;
+                break;
+            }
+            debug_verbose_puts("BCO_AS_JSON");
+            char *str = malloc(size + 1);
+            memcpy(str, bytecode + bc_pos, size);
+            str[size] = 0;
+            stack_push(var_as_json(str));
+            bc_pos += size;
+            break;
+
+            case BCO_JSON_ACCESS:
             size = bytecode[bc_pos++];
             if (skip_mode)
             {
                 bc_pos += size;
                 break;
             }
-            debug_verbose_puts("BCO_ARRAY_INDEX");
+            debug_verbose_puts("BCO_JSON_ACCESS");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
 
             v1 = bc_stack[--bc_stack_size];
             if (v1.type != VAR_STRING)
             {
-                larva_error("Array key must be a string.");
+                larva_error("APath key must be a string.");
             }
+
+            // TODO: parse APath and access JSON recursively
+
             vt = var_lookup(vars, token);
-            if (vt->v.type != VAR_ARRAY)
+            if (vt->v.type != VAR_JSON)
             {
-                fprintf(stderr, "Object '%s' is not an array.", token);
+                fprintf(stderr, "Object '%s' is not a JSON.", token);
                 larva_error(0);
             }
-            array_t *array_elem = array_lookup((array_table_t *)vt->v.data, v1.data);
-            stack_push(array_elem->v);
+
+            json_t *jt = (json_t *)vt->v.data;
+
+            // get JSON type
+            if (json_typeof(jt) == JSON_OBJECT)
+            {
+                json_object_get(jt, token);
+            }
+            else if (json_typeof(jt) == JSON_ARRAY)
+            {
+                // TODO: convert token to int
+                json_array_get(jt, 0);
+            }
+            else
+            {
+                fprintf(stderr, "JSON-object '%s' is scalar.", token);
+                larva_error(0);
+            }
             break;
 
             case BCO_CALL:
