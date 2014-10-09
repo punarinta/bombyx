@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "block.h"
+#include "../vendor/jansson.h"
 
 #define VAR_UNSET       0
 #define VAR_DOUBLE      1
@@ -51,7 +52,8 @@ void var_unset(var *);
 
 var var_as_double(double);
 var var_as_string(char *, size_t);
-var var_as_json(char *);
+var var_as_json(json_t *);
+var var_as_json_string(char *);
 var var_as_var_t(var_t *);
 
 void var_sync(var *);

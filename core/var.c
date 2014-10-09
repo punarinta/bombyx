@@ -2,7 +2,6 @@
 #include "sys.h"
 #include "bytecode.h"
 #include "../common.h"
-#include "../vendor/jansson.h"
 
 var_table_t *var_table_create(int size)
 {
@@ -119,7 +118,12 @@ void var_table_delete(var_table_t *hashtable)
             temp = list;
             list = list->next;
             if (temp->v.name) free(temp->v.name);
-            if (temp->v.data && temp->v.type != VAR_DOUBLE) free(temp->v.data);
+            if (temp->v.data)
+            {
+                if (temp->v.type == VAR_DOUBLE) chfree(pool_of_doubles, temp->v.data);
+                else if (temp->v.type == VAR_JSON) json_decref(temp->v.data);
+                else free(temp->v.data);
+            }
             free(temp);
         }
     }
@@ -190,7 +194,17 @@ var var_as_string(char *a, size_t len)
     return v;
 }
 
-var var_as_json(char *a)
+var var_as_tree(json_t *jt)
+{
+    var v = {0};
+    v.type = VAR_JSON;
+    v.data_size = sizeof(json_t);
+    v.data = json_copy(jt);
+
+    return v;
+}
+
+var var_as_json_string(char *a)
 {
     var v = {0};
     v.type = VAR_JSON;

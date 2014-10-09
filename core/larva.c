@@ -232,7 +232,7 @@ void larva_digest()
                 // Madness? No. This. Is. JSON!
 
                 size_t json_string_start = code_pos;
-                while (code[code_pos] && code[code_pos] != 13)
+                while (code[code_pos] && code[code_pos] != '\n' && code[code_pos] != '\r')
                 {
                     ++code_pos;
                 }

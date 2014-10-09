@@ -145,23 +145,23 @@ void larva_silk()
             memcpy(str, bytecode + bc_pos, size);
             str[size] = 0;
             bc_pos += size;
-            stack_push(var_as_json(str));
+            stack_push(var_as_json_string(str));
             free(str);
             break;
 
-            case BCO_JSON_ACCESS:
+            case BCO_TREE_ACCESS:
             size = bytecode[bc_pos++];
             if (skip_mode)
             {
                 bc_pos += size;
                 break;
             }
-            debug_verbose_puts("BCO_JSON_ACCESS");
+            debug_verbose_puts("BCO_TREE_ACCESS");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
 
             v1 = bc_stack[--bc_stack_size];
-            if (v1.type != VAR_STRING)
+        /*    if (v1.type != VAR_STRING)
             {
                 larva_error("APath key must be a string.");
             }
@@ -175,23 +175,28 @@ void larva_silk()
                 larva_error(0);
             }
 
-            json_t *jt = (json_t *)vt->v.data;
+            json_t *jt = vt->v.data;
 
             // get JSON type
             if (json_typeof(jt) == JSON_OBJECT)
             {
-                json_object_get(jt, token);
+                jt = json_object_get(jt, v1.data);
             }
             else if (json_typeof(jt) == JSON_ARRAY)
             {
                 // TODO: convert token to int
-                json_array_get(jt, 0);
+                jt = json_array_get(jt, 0);
             }
             else
             {
                 fprintf(stderr, "JSON-object '%s' is scalar.", token);
                 larva_error(0);
             }
+
+            var_unset(&v1);
+
+            v1 = var_as_json(jt);*/
+            stack_push(v1);
             break;
 
             case BCO_CALL:
