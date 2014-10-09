@@ -27,6 +27,12 @@ void larva_init(char *incoming_code, size_t len)
     {
         size_t line_start = code_pos;
 
+        if (!line_start || code[line_start - 1] != 13)
+        {
+            // just skip such cases for now
+            ++code_pos;
+        }
+
         larva_read_token(token);
 
         if (!memcmp(token, "include\0", 8))

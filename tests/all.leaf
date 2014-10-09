@@ -111,7 +111,7 @@ print(' - 0x0D** symbols: അഋ→ (must be on one line)\n')
 
 # =========================================
 
-print('Including files...\n')
+print('Testing include directive...\n')
 
 include 'include_me.leaf'
 
