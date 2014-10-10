@@ -28,8 +28,8 @@
 #define BCO_REVERSE_STACK   10
 #define BCO_PARAM           11
 #define BCO_PARAMX          12
-#define BCO_TREE_ACCESS     13
-#define BCO_AS_JSON         14
+#define BCO_ACCESS          13
+#define BCO_FROM_JSON       14
 
 #define BCO_SET             32
 #define BCO_ADD             33

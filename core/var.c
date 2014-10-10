@@ -1,7 +1,10 @@
 #include "var.h"
+#include "map.h"
 #include "sys.h"
 #include "bytecode.h"
 #include "../common.h"
+
+map_table_t *json_to_map(json_t *);
 
 var_table_t *var_table_create(int size)
 {
@@ -121,7 +124,6 @@ void var_table_delete(var_table_t *hashtable)
             if (temp->v.data)
             {
                 if (temp->v.type == VAR_DOUBLE) chfree(pool_of_doubles, temp->v.data);
-                else if (temp->v.type == VAR_JSON) json_decref(temp->v.data);
                 else free(temp->v.data);
             }
             free(temp);
@@ -194,32 +196,73 @@ var var_as_string(char *a, size_t len)
     return v;
 }
 
-var var_as_tree(json_t *jt)
+var var_from_json(char *a)
 {
     var v = {0};
-    v.type = VAR_JSON;
-    v.data_size = sizeof(json_t);
-    v.data = json_copy(jt);
 
-    return v;
-}
-
-var var_as_json_string(char *a)
-{
-    var v = {0};
-    v.type = VAR_JSON;
     json_error_t error;
-    json_t *jt = json_loads(a, 0, &error);  // JSON_DECODE_ANY
-    if (!jt)
+    json_t *j = json_loads(a, 0, &error);  // JSON_DECODE_ANY
+    if (!j)
     {
         sprintf(temp_error, "Cannot decode JSON variable '%s'.", a);
         larva_error(temp_error);
     }
 
-    v.data_size = sizeof(json_t);
-    v.data = jt;
+    if (json_is_object(j) || json_is_array(j))
+    {
+        v.type = VAR_MAP;
+        v.data = json_to_map(j);
+        v.data_size = sizeof(map_table_t);
+    }
+    else
+    {
+        // this can be only array or object
+        larva_error("JSON parsing error");
+    }
 
     return v;
+}
+
+map_table_t *json_to_map(json_t *json)
+{
+    size_t index;
+    json_t *value;
+    const char *key;
+    map_table_t *map;
+
+    // TODO: minimum map size (100?)
+
+    if (json_is_object(json))
+    {
+        map = map_table_create(json_object_size(json));
+        json_object_foreach(json, key, value)
+        {
+            var v = {0};
+            if (json_is_object(value) || json_is_array(value))
+            {
+                // process recursively
+                v.type = VAR_MAP;
+                v.data = json_to_map(value);
+                v.data_size = sizeof(map_table_t);
+            }
+            else if (json_is_string(value))
+            {
+                v.type = VAR_STRING;
+                v.data = strdup(json_string_value(value));
+                v.data_size = json_string_length(value);
+            }
+            map_add(map, (char *)key, v);
+        }
+    }
+    else
+    {
+        map = map_table_create(json_array_size(json));
+        json_array_foreach(json, index, value)
+        {
+        }
+    }
+
+    return map;
 }
 
 inline void var_unset(var *a)
@@ -227,7 +270,7 @@ inline void var_unset(var *a)
     if (a->data)
     {
         if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
-        else if (a->type == VAR_JSON) json_decref(a->data);
+        else if (a->type == VAR_MAP) larva_error("err");//map_table_delete(a->data);
         else free(a->data);
     }
 }
@@ -235,6 +278,9 @@ inline void var_unset(var *a)
 void var_echo(var *a)
 {
     char *str;
+    map_t *list;
+    map_table_t *ht;
+
     if (a)
     {
         switch (a->type)
@@ -252,10 +298,23 @@ void var_echo(var *a)
             fprintf(stdout, "%.6g", *(double *)a->data);
             break;
 
-            case VAR_JSON:
-            str = json_dumps((json_t *)a->data, 0);
-            fprintf(stdout, "%s", str);
-            free(str);
+            case VAR_MAP:
+            fprintf(stdout, "{\n");
+            for (unsigned int i = 0; i < ((map_table_t *)a->data)->size; i++)
+            {
+                list = ((map_table_t *)a->data)->table[i];
+                while (list != NULL)
+                {
+                    if (list->v.type)
+                    {
+                        fprintf(stdout, "%s => ", list->name);
+                        var_echo(&list->v);
+                        fprintf(stdout, ",\n");
+                    }
+                    list = list->next;
+                }
+            }
+            fprintf(stdout, "}\n");
             break;
 
             default:

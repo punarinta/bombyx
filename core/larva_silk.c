@@ -132,7 +132,7 @@ void larva_silk()
             bc_pos += size;
             break;
 
-            case BCO_AS_JSON:
+            case BCO_FROM_JSON:
             size = bytecode[bc_pos] + (bytecode[bc_pos + 1] << 8);
             bc_pos += 2;
             if (skip_mode)
@@ -140,28 +140,28 @@ void larva_silk()
                 bc_pos += size;
                 break;
             }
-            debug_verbose_puts("BCO_AS_JSON");
+            debug_verbose_puts("BCO_FROM_JSON");
             char *str = malloc(size + 1);
             memcpy(str, bytecode + bc_pos, size);
             str[size] = 0;
             bc_pos += size;
-            stack_push(var_as_json_string(str));
+            stack_push(var_from_json(str));
             free(str);
             break;
 
-            case BCO_TREE_ACCESS:
+            case BCO_ACCESS:
             size = bytecode[bc_pos++];
             if (skip_mode)
             {
                 bc_pos += size;
                 break;
             }
-            debug_verbose_puts("BCO_TREE_ACCESS");
+            debug_verbose_puts("BCO_ACCESS");
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
 
             v1 = bc_stack[--bc_stack_size];
-        /*    if (v1.type != VAR_STRING)
+            if (v1.type != VAR_STRING)
             {
                 larva_error("APath key must be a string.");
             }
@@ -169,13 +169,13 @@ void larva_silk()
             // TODO: parse APath and access JSON recursively
 
             vt = var_lookup(vars, token);
-            if (vt->v.type != VAR_JSON)
+            if (vt->v.type != VAR_MAP && vt->v.type != VAR_ARRAY)
             {
-                fprintf(stderr, "Object '%s' is not a JSON.", token);
+                fprintf(stderr, "Object '%s' is not accessible with [] operator.", token);
                 larva_error(0);
             }
 
-            json_t *jt = vt->v.data;
+        /*    json_t *jt = vt->v.data;
 
             // get JSON type
             if (json_typeof(jt) == JSON_OBJECT)

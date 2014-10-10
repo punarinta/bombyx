@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
                 return -1;
             }
 
-            source = malloc(sizeof(char) * (bufsize + 1));
+            source = malloc(sizeof(char) * (bufsize + 2));
 
             if (fseek(fp, 0L, SEEK_SET) != 0)
             {

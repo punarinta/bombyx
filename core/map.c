@@ -1,19 +1,19 @@
-#include "tree.h"
+#include "map.h"
 #include "sys.h"
 
-tree_table_t *tree_table_create(int size)
+map_table_t *map_table_create(int size)
 {
     unsigned int i;
-    tree_table_t *new_table;
+    map_table_t *new_table;
     
     if (size < 1) return NULL;
 
-    if ((new_table = malloc(sizeof(tree_table_t))) == NULL)
+    if ((new_table = malloc(sizeof(map_table_t))) == NULL)
     {
         return NULL;
     }
     
-    if ((new_table->table = malloc(sizeof(tree_t *) * size)) == NULL)
+    if ((new_table->table = malloc(sizeof(map_t *) * size)) == NULL)
     {
         return NULL;
     }
@@ -25,7 +25,7 @@ tree_table_t *tree_table_create(int size)
     return new_table;
 }
 
-unsigned int tree_hash(tree_table_t *hashtable, char *str)
+unsigned int map_hash(map_table_t *hashtable, char *str)
 {
     unsigned int hashval = 0;
 
@@ -34,10 +34,10 @@ unsigned int tree_hash(tree_table_t *hashtable, char *str)
     return hashval % hashtable->size;
 }
 
-tree_t *tree_lookup(tree_table_t *hashtable, char *str)
+map_t *map_lookup(map_table_t *hashtable, char *str)
 {
-    tree_t *list;
-    unsigned int hashval = tree_hash(hashtable, str);
+    map_t *list;
+    unsigned int hashval = map_hash(hashtable, str);
 
     for (list = hashtable->table[hashval]; list != NULL; list = list->next)
     {
@@ -47,15 +47,15 @@ tree_t *tree_lookup(tree_table_t *hashtable, char *str)
     return NULL;
 }
 
-tree_t *tree_add(tree_table_t *hashtable, char *str, var v)
+map_t *map_add(map_table_t *hashtable, char *str, var v)
 {
-    tree_t *new_list;
-    tree_t *current_list;
-    unsigned int hashval = tree_hash(hashtable, str);
+    map_t *new_list;
+    map_t *current_list;
+    unsigned int hashval = map_hash(hashtable, str);
 
-    if ((new_list = malloc(sizeof(tree_t))) == NULL) return NULL;
+    if ((new_list = malloc(sizeof(map_t))) == NULL) return NULL;
 
-    current_list = tree_lookup(hashtable, str);
+    current_list = map_lookup(hashtable, str);
 
     /* item already exists, dont insert it again. */
     if (current_list != NULL) return NULL;
@@ -69,11 +69,11 @@ tree_t *tree_add(tree_table_t *hashtable, char *str, var v)
     return new_list;
 }
 
-int tree_delete(tree_table_t *hashtable, char *str)
+int map_delete(map_table_t *hashtable, char *str)
 {
     int i;
-    tree_t *list, *prev;
-    unsigned int hashval = tree_hash(hashtable, str);
+    map_t *list, *prev;
+    unsigned int hashval = map_hash(hashtable, str);
 
     /* find the string in the table keeping track of the list item
      * that points to it
@@ -96,9 +96,9 @@ int tree_delete(tree_table_t *hashtable, char *str)
     return 0;
 }
 
-void tree_table_delete(tree_table_t *hashtable)
+void map_table_delete(map_table_t *hashtable)
 {
-    tree_t *list, *temp;
+    map_t *list, *temp;
 
     if (hashtable == NULL) return;
 

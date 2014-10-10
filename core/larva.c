@@ -241,7 +241,7 @@ void larva_digest()
                 memcpy(json_string, code + json_string_start, code_pos - json_string_start);
                 json_string[code_pos - json_string_start] = 0;
 
-                bc_add_cmd(BCO_AS_JSON);
+                bc_add_cmd(BCO_FROM_JSON);
                 bc_add_string(json_string);
 
                 free(json_string);
@@ -482,7 +482,7 @@ void larva_stop()
 void larva_poo()
 {
     unsigned int i;
-    char types[][10] = {"UNSET", "DOUBLE", "STRING", "-reserved-", "BLOCK", "JSON", "CUSTOM"};
+    char types[][10] = {"UNSET", "DOUBLE", "STRING", "-reserved-", "BLOCK", "ARRAY", "MAP", "CUSTOM"};
 
     var v;
     var_t *v_list;
