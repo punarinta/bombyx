@@ -270,7 +270,7 @@ inline void var_unset(var *a)
     if (a->data)
     {
         if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
-        else if (a->type == VAR_MAP) larva_error("err");//map_table_delete(a->data);
+        else if (a->type == VAR_MAP) map_table_delete(a->data);
         else free(a->data);
     }
 }
@@ -299,7 +299,7 @@ void var_echo(var *a)
             break;
 
             case VAR_MAP:
-            fprintf(stdout, "{\n");
+            fprintf(stdout, "\n{\n");
             for (unsigned int i = 0; i < ((map_table_t *)a->data)->size; i++)
             {
                 list = ((map_table_t *)a->data)->table[i];

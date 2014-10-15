@@ -110,10 +110,34 @@ void map_table_delete(map_table_t *hashtable)
             temp = list;
             list = list->next;
             free(temp->name);
+            var_unset(&temp->v);
             free(temp);
         }
     }
 
     free(hashtable->table);
     free(hashtable);
+}
+
+map_table_t *map_table_clone(map_table_t *hashtable)
+{
+    map_t *list;
+
+    if (hashtable == NULL) return NULL;
+
+    map_table_t *new_map = map_table_create(hashtable->size);
+
+    for (unsigned int i = 0; i < hashtable->size; i++)
+    {
+        list = hashtable->table[i];
+        while (list != NULL)
+        {
+            var v = {0};
+            op_copy(&v, &list->v);
+            map_add(new_map, list->name, v);
+            list = list->next;
+        }
+    }
+
+    return new_map;
 }

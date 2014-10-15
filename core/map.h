@@ -25,5 +25,6 @@ map_t *map_lookup(map_table_t *, char *);
 map_t *map_add(map_table_t *, char *, var);
 int map_delete(map_table_t *, char *);
 void map_table_delete(map_table_t *);
+map_table_t *map_table_clone(map_table_t *);
 
 #endif
