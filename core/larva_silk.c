@@ -88,6 +88,11 @@ void larva_silk()
             memcpy(token, bytecode + bc_pos, size);
             token[size] = 0;
             vt = var_lookup(vars, token);
+            if (!vt)
+            {
+                sprintf(temp_error, "Unknown variable '%s'.", token);
+                larva_error(temp_error);
+            }
             bc_stack[bc_stack_size++] = var_as_var_t(vt);
             bc_pos += size;
             break;

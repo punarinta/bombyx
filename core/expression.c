@@ -74,27 +74,18 @@ void parse_expression(const char *expr, size_t size)
 
 void parser_parse(parser_data *pd)
 {
-	// set the jump position and launch the parser
-	if (!setjmp(pd->err_jmp_buf))
-    {
-	    parser_read_boolean_or(pd);
-        parser_eat_whitespace(pd);
+    parser_read_boolean_or(pd);
+    parser_eat_whitespace(pd);
 
-        if (pd->pos < pd->len - 1)
-        {
-            parser_error(pd, "Failed to reach end of input expression, likely malformed input");
-        }
-	}
-	else
-	{
-		parser_error(pd, "Setjmp failed. It's dangerous to continue.");
-	}
+    if (pd->pos < pd->len - 1)
+    {
+        larva_error("Failed to reach end of input expression, likely malformed input");
+    }
 }
 
 void parser_error(parser_data *pd, const char *err)
 {
-	pd->error = err;
-	longjmp(pd->err_jmp_buf, 1);
+	larva_error((char *)err);
 }
 
 char parser_peek(parser_data *pd)
@@ -297,6 +288,7 @@ void parser_read_builtin(parser_data *pd)
 			}
 			else if (memcmp(token, "swap\0", 5) == 0)
             {
+                // TODO: add swapping
             	// bc_add_cmd(BCO_SWAP);
 			}
 			else if (memcmp(token, "microtime\0", 10) == 0)
@@ -328,9 +320,10 @@ void parser_read_builtin(parser_data *pd)
             // eat the bracket
             parser_skip(pd);
 
+            // TODO: find out if whitespace skipping is needed here
             if (parser_peek(pd) == ']')
             {
-                parser_error(pd, "Operator [] requires an operand.");
+                parser_error(pd, "Operator '[]' requires an operand.");
             }
             else
             {
@@ -340,6 +333,27 @@ void parser_read_builtin(parser_data *pd)
 
                 if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
             }
+        }
+        else if (parser_peek(pd) == ':')
+        {
+            // eat the bracket
+            parser_skip(pd);
+
+            if (parser_peek(pd) != ':')
+            {
+                parser_error(pd, "Operator ':' is not defined.");
+            }
+            parser_eat(pd);
+
+            pos = 0;
+            c = parser_peek(pd);
+
+            while (isalpha(c) || isdigit(c) || c == '_' || c == '.')
+            {
+            	token[pos++] = parser_eat(pd);
+            	c = parser_peek(pd);
+            }
+            token[pos] = '\0';
         }
 		else
 		{
