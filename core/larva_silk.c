@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "larva.h"
 #include "var.h"
+#include "map.h"
 #include "block.h"
 #include "sys.h"
 #include "bytecode.h"
@@ -169,34 +170,17 @@ void larva_silk()
             // TODO: parse APath and access JSON recursively
 
             vt = var_lookup(vars, token);
-            if (vt->v.type != VAR_MAP && vt->v.type != VAR_ARRAY)
+
+            if (vt->v.type == VAR_MAP)
+            {
+                map_t *m = map_lookup(vt->v.data, v1.data);
+                stack_push(m->v);
+            }
+            else
             {
                 fprintf(stderr, "Object '%s' is not accessible with [] operator.", token);
                 larva_error(0);
             }
-
-        /*    json_t *jt = vt->v.data;
-
-            // get JSON type
-            if (json_typeof(jt) == JSON_OBJECT)
-            {
-                jt = json_object_get(jt, v1.data);
-            }
-            else if (json_typeof(jt) == JSON_ARRAY)
-            {
-                // TODO: convert token to int
-                jt = json_array_get(jt, 0);
-            }
-            else
-            {
-                fprintf(stderr, "JSON-object '%s' is scalar.", token);
-                larva_error(0);
-            }
-
-            var_unset(&v1);
-
-            v1 = var_as_json(jt);*/
-            stack_push(v1);
             break;
 
             case BCO_CALL:
