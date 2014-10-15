@@ -23,7 +23,7 @@ void op_copy(var *a, var *b)
             else
             {
                 if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
-                else if (a->type == VAR_MAP)map_table_delete(a->data);
+                else if (a->type == VAR_MAP) map_table_delete(a->data);
                 else free(a->data);
 
                 if (b->type == VAR_MAP) a->data = map_table_clone(b->data);

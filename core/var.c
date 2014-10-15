@@ -121,11 +121,7 @@ void var_table_delete(var_table_t *hashtable)
             temp = list;
             list = list->next;
             if (temp->v.name) free(temp->v.name);
-            if (temp->v.data)
-            {
-                if (temp->v.type == VAR_DOUBLE) chfree(pool_of_doubles, temp->v.data);
-                else free(temp->v.data);
-            }
+            var_unset(&temp->v);
             free(temp);
         }
     }
@@ -220,6 +216,8 @@ var var_from_json(char *a)
         larva_error("JSON parsing error");
     }
 
+    json_decref(j);
+
     return v;
 }
 
@@ -249,7 +247,7 @@ map_table_t *json_to_map(json_t *json)
             {
                 v.type = VAR_STRING;
                 v.data = strdup(json_string_value(value));
-                v.data_size = json_string_length(value);
+                v.data_size = json_string_length(value) + 1;
             }
             else if (json_is_integer(value))
             {
