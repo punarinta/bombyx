@@ -251,6 +251,13 @@ map_table_t *json_to_map(json_t *json)
                 v.data = strdup(json_string_value(value));
                 v.data_size = json_string_length(value);
             }
+            else if (json_is_integer(value))
+            {
+                v.type = VAR_DOUBLE;
+                v.data = challoc(pool_of_doubles);
+                v.data_size = sizeof(double);
+                *(double *)v.data = json_integer_value(value);
+            }
             map_add(map, (char *)key, v);
         }
     }
@@ -275,11 +282,14 @@ inline void var_unset(var *a)
     }
 }
 
+BYTE var_echo_level = 0;
+
 void var_echo(var *a)
 {
     char *str;
     map_t *list;
     map_table_t *ht;
+    ++var_echo_level;
 
     if (a)
     {
@@ -299,7 +309,7 @@ void var_echo(var *a)
             break;
 
             case VAR_MAP:
-            fprintf(stdout, "\n{\n");
+            fprintf(stdout, "\n%.*s{\n", var_echo_level - 1, "\t\t\t\t\t");
             for (unsigned int i = 0; i < ((map_table_t *)a->data)->size; i++)
             {
                 list = ((map_table_t *)a->data)->table[i];
@@ -307,14 +317,14 @@ void var_echo(var *a)
                 {
                     if (list->v.type)
                     {
-                        fprintf(stdout, "%s => ", list->name);
+                        fprintf(stdout, "%.*s\"%s\" : ", var_echo_level, "\t\t\t\t\t", list->name);
                         var_echo(&list->v);
-                        fprintf(stdout, ",\n");
+                        fprintf(stdout, "\n");
                     }
                     list = list->next;
                 }
             }
-            fprintf(stdout, "}\n");
+            fprintf(stdout, "%.*s}", var_echo_level - 1, "\t\t\t\t\t");
             break;
 
             default:
@@ -331,4 +341,5 @@ void var_echo(var *a)
     {
         fputs("(null)", stdout);
     }
+    --var_echo_level;
 }

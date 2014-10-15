@@ -47,3 +47,12 @@ myBlock.internalBlock(-15)
 print(myBlock.internalBlock.z)
 
 core.files::open('readme.txt')
+
+
+var x = {"foo":[{"bar": 15}, 42]}       # it's a JSON if first character is '{' or '['
+
+x['foo']                                # is a JSON of ["bar", 42]
+
+x['foo:1']                              # is an integer 42
+
+x['foo:0/bar']                          # is an integer 15

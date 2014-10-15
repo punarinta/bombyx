@@ -117,6 +117,14 @@ include 'include_me.leaf'
 
 # =========================================
 
+print('Testing maps and JSON vars (should be 1337)...\n')
+
+var json = {"leet":1337, "map":{"aaa":"a string"}}
+
+print(json['leet'] + '\n')
+
+# =========================================
+
 print('Blocks (b1, b1.b2):\n')
 
 block b1
