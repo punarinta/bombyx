@@ -5,3 +5,4 @@ temp
 vendor/*.a
 *.ccn*
 *.out
+*.dSYM
