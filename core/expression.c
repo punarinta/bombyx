@@ -259,7 +259,7 @@ int parser_read_argument_list(parser_data *pd, int *num_args, var *args)
 void parser_read_builtin(parser_data *pd)
 {
 	int num_args, pos = 0;
-	char c, token[PARSER_MAX_TOKEN_SIZE];
+	char c, token[PARSER_MAX_TOKEN_SIZE], token2[PARSER_MAX_TOKEN_SIZE];
 	var args[PARSER_MAX_ARGUMENT_COUNT];
 
 	c = parser_peek(pd);
@@ -286,11 +286,11 @@ void parser_read_builtin(parser_data *pd)
 				parser_read_boolean_or(pd);
                 bc_add_cmd(BCO_PRINT);
 			}
-			else if (memcmp(token, "swap\0", 5) == 0)
+		/*	else if (memcmp(token, "swap\0", 5) == 0)
             {
                 // TODO: add swapping
-            	// bc_add_cmd(BCO_SWAP);
-			}
+            	bc_add_cmd(BCO_SWAP);
+			}*/
 			else if (memcmp(token, "microtime\0", 10) == 0)
             {
 				bc_add_cmd(BCO_MICROTIME);
@@ -350,10 +350,37 @@ void parser_read_builtin(parser_data *pd)
 
             while (isalpha(c) || isdigit(c) || c == '_' || c == '.')
             {
-            	token[pos++] = parser_eat(pd);
+            	token2[pos++] = parser_eat(pd);
             	c = parser_peek(pd);
             }
-            token[pos] = '\0';
+            token2[pos] = '\0';
+
+            if (parser_peek(pd) == '(')
+            {
+                parser_skip(pd);
+
+			    // this is a 'block' function call
+				parser_read_argument_list(pd, &num_args, args);
+				if (num_args > 32)
+				{
+				    parser_error(pd, "Max 32 arguments allowed.");
+				}
+
+				if (num_args > 0) bc_add_cmd(BCO_REVERSE_STACK);
+
+				// insert 1 byte
+                bc_add_cmd((BYTE) num_args);
+				bc_add_cmd(BCO_XCALL);
+				bc_add_token(token);        // library
+				bc_add_token(token2);       // function
+
+                // eat closing bracket of function call
+                if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in a function call.");
+            }
+            else
+            {
+                parser_error(pd, "Variables cannot travel through cocoon barrier.");
+            }
         }
 		else
 		{

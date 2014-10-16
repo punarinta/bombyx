@@ -21,8 +21,7 @@ typedef struct _cocoon_table_t_
 cocoon_table_t *cocoon_table_create(int);
 unsigned int cocoon_hash(cocoon_table_t *, char *);
 cocoon_t *cocoon_lookup(cocoon_table_t *, char *);
-cocoon_t *cocoon_add(cocoon_table_t *, char *, void *);
-int cocoon_delete(cocoon_table_t *, char *);
+cocoon_t *cocoon_add(cocoon_table_t *, char *);
 void cocoon_table_delete(cocoon_table_t *);
 
 #endif

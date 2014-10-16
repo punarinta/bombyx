@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 #include "core/var.h"
 #include "core/block.h"
+#include "core/cocoon.h"
 #include "core/expression.h"
 
 // #define BOMBYX_DEBUG
@@ -29,10 +30,14 @@
 #define MIN_BLOCKS       	1000
 #define MAX_BLOCKS       	100000
 
+#define MIN_COCOONS       	50
+#define MAX_COCOONS       	1000
+
 #define BOMBYX_STACK_SIZE   256
 
 var_table_t *vars;
 block_table_t *blocks;
+cocoon_table_t *cocoons;
 unsigned int vars_count;
 unsigned int blocks_count;
 

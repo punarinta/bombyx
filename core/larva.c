@@ -14,6 +14,7 @@ void larva_init(char *incoming_code, size_t len)
     vars_count   = MIN_VARIABLES;
     blocks       = block_table_create(MIN_BLOCKS);
     vars         = var_table_create(MIN_VARIABLES);
+    cocoons      = cocoon_table_create(MIN_COCOONS);
 
     bc_init();
 
@@ -27,7 +28,7 @@ void larva_init(char *incoming_code, size_t len)
     {
         size_t line_start = code_pos;
 
-        if (!line_start || code[line_start - 1] != 13)
+        if (line_start && code[line_start - 1] != 13)
         {
             // just skip such cases for now
             ++code_pos;
@@ -84,31 +85,7 @@ void larva_init(char *incoming_code, size_t len)
         else if (!memcmp(token, "use\0", 4))
         {
             larva_read_token(token);
-
-            int x;
-            char *error;
-            void *lib_handle;
-            double (*fn)(int *);
-
-            lib_handle = dlopen(token, RTLD_LAZY);
-
-            if (!lib_handle)
-            {
-                fprintf(stderr, "%s\n", dlerror());
-                larva_error(0);
-            }
-
-            fn = dlsym(lib_handle, "dynamic_test");
-            if ((error = dlerror()) != NULL)
-            {
-                fprintf(stderr, "%s\n", error);
-                larva_error(0);
-            }
-
-            (*fn)(&x);
-            printf("val = %d\n", x);
-
-            dlclose(lib_handle);
+            cocoon_t *cocoon = cocoon_add(cocoons, token);
         }
 
         ++code_pos;
@@ -469,6 +446,7 @@ void larva_stop()
 
     var_table_delete(vars);
     block_table_delete(blocks);
+    cocoon_table_delete(cocoons);
 
     if (code) free(code);
 

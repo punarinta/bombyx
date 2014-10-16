@@ -1,5 +1,6 @@
-#include "cocoon.h"
+#include "../common.h"
 #include "sys.h"
+#include "larva.h"
 
 cocoon_table_t *cocoon_table_create(int size)
 {
@@ -47,53 +48,37 @@ cocoon_t *cocoon_lookup(cocoon_table_t *hashtable, char *str)
     return NULL;
 }
 
-cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *str, void *ptr)
+cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *cocoon_name)
 {
     cocoon_t *new_list;
     cocoon_t *current_list;
-    unsigned int hashval = cocoon_hash(hashtable, str);
+
+    unsigned int hashval = cocoon_hash(hashtable, cocoon_name);
 
     if ((new_list = malloc(sizeof(cocoon_t))) == NULL) return NULL;
 
-    current_list = cocoon_lookup(hashtable, str);
+    current_list = cocoon_lookup(hashtable, cocoon_name);
 
     /* item already exists, dont insert it again. */
     if (current_list != NULL) return NULL;
 
+    // check the cocoon
+    // TODO: search in the lair directory first
+    void *lib_handle = dlopen(cocoon_name, RTLD_LAZY);
+
+    if (!lib_handle)
+    {
+        fprintf(stderr, "Cannot load cocoon '%s'.\n", cocoon_name);
+        larva_error(0);
+    }
+
     /* Insert into list */
-    new_list->name = strdup(str);
-    new_list->ptr = ptr;
+    new_list->name = strdup(cocoon_name);
+    new_list->ptr = lib_handle;
     new_list->next = hashtable->table[hashval];
     hashtable->table[hashval] = new_list;
 
     return new_list;
-}
-
-int cocoon_delete(cocoon_table_t *hashtable, char *str)
-{
-    int i;
-    cocoon_t *list, *prev;
-    unsigned int hashval = cocoon_hash(hashtable, str);
-
-    /* find the string in the table keeping track of the list item
-     * that points to it
-     */
-    for (prev = NULL, list = hashtable->table[hashval];
-        list != NULL && strcmp(str, list->name);
-        prev = list,
-        list = list->next);
-    
-    /* if it wasn't found, return 1 as an error */
-    if (list == NULL) return 1;
-
-    /* otherwise, it exists. remove it from the table */
-    if (prev == NULL) hashtable->table[hashval] = list->next;
-    else prev->next = list->next; 
-    
-    free(list->name);
-    free(list);
-
-    return 0;
 }
 
 void cocoon_table_delete(cocoon_table_t *hashtable)
@@ -109,6 +94,7 @@ void cocoon_table_delete(cocoon_table_t *hashtable)
         {
             temp = list;
             list = list->next;
+            dlclose(temp->ptr);
             free(temp->name);
             free(temp);
         }

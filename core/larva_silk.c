@@ -39,6 +39,7 @@ void larva_silk()
     size_t param_count = 0;
     block_t *parent_block = NULL;
     char token[PARSER_MAX_TOKEN_SIZE];
+    char token2[PARSER_MAX_TOKEN_SIZE];
 
     bc_ready();
 
@@ -212,6 +213,48 @@ void larva_silk()
             	// step into
             	run_flag[gl_level] = RUN_BLOCK;
             	bc_pos = this_block->pos;
+            }
+            break;
+
+            case BCO_XCALL:
+            debug_verbose_puts("BCO_XCALL");
+            size = bytecode[bc_pos++];
+            if (skip_mode)
+            {
+                bc_pos += size;
+                size = bytecode[bc_pos++];
+                bc_pos += size;
+                break;
+            }
+            memcpy(token, bytecode + bc_pos, size);
+            token[size] = 0;
+            bc_pos += size;
+            size = bytecode[bc_pos++];
+            memcpy(token2, bytecode + bc_pos, size);
+            token2[size] = 0;
+            bc_pos += size;
+
+            cocoon_t *cocoon = cocoon_lookup(cocoons, token);
+            if (!cocoon)
+            {
+                sprintf(temp_error, "Cocoon '%s' was not loaded.", token);
+                larva_error(temp_error);
+            }
+            else
+            {
+                //int x;
+                char *error;
+                void (*fn)();
+
+                fn = dlsym(cocoon->ptr, token2);
+                if ((error = dlerror()) != NULL)
+                {
+                    fprintf(stderr, "Function '%s' does not exist in cocoon '%s'. %s\n", token2, token, error);
+                    larva_error(0);
+                }
+
+                /*(*fn)(&x);
+                printf("val = %d\n", x);*/
             }
             break;
 

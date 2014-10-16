@@ -30,6 +30,7 @@
 #define BCO_PARAMX          12
 #define BCO_ACCESS          13
 #define BCO_FROM_JSON       14
+#define BCO_XCALL           15
 
 #define BCO_SET             32
 #define BCO_ADD             33
