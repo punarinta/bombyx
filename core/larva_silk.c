@@ -248,7 +248,7 @@ void larva_silk()
                 fn = dlsym(cocoon->ptr, token2);
                 if ((error = dlerror()) != NULL)
                 {
-                    fprintf(stderr, "Function '%s' does not exist in cocoon '%s'. %s\n", token2, token, error);
+                    fprintf(stderr, "Function '%s' does not exist in cocoon '%s'.\n", token2, token);
                     larva_error(0);
                 }
 
