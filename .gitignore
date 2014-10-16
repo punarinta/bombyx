@@ -3,5 +3,5 @@ bombyx
 bombyx-web
 temp
 vendor/*.a
-*.ccn
+*.ccn*
 *.out
