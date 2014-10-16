@@ -74,9 +74,11 @@ int main(int argc, char *argv[])
 
         fclose(fp);
 
-        char *dir = dirname(argv[1]);
-        chdir(dir);
-        free(dir);
+        getcwd(dir_home, sizeof(dir_home));
+        char *dir_leaf_temp = dirname(argv[1]);
+        strcpy(dir_leaf, dir_leaf_temp);
+        free(dir_leaf_temp);
+        chdir(dir_leaf);
 
         setjmp(error_exit);
 

@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "../common.h"
 #include "sys.h"
 #include "larva.h"
@@ -63,14 +64,24 @@ cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *cocoon_name)
     if (current_list != NULL) return NULL;
 
     // check the cocoon
-    // TODO: search in the lair directory first
-    void *lib_handle = dlopen(cocoon_name, RTLD_LAZY);
+
+    // TODO: get red of these allocations
+    char *filename = malloc(4096);
+    strcpy(filename, dir_home);
+    strcat(filename, "/cocoons/");
+    strcat(filename, cocoon_name);
+    strcat(filename, ".ccn");
+
+    void *lib_handle = dlopen(filename, RTLD_LAZY);
 
     if (!lib_handle)
     {
-        fprintf(stderr, "Cannot load cocoon '%s'.\n", cocoon_name);
+        fprintf(stderr, "Cannot load cocoon '%s'.\n%s\n", filename, dlerror());
+        free(filename);
         larva_error(0);
     }
+
+    free(filename);
 
     /* Insert into list */
     new_list->name = strdup(cocoon_name);
