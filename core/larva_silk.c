@@ -242,9 +242,8 @@ void larva_silk()
             }
             else
             {
-                //int x;
                 char *error;
-                void (*fn)();
+                var (*fn)();
 
                 fn = dlsym(cocoon->ptr, token2);
                 if ((error = dlerror()) != NULL)
@@ -253,8 +252,7 @@ void larva_silk()
                     larva_error(0);
                 }
 
-                /*(*fn)(&x);
-                printf("val = %d\n", x);*/
+                stack_push(fn());
             }
             break;
 
