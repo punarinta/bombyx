@@ -1,8 +1,8 @@
 #!/bin/sh
 
-g++ \
+gcc \
 core/*.c \
-web.cpp \
+web.c \
 \
--std=c++11 \
--O0 -o bombyx-web -lpthread -ldl -lfcgi++ -lfcgi -lmysqlclient_r
+-std=c99 \
+-O0 -o bombyx-web -lpthread -ldl -lfcgi -ldl -ljansson
