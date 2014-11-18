@@ -369,10 +369,10 @@ void parser_read_builtin(parser_data *pd)
 				if (num_args > 0) bc_add_cmd(BCO_REVERSE_STACK);
 
 				// insert 1 byte
-                bc_add_cmd((BYTE) num_args);
 				bc_add_cmd(BCO_XCALL);
 				bc_add_token(token);        // library
 				bc_add_token(token2);       // function
+                bc_add_cmd((BYTE) num_args);
 
                 // eat closing bracket of function call
                 if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in a function call.");
