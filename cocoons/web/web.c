@@ -23,9 +23,9 @@ var version()
     Render an HTML template using optional parameters.
     No control statement support in the first version.
 */
-var render(BYTE argc, var *argv)
+var render(BYTE argc, var *stack)
 {
-    // TODO: use some predefined path
+/*    // TODO: use some predefined path
     FILE *html = fopen(template->data, "rt");
     if (!html)
     {
@@ -34,7 +34,7 @@ var render(BYTE argc, var *argv)
 
     // 1. Replace variables
 
-    fclose(html);
+    fclose(html);*/
 
-    return v;
+    return stack[0];
 }

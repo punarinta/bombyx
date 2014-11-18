@@ -235,8 +235,6 @@ void larva_silk()
             token2[size] = 0;
             bc_pos += size;
 
-            BYTE argc = bytecode[bc_pos++];
-
             cocoon_t *cocoon = cocoon_lookup(cocoons, token);
             if (!cocoon)
             {
@@ -246,10 +244,7 @@ void larva_silk()
             else
             {
                 char *error;
-                var (*fn)();
-
-                // pass arguments
-                var *argv = malloc(sizeof(var) * argc);
+                var (*fn)(BYTE, var *stack);
 
                 fn = dlsym(cocoon->ptr, token2);
                 if ((error = dlerror()) != NULL)
@@ -258,8 +253,11 @@ void larva_silk()
                     larva_error(0);
                 }
 
-                stack_push(fn(argc, argv));
-                free(argv);
+                // pass arguments
+                BYTE argc = bytecode[bc_pos++];
+                bc_stack_size -= argc;
+
+                stack_push(fn(argc, bc_stack ));
             }
             break;
 
