@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 var version();
-var render(BYTE, var *stack);
 
 #ifdef __cplusplus
 }
