@@ -1,4 +1,4 @@
-# login example
+# Login example
 
 use web
 use mysql
@@ -7,23 +7,23 @@ block myLogin
 {
     param username, password
 
-    var result = mysql.query(db, 'SELECT password FROM user WHERE username = ?', username),
-        row = mysql.fetch_row(result)
+    var result = mysql::query(db, 'SELECT password FROM user WHERE username = ?', username),
+        row = mysql::fetch_row(result)
 
-    return (web.secret(password, salt) == row[0])
+    return (web::secret(password, salt) == row[0])
 }
 
 # -- connect to your DB --
-var db = mysql.connect('127.0.0.1', 'root', '', 'test_db')
+var db = mysql::connect('127.0.0.1', 'root', '', 'test_db')
 
 # -- try to login --
-if (myLogin(web.fromPost('username'), web.fromPost('password')))
+if (myLogin(web::fromPost('username'), web::fromPost('password')))
 {
-    web.render('success', [username = web.fromPost('username')])
+    web::render('success', [username = web::fromPost('username')])
 }
 else
 {
-    web.render('failure')
+    web::render('failure')
 }
 
 
