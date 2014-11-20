@@ -1,1 +1,6 @@
+use web
+
+var version = web::version()
+
 print('<h2>First output</h2>')
+print('Version of Web cocoon is ' + version)

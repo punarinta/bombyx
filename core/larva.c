@@ -406,7 +406,7 @@ void larva_error(char *err)
 {
     unsigned int line = 1, sym = 0, i = 0;
 
-    if (err) fputs(err, stderr);
+    if (err) web_puts(err);
 
     while (code[i] != '\0')
     {
@@ -421,7 +421,7 @@ void larva_error(char *err)
         if (i == code_pos) break;
     }
 
-    fprintf(stderr, "\nError on line %d, sym %d.\n\n", line, sym);
+    web_printf("\nError on line %d, sym %d.\n\n", line, sym);
 
     gl_error = 1;
     longjmp(error_exit, 1);

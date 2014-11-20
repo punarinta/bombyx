@@ -10,6 +10,7 @@
 #include "core/block.h"
 #include "core/cocoon.h"
 #include "core/expression.h"
+#include "fcgiapp.h"
 
 // #define BOMBYX_DEBUG
 // #define BOMBYX_MCHECK
@@ -35,6 +36,18 @@
 
 #define BOMBYX_STACK_SIZE   256
 
+
+#ifdef WEB_BUILD
+    #define web_puts(a) FCGX_PutS(a, pRequest->out)
+    #define web_printf(a, ...) FCGX_FPrintF(pRequest->out, a, __VA_ARGS__)
+    #define WEB_NEWLINE "<br>"
+#else
+    #define web_puts puts
+    #define web_printf printf
+    #define WEB_NEWLINE "\n"
+#endif
+
+
 var_table_t *vars;
 block_table_t *blocks;
 cocoon_table_t *cocoons;
@@ -55,5 +68,6 @@ char *code;
 size_t code_pos;
 size_t code_length;
 double started_at;
+FCGX_Request *pRequest;
 
 #endif

@@ -76,12 +76,13 @@ cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *cocoon_name)
 
     if (!lib_handle)
     {
-        fprintf(stderr, "Cannot load cocoon '%s'.\n%s\n", filename, dlerror());
+        web_printf("Cannot load cocoon '%s'.%s%s%s", filename, WEB_NEWLINE, dlerror(), WEB_NEWLINE);
         free(filename);
         larva_error(0);
     }
 
     free(filename);
+    chdir(dir_home);
 
     /* Insert into list */
     new_list->name = strdup(cocoon_name);

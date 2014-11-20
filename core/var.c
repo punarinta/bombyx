@@ -294,12 +294,12 @@ void var_echo(var *a)
         switch (a->type)
         {
             case VAR_UNSET:
-            fputs("UNSET", stdout);
+            web_puts("UNSET");
             break;
 
             case VAR_STRING:
-            if (a->data && a->data_size) fputs(a->data, stdout);
-            else fputs("NULL", stdout);
+            if (a->data && a->data_size) web_puts(a->data);
+            else web_puts("NULL");
             break;
 
             case VAR_DOUBLE:
@@ -337,7 +337,7 @@ void var_echo(var *a)
     }
     else
     {
-        fputs("(null)", stdout);
+        web_puts("(null)");
     }
     --var_echo_level;
 }
