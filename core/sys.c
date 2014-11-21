@@ -62,3 +62,25 @@ void *bytecopy(void *const dest, void const *const src, size_t bytes)
     while (bytes-- > (size_t)0) ((unsigned char *)dest)[bytes] = ((unsigned char const *)src)[bytes];
     return dest;
 }
+
+char *get_file_contents(char *filename)
+{
+    size_t length;
+    char *buffer = NULL;
+    FILE *fp = fopen(filename, "rb");
+
+    if (fp)
+    {
+        fseek(fp, 0, SEEK_END);
+        length = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        buffer = malloc(length);
+        if (buffer)
+        {
+            fread(buffer, 1, length, fp);
+        }
+        fclose(fp);
+    }
+
+    return buffer;
+}
