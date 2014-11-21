@@ -13,7 +13,7 @@
  *
  * @return double
  */
-var version()
+var version_()
 {
     var v = {0};
 
@@ -36,7 +36,7 @@ var version()
  *
  * @return mixed
  */
-var replace(FCGX_Request *request, BYTE argc, var *stack)
+var replace_(FCGX_Request *request, BYTE argc, var *stack)
 {
     var v = {0};
 
@@ -49,6 +49,31 @@ var replace(FCGX_Request *request, BYTE argc, var *stack)
     {
         v.data = str_replace(stack[0].data, stack[1].data, stack[2].data);
         v.data_size = strlen(v.data);
+        v.type = VAR_STRING;
+    }
+
+    return v;
+}
+
+/**
+ * Performs string replacement.
+ *
+ * @version 0.1
+ *
+ * @param string src
+ *
+ * @return mixed
+ */
+var trim_(FCGX_Request *request, BYTE argc, var *stack)
+{
+    var v = {0};
+
+    if (argc == 1 && stack[0].type == VAR_STRING)
+    {
+        v.data = malloc(stack[0].data_size);
+        memcpy(v.data, stack[0].data, stack[0].data_size);
+        trim(v.data);
+        v.data_size = strlen(v.data) + 1;
         v.type = VAR_STRING;
     }
 

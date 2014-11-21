@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-var version();
+var version_();
 
 #ifdef __cplusplus
 }
