@@ -1,6 +1,5 @@
 use web
 
-var version = web::version()
+var json = {"leet":1337, "map":{"aaa":"a string"}, "username":"world"}
 
-print('<h2>First output</h2>')
-print('Version of Web cocoon is ' + version)
+web::render('views/index.html', json)
