@@ -5,7 +5,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "web.h"
-#include "fcgiapp.h"
 
 #define LIBRARY_VERSION 0.1
 
