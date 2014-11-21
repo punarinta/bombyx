@@ -1,0 +1,4 @@
+use text
+
+var a = 'Hello, world!\n'
+print(text::replace(a, 'world', text::trim('Robin ')))
