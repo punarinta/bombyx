@@ -244,7 +244,7 @@ void larva_silk()
             else
             {
                 char *error;
-                var (*fn)(BYTE, var *stack);
+                var (*fn)(FCGX_Request *, BYTE, var *);
 
                 fn = dlsym(cocoon->ptr, token2);
                 if ((error = dlerror()) != NULL)
@@ -257,7 +257,7 @@ void larva_silk()
                 BYTE argc = bytecode[bc_pos++];
                 bc_stack_size -= argc;
 
-                stack_push(fn(argc, bc_stack ));
+                stack_push(fn(pRequest, argc, bc_stack ));
             }
             break;
 

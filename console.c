@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
     mtrace();
 #endif
 
+    pRequest = NULL;
     FILE *fp = fopen(argv[1], "rt");
 
     if (fp != NULL)
