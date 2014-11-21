@@ -13,7 +13,7 @@
  *
  * @return double
  */
-var version()
+var version_()
 {
     var v = {0};
 
@@ -33,7 +33,7 @@ var version()
  * @param map variables
  * @return string
  */
-var render(FCGX_Request *request, BYTE argc, var *stack)
+var render_(FCGX_Request *request, BYTE argc, var *stack)
 {
     var null_var = {0};
 
@@ -73,7 +73,7 @@ var render(FCGX_Request *request, BYTE argc, var *stack)
  * @param string salt
  * @return string
  */
-var secret(FCGX_Request *request, BYTE argc, var *stack)
+var secret_(FCGX_Request *request, BYTE argc, var *stack)
 {
     var v = {0};
 
@@ -86,7 +86,7 @@ var secret(FCGX_Request *request, BYTE argc, var *stack)
  * @param string key
  * @return mixed
  */
-var fromPost(FCGX_Request *request, BYTE argc, var *stack)
+var fromPost_(FCGX_Request *request, BYTE argc, var *stack)
 {
     var v = {0};
 

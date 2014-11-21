@@ -246,16 +246,28 @@ void larva_silk()
                 char *error;
                 var (*fn)(FCGX_Request *, BYTE, var *);
 
+                token2[size++] = '_';
+                token2[size] = 0;
+
                 fn = dlsym(cocoon->ptr, token2);
                 if ((error = dlerror()) != NULL)
                 {
+                    token2[--size] = 0;
                     fprintf(stderr, "Function '%s' does not exist in cocoon '%s'.\n", token2, token);
                     larva_error(0);
                 }
 
                 // pass arguments
                 BYTE argc = bytecode[bc_pos++];
-                bc_stack_size -= argc;
+
+                /*
+                    TODO: something needs to be done with the stack
+                    if we just decrease stack size then it's a memory leak, but 100% safe
+                    if the stack stays unchanged it grows — may lead to stack overflow
+                    the best option if to clear the stack top manually after the call, but before the result is pushed
+                 */
+
+                // bc_stack_size -= argc;
 
                 stack_push(fn(pRequest, argc, bc_stack ));
             }
