@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <libgen.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "web.h"
+#include "fcgiapp.h"
 
 #define LIBRARY_VERSION 0.1
 
@@ -25,32 +30,49 @@ var version()
  * Render an HTML template using optional parameters.
  * No control statement support in the first version.
  *
- * @param string filename, map variables
+ * @param string filename
+ * @param map variables
  * @return string
  */
-var render(BYTE argc, var *stack)
+var render(FCGX_Request *request, BYTE argc, var *stack)
 {
-/*    // TODO: use some predefined path
-    FILE *html = fopen(template->data, "rt");
-    if (!html)
+    var null_var = {0};
+    char *dir_leaf_temp, dir_home[1024], dir_leaf[1024];
+
+    getcwd(dir_home, sizeof(dir_home));
+    dir_leaf_temp = dirname(FCGX_GetParam("SCRIPT_FILENAME", request->envp));
+    strcpy(dir_leaf, dir_leaf_temp);
+    chdir(dir_leaf);
+
+    // variables - stack[1];
+    // options   - stack[2];
+
+    char *html = get_file_contents(stack[0].data);
+
+    if (stack[1].type != VAR_MAP)
     {
-        // TODO: report an error
+        return null_var;
     }
 
-    // 1. Replace variables
+    if (html)
+    {
+        FCGX_PutS(html, request->out);
+        free(html);
+    }
 
-    fclose(html);*/
+    chdir(dir_home);
 
-    return stack[0];
+    return null_var;
 }
 
 /**
  * Generates a hash for a password.
  *
- * @param string password, string salt
+ * @param string password
+ * @param string salt
  * @return string
  */
-var secret(BYTE argc, var *stack)
+var secret(FCGX_Request *request, BYTE argc, var *stack)
 {
     var v = {0};
 
@@ -60,10 +82,10 @@ var secret(BYTE argc, var *stack)
 /**
  * Extracts a parameter value by its name from HTTP posted body.
  *
- * @param string password, string salt
+ * @param string key
  * @return mixed
  */
-var fromPost(BYTE argc, var *stack)
+var fromPost(FCGX_Request *request, BYTE argc, var *stack)
 {
     var v = {0};
 

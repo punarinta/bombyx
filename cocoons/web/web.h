@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../core/var.h"
+#include "../../core/sys.h"
 
 #ifdef __cplusplus
 extern "C" {
