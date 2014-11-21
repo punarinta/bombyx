@@ -36,6 +36,7 @@ var version()
 var render(FCGX_Request *request, BYTE argc, var *stack)
 {
     var null_var = {0};
+
     char *dir_leaf_temp, dir_home[1024], dir_leaf[1024];
 
     getcwd(dir_home, sizeof(dir_home));
@@ -55,7 +56,8 @@ var render(FCGX_Request *request, BYTE argc, var *stack)
 
     if (html)
     {
-        FCGX_PutS(html, request->out);
+        if (request) FCGX_PutS(html, request->out);
+        else puts(html);
         free(html);
     }
 
