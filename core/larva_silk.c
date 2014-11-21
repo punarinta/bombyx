@@ -25,6 +25,18 @@ void stack_clear()
     }
 }
 
+void stack_poo()
+{
+    puts("================ STACK ===============");
+    for (int i = bc_stack_size - 1; i >= 0; i--)
+    {
+        fprintf(stdout, "%04d: ", i);
+        var_echo(&bc_stack[i]);
+        fprintf(stdout, "\n");
+    }
+    puts("======================================");
+}
+
 // execute byte-code
 void larva_silk()
 {
@@ -267,9 +279,14 @@ void larva_silk()
                     the best option if to clear the stack top manually after the call, but before the result is pushed
                  */
 
-                // bc_stack_size -= argc;
+                v1 = fn(pRequest, argc, bc_stack + bc_stack_size - argc);
 
-                stack_push(fn(pRequest, argc, bc_stack ));
+                while (argc--)
+                {
+                    var_unset(&bc_stack[--bc_stack_size]);
+                }
+
+                stack_push(v1);
             }
             break;
 

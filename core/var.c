@@ -298,8 +298,8 @@ void var_echo(var *a)
             break;
 
             case VAR_STRING:
-            if (a->data && a->data_size) web_puts(a->data);
-            else web_puts("NULL");
+            if (a->data && a->data_size) web_printf(a->data, 0);
+            else web_printf("NULL%c", 0);
             break;
 
             case VAR_DOUBLE:
