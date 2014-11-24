@@ -44,6 +44,10 @@ var render_(FCGX_Request *request, BYTE argc, var *stack)
     strcpy(dir_leaf, dir_leaf_temp);
     chdir(dir_leaf);
 
+#ifdef __APPLE__
+    free(dir_leaf_temp);
+#endif
+
     // variables - stack[1];
     // options   - stack[2];
 

@@ -101,6 +101,10 @@ void *thread(void *a)
             strcpy(dir_leaf, dir_leaf_temp);
             chdir(dir_leaf);
 
+#ifdef __APPLE__
+            free(dir_leaf_temp);
+#endif
+
             setjmp(error_exit);
 
             if (gl_error)

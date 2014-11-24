@@ -1,3 +1,3 @@
 use web
 
-var version = web::render(42, 43)
+var version = web::version()
