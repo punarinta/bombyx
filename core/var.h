@@ -14,6 +14,7 @@
 #define VAR_ARRAY       5
 #define VAR_MAP         6
 #define VAR_CUSTOM      7
+#define VAR_ERROR       255
 
 typedef unsigned char BYTE;
 typedef unsigned int  DWORD;

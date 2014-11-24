@@ -262,9 +262,12 @@ void larva_silk()
                 token2[size] = 0;
 
                 fn = dlsym(cocoon->ptr, token2);
+
+                // restore name
+                token2[--size] = 0;
+
                 if ((error = dlerror()) != NULL)
                 {
-                    token2[--size] = 0;
                     fprintf(stderr, "Function '%s' does not exist in cocoon '%s'.\n", token2, token);
                     larva_error(0);
                 }
@@ -284,6 +287,12 @@ void larva_silk()
                 while (argc--)
                 {
                     var_unset(&bc_stack[--bc_stack_size]);
+                }
+
+                if (v1.type == VAR_ERROR)
+                {
+                    sprintf(temp_error, "%s(): %s", token2, v1.data);
+                    larva_error(temp_error);
                 }
 
                 stack_push(v1);

@@ -38,19 +38,20 @@ var version_()
  */
 var replace_(FCGX_Request *request, BYTE argc, var *stack)
 {
-    var v = {0};
-
     // TODO: error processing
     // TODO: support replacement without return
     // TODO: support replacement limit
     // TODO: support replacement maps
 
-    if (argc == 3 && stack[0].type == VAR_STRING && stack[1].type == VAR_STRING && stack[2].type == VAR_STRING)
+    if (argc != 3 || stack[0].type != VAR_STRING || stack[1].type != VAR_STRING || stack[2].type != VAR_STRING)
     {
-        v.data = str_replace(stack[0].data, stack[1].data, stack[2].data);
-        v.data_size = strlen(v.data);
-        v.type = VAR_STRING;
+        return cocoon_error(request, "Function requires 3 arguments, type STRING. See manual.");
     }
+
+    var v = {0};
+    v.data = str_replace(stack[0].data, stack[1].data, stack[2].data);
+    v.data_size = strlen(v.data);
+    v.type = VAR_STRING;
 
     return v;
 }

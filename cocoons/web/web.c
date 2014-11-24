@@ -39,13 +39,18 @@ var render_(FCGX_Request *request, BYTE argc, var *stack)
 
     char *dir_leaf_temp, dir_home[1024], dir_leaf[1024];
 
+    if (!request)
+    {
+        return cocoon_error(request, "Rendering disabled for CLI.");
+    }
+
     getcwd(dir_home, sizeof(dir_home));
     dir_leaf_temp = dirname(FCGX_GetParam("SCRIPT_FILENAME", request->envp));
     strcpy(dir_leaf, dir_leaf_temp);
     chdir(dir_leaf);
 
 #ifdef __APPLE__
-    free(dir_leaf_temp);
+    //free(dir_leaf_temp);
 #endif
 
     // variables - stack[1];
@@ -53,9 +58,9 @@ var render_(FCGX_Request *request, BYTE argc, var *stack)
 
     char *html = get_file_contents(stack[0].data);
 
-    if (stack[1].type != VAR_MAP)
+    if (argc == 2 && stack[1].type != VAR_MAP)
     {
-        return null_var;
+        return cocoon_error(request, "Parameters should be of type MAP.");
     }
 
     if (html)
