@@ -2,6 +2,7 @@
 #define _COCOON_COMMON_H_
 
 #include "../core/var.h"
+#include "../core/sys.h"
 #include "fcgiapp.h"
 
 void larva_error(char *);
