@@ -1,10 +1,12 @@
 #include "var.h"
 #include "map.h"
+#include "array.h"
 #include "sys.h"
 #include "bytecode.h"
 #include "../common.h"
 
 map_table_t *json_to_map(json_t *);
+array_t *json_to_array(json_t *);
 
 var_table_t *var_table_create(int size)
 {
@@ -204,11 +206,17 @@ var var_from_json(char *a)
         larva_error(temp_error);
     }
 
-    if (json_is_object(j) || json_is_array(j))
+    if (json_is_object(j))
     {
         v.type = VAR_MAP;
         v.data = json_to_map(j);
         v.data_size = sizeof(map_table_t);
+    }
+    else if (json_is_array(j))
+    {
+        v.type = VAR_ARRAY;
+        v.data = json_to_array(j);
+        v.data_size = sizeof(array_t);
     }
     else
     {
@@ -236,12 +244,18 @@ map_table_t *json_to_map(json_t *json)
         json_object_foreach(json, key, value)
         {
             var v = {0};
-            if (json_is_object(value) || json_is_array(value))
+            if (json_is_object(value))
             {
                 // process recursively
                 v.type = VAR_MAP;
                 v.data = json_to_map(value);
                 v.data_size = sizeof(map_table_t);
+            }
+            else if (json_is_array(value))
+            {
+                v.type = VAR_ARRAY;
+                v.data = json_to_array(value);
+                v.data_size = sizeof(array_t);
             }
             else if (json_is_string(value))
             {
@@ -259,15 +273,54 @@ map_table_t *json_to_map(json_t *json)
             map_add(map, (char *)key, v);
         }
     }
-    else
+
+    return map;
+}
+
+array_t *json_to_array(json_t *json)
+{
+    size_t index;
+    json_t *value;
+    const char *key;
+    array_t *array;
+
+    if (json_is_array(json))
     {
-        map = map_table_create(json_array_size(json));
+        array = array_create(json_array_size(json));
         json_array_foreach(json, index, value)
         {
+            var v = {0};
+            if (json_is_object(value))
+            {
+                // process recursively
+                v.type = VAR_MAP;
+                v.data = json_to_map(value);
+                v.data_size = sizeof(map_table_t);
+            }
+            else if (json_is_array(value))
+            {
+                v.type = VAR_ARRAY;
+                v.data = json_to_array(value);
+                v.data_size = sizeof(array_t);
+            }
+            else if (json_is_string(value))
+            {
+                v.type = VAR_STRING;
+                v.data = strdup(json_string_value(value));
+                v.data_size = json_string_length(value) + 1;
+            }
+            else if (json_is_integer(value))
+            {
+                v.type = VAR_DOUBLE;
+                v.data = challoc(pool_of_doubles);
+                v.data_size = sizeof(double);
+                *(double *)v.data = json_integer_value(value);
+            }
+            array_push(array, v);
         }
     }
 
-    return map;
+    return array;
 }
 
 inline void var_unset(var *a)
@@ -320,6 +373,20 @@ void var_echo(var *a)
                         fprintf(stdout, "\n");
                     }
                     list = list->next;
+                }
+            }
+            fprintf(stdout, "%.*s}", var_echo_level - 1, "\t\t\t\t\t");
+            break;
+
+            case VAR_ARRAY:
+            fprintf(stdout, "\n%.*s{\n", var_echo_level - 1, "\t\t\t\t\t");
+            for (unsigned int i = 0; i < ((array_t *)a->data)->size; i++)
+            {
+                if (((array_t *)a->data)->vars[i]->type)
+                {
+                    fprintf(stdout, "%.*s\"%d\" : ", var_echo_level, "\t\t\t\t\t", i);
+                    var_echo(((array_t *)a->data)->vars[i]);
+                    fprintf(stdout, "\n");
                 }
             }
             fprintf(stdout, "%.*s}", var_echo_level - 1, "\t\t\t\t\t");

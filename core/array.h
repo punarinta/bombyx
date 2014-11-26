@@ -9,10 +9,12 @@
 typedef struct _array_t_
 {
     size_t size;
+    size_t count;
     var **vars;
 } array_t;
 
 array_t *array_create(size_t);
+void array_push(array_t *, var);
 void array_delete(array_t *);
 array_t *array_clone(array_t *);
 
