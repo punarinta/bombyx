@@ -291,7 +291,7 @@ void larva_silk()
 
                 if (v1.type == VAR_ERROR)
                 {
-                    sprintf(temp_error, "%s(): %s", token2, v1.data);
+                    sprintf(temp_error, "%s(): %s", token2, (char *) v1.data);
                     larva_error(temp_error);
                 }
 
