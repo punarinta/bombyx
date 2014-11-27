@@ -17,6 +17,7 @@ void op_copy(var *a, var *b)
             {
                 if (a->type == VAR_DOUBLE) *(double *)a->data = *(double *)b->data;
                 else if (a->type == VAR_MAP) a->data = map_table_clone(b->data);
+                else if (a->type == VAR_ARRAY) a->data = array_clone(b->data);
                 else memcpy(a->data, b->data, b->data_size);
                 // it's done :)
                 return;
@@ -25,6 +26,7 @@ void op_copy(var *a, var *b)
             {
                 if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
                 else if (a->type == VAR_MAP) map_table_delete(a->data);
+                else if (a->type == VAR_ARRAY) array_delete(a->data);
                 else free(a->data);
 
                 if (b->type == VAR_MAP) a->data = map_table_clone(b->data);

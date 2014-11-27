@@ -2,6 +2,7 @@
 #include "larva.h"
 #include "var.h"
 #include "map.h"
+#include "array.h"
 #include "block.h"
 #include "sys.h"
 #include "bytecode.h"
@@ -180,10 +181,6 @@ void larva_silk()
             token[size] = 0;
 
             v1 = bc_stack[--bc_stack_size];
-            if (v1.type != VAR_STRING)
-            {
-                larva_error("APath key must be a string.");
-            }
 
             // TODO: parse APath and access JSON recursively
 
@@ -191,8 +188,20 @@ void larva_silk()
 
             if (vt->v.type == VAR_MAP)
             {
+                if (v1.type != VAR_STRING)
+                {
+                    larva_error("Map key must be a string.");
+                }
                 map_t *m = map_lookup(vt->v.data, v1.data);
                 stack_push(m->v);
+            }
+            else if (vt->v.type == VAR_ARRAY)
+            {
+                if (v1.type != VAR_DOUBLE)
+                {
+                    larva_error("Array index must be a number");
+                }
+                stack_push( *( ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]) );
             }
             else
             {

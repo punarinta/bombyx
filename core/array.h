@@ -9,7 +9,7 @@
 typedef struct _array_t_
 {
     size_t size;
-    size_t count;
+    size_t max_size;
     var **vars;
 } array_t;
 
