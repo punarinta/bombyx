@@ -1,6 +1,7 @@
 #include "var.h"
 #include "sys.h"
 #include "map.h"
+#include "array.h"
 #include "larva.h"
 #include "bytecode.h"
 #include "../common.h"
@@ -27,6 +28,7 @@ void op_copy(var *a, var *b)
                 else free(a->data);
 
                 if (b->type == VAR_MAP) a->data = map_table_clone(b->data);
+                else if (b->type == VAR_ARRAY) a->data = array_clone(b->data);
                 else
                 {
                     a->data = malloc(b->data_size);
@@ -49,10 +51,8 @@ void op_copy(var *a, var *b)
                 a->data = challoc(pool_of_doubles);
                 *(double *)a->data = *(double *)b->data;
             }
-            else if (b->type == VAR_MAP)
-            {
-                a->data = map_table_clone(b->data);
-            }
+            else if (b->type == VAR_MAP) a->data = map_table_clone(b->data);
+            else if (b->type == VAR_ARRAY) a->data = array_clone(b->data);
             else
             {
                 a->data = malloc(b->data_size);
