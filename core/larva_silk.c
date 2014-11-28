@@ -61,8 +61,6 @@ void larva_silk()
     puts("======================================");*/
 //exit(0);
 
-    started_at = get_microtime();
-
     // reentry must be here, not above! => rewrite silk function later
 
     while (bc_pos < bc_length)

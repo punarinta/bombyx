@@ -78,7 +78,6 @@ unsigned int bc_stack_size;
 char *code;
 size_t code_pos;
 size_t code_length;
-double started_at;
 FCGX_Request *pRequest;
 
 #endif
