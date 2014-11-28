@@ -3,6 +3,7 @@
 
 #include "../core/var.h"
 #include "../core/sys.h"
+#include "../core/array.h"
 #include "fcgiapp.h"
 
 void larva_error(char *);

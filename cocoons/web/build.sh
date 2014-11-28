@@ -3,7 +3,6 @@
 gcc \
 web.c \
 ../../core/block.c \
-../../core/bytecode.c \
 ../../core/challoc.c \
 ../../core/map.c \
 ../../core/array.c \

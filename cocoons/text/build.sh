@@ -2,7 +2,13 @@
 
 gcc \
 text.c \
+../../core/block.c \
+../../core/challoc.c \
+../../core/map.c \
+../../core/array.c \
+../../core/operator.c \
 ../../core/sys.c \
+../../core/var.c \
 ../common.c \
 \
 -std=c99 \

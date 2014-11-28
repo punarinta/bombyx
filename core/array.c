@@ -4,6 +4,9 @@
 
 array_t *array_create(size_t size)
 {
+    if (!size)
+        size = MIN_ARRAY_SIZE;
+
     array_t *array = malloc(sizeof(array_t));
 
     array->size = 0;

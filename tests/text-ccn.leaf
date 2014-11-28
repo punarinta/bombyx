@@ -1,4 +1,7 @@
 use text
 
 var a = 'Hello, world!\n'
-print(text::replace(a, 'world', text::trim('Robin ')))
+print('Trim+replace: ' + text::replace(a, 'world', text::trim('Robin ')))
+print('Length: ' + text::length(a) + '\n')
+print('Split: ')
+print(text::split(a, ', '))

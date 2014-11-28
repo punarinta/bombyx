@@ -380,7 +380,7 @@ void var_echo(var *a)
             break;
 
             case VAR_ARRAY:
-            fprintf(stdout, "\n%.*s{\n", var_echo_level - 1, "\t\t\t\t\t");
+            fprintf(stdout, "\n%.*s[\n", var_echo_level - 1, "\t\t\t\t\t");
             for (unsigned int i = 0; i < ((array_t *)a->data)->size; i++)
             {
                 if (((array_t *)a->data)->vars[i]->type)
@@ -390,7 +390,7 @@ void var_echo(var *a)
                     fprintf(stdout, "\n");
                 }
             }
-            fprintf(stdout, "%.*s}", var_echo_level - 1, "\t\t\t\t\t");
+            fprintf(stdout, "%.*s]", var_echo_level - 1, "\t\t\t\t\t");
             break;
 
             default:
