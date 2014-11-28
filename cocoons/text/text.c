@@ -57,23 +57,20 @@ var replace_(FCGX_Request *request, BYTE argc, var *stack)
 }
 
 /**
- * Performs string replacement.
+ * Trims the string both sides.
  *
- * @version 0.1
+ * @param string text
  *
- * @param string src
- *
- * @return mixed
+ * @return string
  */
 var trim_(FCGX_Request *request, BYTE argc, var *stack)
 {
-    var v = {0};
-
     if (argc != 1 || stack[0].type != VAR_STRING)
     {
         return cocoon_error(request, "Parameters should be of type STRING.");
     }
 
+    var v = {0};
     v.data = malloc(stack[0].data_size);
     memcpy(v.data, stack[0].data, stack[0].data_size);
     trim(v.data);
@@ -83,15 +80,21 @@ var trim_(FCGX_Request *request, BYTE argc, var *stack)
     return v;
 }
 
+/**
+ * Counts the length of a string in symbols (not in bytes).
+ *
+ * @param string text
+ *
+ * @return double
+ */
 var length_(FCGX_Request *request, BYTE argc, var *stack)
 {
-    var v = {0};
-
     if (argc != 1 || stack[0].type != VAR_STRING)
     {
         return cocoon_error(request, "Parameters should be of type STRING.");
     }
 
+    var v = {0};
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
     v.data = malloc(sizeof(double));
@@ -100,16 +103,25 @@ var length_(FCGX_Request *request, BYTE argc, var *stack)
     return v;
 }
 
+/**
+ * Splits the string using the separator and packs everything into an array.
+ *
+ * @param string text
+ * @param string separator
+ *
+ * @return array
+ */
 var split_(FCGX_Request *request, BYTE argc, var *stack)
 {
-    var v = {0};
-    char *tok = NULL;
+    // TODO: support 1 argument mode — split onto letters (not bytes)
 
     if (argc != 2 || stack[0].type != VAR_STRING)
     {
         return cocoon_error(request, "Function requires 2 arguments, type STRING.");
     }
 
+    var v = {0};
+    char *tok = NULL;
     v.type = VAR_ARRAY;
     v.data_size = sizeof(array_t);
     v.data = array_create(0);
@@ -144,10 +156,10 @@ var split_(FCGX_Request *request, BYTE argc, var *stack)
 
 static size_t cp_strlen_utf8(const char *_s)
 {
-	const char * s;
-	size_t count = 0;
 	size_t u;
+	const char * s;
 	unsigned char b;
+	size_t count = 0;
 
 	/* Handle any initial misaligned bytes. */
 	for (s = _s; (uintptr_t)(s) & (sizeof(size_t) - 1); s++)
