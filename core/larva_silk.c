@@ -632,6 +632,10 @@ void larva_silk()
 
             v1 = bc_stack[--bc_stack_size];
             v1.name = token;
+
+            // v1 was taken from stack and still points on the old var, reset this shit!
+            v1.ref = NULL;
+
             var_sync(&v1);
             // this will not unset name, so no worries about the token
             var_unset(&v1);
