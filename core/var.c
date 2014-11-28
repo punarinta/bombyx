@@ -323,12 +323,13 @@ array_t *json_to_array(json_t *json)
     return array;
 }
 
-inline void var_unset(var *a)
+void var_unset(var *a)
 {
     if (a->data)
     {
         if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
         else if (a->type == VAR_MAP) map_table_delete(a->data);
+        else if (a->type == VAR_ARRAY) array_delete(a->data);
         else free(a->data);
     }
 }

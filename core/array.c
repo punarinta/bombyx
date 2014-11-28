@@ -68,7 +68,12 @@ void array_delete(array_t *array)
         // kill all vars
         for (size_t i = 0; i < array->size; ++i)
         {
-            if (array->vars[i]) var_unset(array->vars[i]);
+            // no necessity to nullify the var, as it will be deleted soon
+            if (array->vars[i])
+            {
+                var_unset(array->vars[i]);
+                free(array->vars[i]);
+            }
         }
 
         free(array->vars);
