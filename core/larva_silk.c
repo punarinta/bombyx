@@ -284,15 +284,13 @@ void larva_silk()
                 // pass arguments
                 BYTE argc = bytecode[bc_pos++];
 
-                /*
-                    TODO: something needs to be done with the stack
-                    if we just decrease stack size then it's a memory leak, but 100% safe
-                    if the stack stays unchanged it grows — may lead to stack overflow
-                    the best option if to clear the stack top manually after the call, but before the result is pushed
-                 */
-
                 v1 = fn(pRequest, argc, bc_stack + bc_stack_size - argc);
 
+                /*
+                    If we just decrease stack size then it's a memory leak, but 100% safe.
+                    If the stack stays unchanged it grows — may lead to stack overflow.
+                    The best option if to clear the stack top manually after the call, but before the result is pushed.
+                 */
                 while (argc--)
                 {
                     var_unset(&bc_stack[--bc_stack_size]);
