@@ -69,14 +69,33 @@ var trim_(FCGX_Request *request, BYTE argc, var *stack)
 {
     var v = {0};
 
-    if (argc == 1 && stack[0].type == VAR_STRING)
+    if (argc != 1 || stack[0].type != VAR_STRING)
     {
-        v.data = malloc(stack[0].data_size);
-        memcpy(v.data, stack[0].data, stack[0].data_size);
-        trim(v.data);
-        v.data_size = strlen(v.data) + 1;
-        v.type = VAR_STRING;
+        return cocoon_error(request, "Parameters should be of type STRING.");
     }
+
+    v.data = malloc(stack[0].data_size);
+    memcpy(v.data, stack[0].data, stack[0].data_size);
+    trim(v.data);
+    v.data_size = strlen(v.data) + 1;
+    v.type = VAR_STRING;
+
+    return v;
+}
+
+var length_(FCGX_Request *request, BYTE argc, var *stack)
+{
+    var v = {0};
+
+    if (argc != 1 || stack[0].type != VAR_STRING)
+    {
+        return cocoon_error(request, "Parameters should be of type STRING.");
+    }
+
+    v.type = VAR_DOUBLE;
+    v.data_size = sizeof(double);
+    v.data = malloc(sizeof(double));
+    *(double *)v.data = stack[0].data_size - 1;
 
     return v;
 }
