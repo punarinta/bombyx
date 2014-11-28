@@ -17,5 +17,6 @@ var version_();
 }
 #endif
 
+static size_t cp_strlen_utf8(const char *);
 
 #endif
