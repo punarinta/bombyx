@@ -10,8 +10,6 @@
  */
 void larva_init(char *incoming_code, size_t len)
 {
-    blocks_count = MIN_BLOCKS;
-    vars_count   = MIN_VARIABLES;
     blocks       = block_table_create(MIN_BLOCKS);
     vars         = var_table_create(MIN_VARIABLES);
     cocoons      = cocoon_table_create(MIN_COCOONS);

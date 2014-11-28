@@ -3,7 +3,6 @@
 
 #include "../common.h"
 #include "var.h"
-#include "challoc.h"
 
 #define BC_INITIAL_SIZE         25000
 #define BC_GROW_SIZE            10000
@@ -62,16 +61,6 @@
 #define BCO_MICROTIME       201
 #define BCO_SWAP            202
 #define BCO_AS_VOID         203
-
-
-unsigned int bc_ops;
-unsigned int bc_pos;
-unsigned int bc_length;
-BYTE *bytecode;
-var bc_stack[BOMBYX_STACK_SIZE];
-unsigned int bc_stack_size;
-
-ChunkAllocator* pool_of_doubles;
 
 void bc_init();
 void bc_free();

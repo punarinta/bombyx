@@ -71,13 +71,13 @@ typedef struct chunk_allocator ChunkAllocator;
  */
 
 /* Create a ChunkAllocator for `n' elements of size `size' */
-ChunkAllocator* chcreate(size_t n, size_t size);
+ChunkAllocator* chcreate(size_t, size_t);
 
 /*
  * Destroy a ChunkAllocator returning the memory to the OS.
  * ch will be NULL after a call to chdestroy.
  */
-void chdestroy(ChunkAllocator** ch);
+void chdestroy(ChunkAllocator**);
 
 /*
  * These functions deal with a ChunkAllocator's buffer.
@@ -87,12 +87,12 @@ void chdestroy(ChunkAllocator** ch);
  * Get memory for an object from ChunkAllocator `ch'.
  * Returns NULL if no memory is available anymore.
  */
-void* challoc(ChunkAllocator* ch);
+void* challoc(ChunkAllocator*);
 
 /* Mark the object `o' as free in the ChunkAllocator's buffer */ 
-void chfree(ChunkAllocator* ch, void* o);
+void chfree(ChunkAllocator*, void*);
 
 /* Mark all objects in the ChunkAllocator's buffer as free */
-void chclear(ChunkAllocator* ch);
+void chclear(ChunkAllocator*);
 
 #endif

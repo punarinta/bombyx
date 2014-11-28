@@ -12,7 +12,7 @@
 #include "common.h"
 #include "core/larva.h"
 
-static int socketId;
+static int socketId;    // is not written within the thread — safe
 void *thread(void *);
 
 int main(void)
@@ -50,7 +50,7 @@ void *thread(void *a)
 
     if (FCGX_InitRequest(&request, socketId, 0) != 0)
     {
-        printf("Can not init request\n");
+        printf("Cannot init request\n");
         return NULL;
     }
 
