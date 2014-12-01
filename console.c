@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     bombyx_env_t *env = calloc(1, sizeof(bombyx_env_t));
 
     env->gl_error = 0;
+    env->request.out = NULL;
 
     FILE *fp = fopen(argv[1], "rt");
 

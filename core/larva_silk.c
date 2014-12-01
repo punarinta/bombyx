@@ -268,7 +268,7 @@ void larva_silk(bombyx_env_t *env)
             else
             {
                 char *error;
-                var (*fn)(FCGX_Request *, BYTE, var *);
+                var (*fn)(bombyx_env_t *, BYTE, var *);
 
                 token2[size++] = '_';
                 token2[size] = 0;
@@ -287,7 +287,7 @@ void larva_silk(bombyx_env_t *env)
                 // pass arguments
                 BYTE argc = env->bytecode[env->bc_pos++];
 
-                v1 = fn(&env->request, argc, env->bc_stack + env->bc_stack_size - argc);
+                v1 = fn(env, argc, env->bc_stack + env->bc_stack_size - argc);
 
                 /*
                     If we just decrease stack size then it's a memory leak, but 100% safe.

@@ -1,11 +1,11 @@
 #include "common.h"
 
-void larva_error(char *err)
+void larva_error(bombyx_env_t *env, char *err)
 {
     // TODO
 }
 
-var cocoon_error(FCGX_Request *request, char *err)
+var cocoon_error(bombyx_env_t *env, char *err)
 {
     var v = {0};
     v.type = VAR_ERROR;

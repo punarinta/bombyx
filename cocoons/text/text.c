@@ -1,10 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <libgen.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "text.h"
+#include "../../core/array_2.h"
 
 #define LIBRARY_VERSION 0.1
 
@@ -36,7 +31,7 @@ var version_()
  *
  * @return mixed
  */
-var replace_(FCGX_Request *request, BYTE argc, var *stack)
+var replace_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     // TODO: error processing
     // TODO: support replacement without return
@@ -45,7 +40,7 @@ var replace_(FCGX_Request *request, BYTE argc, var *stack)
 
     if (argc != 3 || stack[0].type != VAR_STRING || stack[1].type != VAR_STRING || stack[2].type != VAR_STRING)
     {
-        return cocoon_error(request, "Function requires 3 arguments, type STRING.");
+        return cocoon_error(env, "Function requires 3 arguments, type STRING.");
     }
 
     var v = {0};
@@ -63,11 +58,11 @@ var replace_(FCGX_Request *request, BYTE argc, var *stack)
  *
  * @return string
  */
-var trim_(FCGX_Request *request, BYTE argc, var *stack)
+var trim_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     if (argc != 1 || stack[0].type != VAR_STRING)
     {
-        return cocoon_error(request, "Parameters should be of type STRING.");
+        return cocoon_error(env, "Parameters should be of type STRING.");
     }
 
     var v = {0};
@@ -87,11 +82,11 @@ var trim_(FCGX_Request *request, BYTE argc, var *stack)
  *
  * @return double
  */
-var length_(FCGX_Request *request, BYTE argc, var *stack)
+var length_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     if (argc != 1 || stack[0].type != VAR_STRING)
     {
-        return cocoon_error(request, "Parameters should be of type STRING.");
+        return cocoon_error(env, "Parameters should be of type STRING.");
     }
 
     var v = {0};
@@ -111,13 +106,13 @@ var length_(FCGX_Request *request, BYTE argc, var *stack)
  *
  * @return array
  */
-var split_(FCGX_Request *request, BYTE argc, var *stack)
+var split_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     // TODO: support 1 argument mode — split onto letters (not bytes)
 
     if (argc != 2 || stack[0].type != VAR_STRING)
     {
-        return cocoon_error(request, "Function requires 2 arguments, type STRING.");
+        return cocoon_error(env, "Function requires 2 arguments, type STRING.");
     }
 
     var v = {0};

@@ -33,19 +33,19 @@ var version_()
  * @param map variables
  * @return string
  */
-var render_(FCGX_Request *request, BYTE argc, var *stack)
+var render_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var null_var = {0};
 
     char *dir_leaf_temp, dir_home[1024], dir_leaf[1024];
 
-    if (!request)
+    if (!env->request.out)
     {
-        return cocoon_error(request, "Rendering disabled for CLI.");
+        return cocoon_error(env, "Rendering disabled for CLI.");
     }
 
     getcwd(dir_home, sizeof(dir_home));
-    dir_leaf_temp = dirname(FCGX_GetParam("SCRIPT_FILENAME", request->envp));
+    dir_leaf_temp = dirname(FCGX_GetParam("SCRIPT_FILENAME", env->request.envp));
     strcpy(dir_leaf, dir_leaf_temp);
     chdir(dir_leaf);
 
@@ -60,12 +60,12 @@ var render_(FCGX_Request *request, BYTE argc, var *stack)
 
     if (argc == 2 && stack[1].type != VAR_MAP)
     {
-        return cocoon_error(request, "Parameters should be of type MAP.");
+        return cocoon_error(env, "Parameters should be of type MAP.");
     }
 
     if (html)
     {
-        if (request) FCGX_PutS(html, request->out);
+        if (env->request.out) FCGX_PutS(html, env->request.out);
         else puts(html);
         free(html);
     }
@@ -82,7 +82,7 @@ var render_(FCGX_Request *request, BYTE argc, var *stack)
  * @param string salt
  * @return string
  */
-var secret_(FCGX_Request *request, BYTE argc, var *stack)
+var secret_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
 
@@ -95,7 +95,7 @@ var secret_(FCGX_Request *request, BYTE argc, var *stack)
  * @param string key
  * @return mixed
  */
-var fromPost_(FCGX_Request *request, BYTE argc, var *stack)
+var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
 

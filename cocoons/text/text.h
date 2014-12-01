@@ -4,7 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../core/sys.h"
+#include <stdint.h>
+#include <unistd.h>
+#include <libgen.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "../common.h"
 
 #ifdef __cplusplus
