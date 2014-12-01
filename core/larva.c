@@ -229,7 +229,7 @@ void larva_digest(bombyx_env_t *env)
             }
             else
             {
-                parse();
+                parse(env);
 
                 bc_add_cmd(env, is_param ? BCO_PARAMX : BCO_VARX);
                 bc_add_token(env, token);
