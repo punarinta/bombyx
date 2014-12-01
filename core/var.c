@@ -1,12 +1,16 @@
 #include "var.h"
+#include "var_2.h"
+#include "map_2.h"
+#include "array_2.h"
 #include "map.h"
 #include "array.h"
 #include "sys.h"
 #include "bytecode.h"
-#include "../common.h"
+#include "common.h"
+#include "larva.h"
 
-map_table_t *json_to_map(json_t *);
-array_t *json_to_array(json_t *);
+map_table_t *json_to_map(bombyx_env_t *env, json_t *);
+array_t *json_to_array(bombyx_env_t *env, json_t *);
 
 var_table_t *var_table_create(int size)
 {
@@ -109,7 +113,7 @@ int var_delete(var_table_t *hashtable, char *str)
     return 0;
 }
 
-void var_table_delete(var_table_t *hashtable)
+void var_table_delete(bombyx_env_t *env, var_table_t *hashtable)
 {
     var_t *list, *temp;
 
@@ -123,7 +127,7 @@ void var_table_delete(var_table_t *hashtable)
             temp = list;
             list = list->next;
             if (temp->v.name) free(temp->v.name);
-            var_unset(&temp->v);
+            var_unset(env, &temp->v);
             free(temp);
         }
     }
@@ -137,33 +141,33 @@ void var_table_delete(var_table_t *hashtable)
     Synchronizes var with vars[] if necessary
     Var is NOT modified
 */
-void var_sync(var *a)
+void var_sync(bombyx_env_t *env, var *a)
 {
     if (a->ref)
     {
-        op_copy(&((var_t *)a->ref)->v, a);
+        op_copy(env, &((var_t *)a->ref)->v, a);
     }
     else if (a->name)
     {
-        var_t *vt = var_lookup(vars, a->name);
+        var_t *vt = var_lookup(env->vars, a->name);
         if (vt)
         {
-            op_copy(&vt->v, a);
+            op_copy(env, &vt->v, a);
         }
         else
         {
-            sprintf(temp_error, "Variable '%s' not found.", a->name);
-            larva_error(temp_error);
+            sprintf(env->temp_error, "Variable '%s' not found.", a->name);
+            larva_error(env, env->temp_error);
         }
     }
 }
 
-var var_as_double(double a)
+var var_as_double(bombyx_env_t *env, double a)
 {
     var v = {0};
     v.type = VAR_DOUBLE;
     v.data_size = sizeof(double);
-    v.data = challoc(pool_of_doubles);
+    v.data = challoc(env->pool_of_doubles);
     *(double *)v.data = a;
 
     return v;
@@ -172,12 +176,12 @@ var var_as_double(double a)
 /*
     Be careful: name is not copied, but assigned!
 */
-var var_as_var_t(var_t *vt)
+var var_as_var_t(bombyx_env_t *env, var_t *vt)
 {
     var v = {0};
     v.name = vt->v.name;
 
-    op_copy(&v, &vt->v);
+    op_copy(env, &v, &vt->v);
     v.ref = vt;
 
     return v;
@@ -194,7 +198,7 @@ var var_as_string(char *a, size_t len)
     return v;
 }
 
-var var_from_json(char *a)
+var var_from_json(bombyx_env_t *env, char *a)
 {
     var v = {0};
 
@@ -202,26 +206,26 @@ var var_from_json(char *a)
     json_t *j = json_loads(a, 0, &error);  // JSON_DECODE_ANY
     if (!j)
     {
-        sprintf(temp_error, "Cannot decode JSON variable '%s'.", a);
-        larva_error(temp_error);
+        sprintf(env->temp_error, "Cannot decode JSON variable '%s'.", a);
+        larva_error(env, env->temp_error);
     }
 
     if (json_is_object(j))
     {
         v.type = VAR_MAP;
-        v.data = json_to_map(j);
+        v.data = json_to_map(env, j);
         v.data_size = sizeof(map_table_t);
     }
     else if (json_is_array(j))
     {
         v.type = VAR_ARRAY;
-        v.data = json_to_array(j);
+        v.data = json_to_array(env, j);
         v.data_size = sizeof(array_t);
     }
     else
     {
         // this can be only array or object
-        larva_error("JSON parsing error");
+        larva_error(env, "JSON parsing error");
     }
 
     json_decref(j);
@@ -229,7 +233,7 @@ var var_from_json(char *a)
     return v;
 }
 
-map_table_t *json_to_map(json_t *json)
+map_table_t *json_to_map(bombyx_env_t *env, json_t *json)
 {
     size_t index;
     json_t *value;
@@ -248,13 +252,13 @@ map_table_t *json_to_map(json_t *json)
             {
                 // process recursively
                 v.type = VAR_MAP;
-                v.data = json_to_map(value);
+                v.data = json_to_map(env, value);
                 v.data_size = sizeof(map_table_t);
             }
             else if (json_is_array(value))
             {
                 v.type = VAR_ARRAY;
-                v.data = json_to_array(value);
+                v.data = json_to_array(env, value);
                 v.data_size = sizeof(array_t);
             }
             else if (json_is_string(value))
@@ -266,7 +270,7 @@ map_table_t *json_to_map(json_t *json)
             else if (json_is_integer(value))
             {
                 v.type = VAR_DOUBLE;
-                v.data = challoc(pool_of_doubles);
+                v.data = challoc(env->pool_of_doubles);
                 v.data_size = sizeof(double);
                 *(double *)v.data = json_integer_value(value);
             }
@@ -277,7 +281,7 @@ map_table_t *json_to_map(json_t *json)
     return map;
 }
 
-array_t *json_to_array(json_t *json)
+array_t *json_to_array(bombyx_env_t *env, json_t *json)
 {
     size_t index;
     json_t *value;
@@ -294,13 +298,13 @@ array_t *json_to_array(json_t *json)
             {
                 // process recursively
                 v.type = VAR_MAP;
-                v.data = json_to_map(value);
+                v.data = json_to_map(env, value);
                 v.data_size = sizeof(map_table_t);
             }
             else if (json_is_array(value))
             {
                 v.type = VAR_ARRAY;
-                v.data = json_to_array(value);
+                v.data = json_to_array(env, value);
                 v.data_size = sizeof(array_t);
             }
             else if (json_is_string(value))
@@ -312,7 +316,7 @@ array_t *json_to_array(json_t *json)
             else if (json_is_integer(value))
             {
                 v.type = VAR_DOUBLE;
-                v.data = challoc(pool_of_doubles);
+                v.data = challoc(env->pool_of_doubles);
                 v.data_size = sizeof(double);
                 *(double *)v.data = json_integer_value(value);
             }
@@ -323,20 +327,20 @@ array_t *json_to_array(json_t *json)
     return array;
 }
 
-void var_unset(var *a)
+void var_unset(bombyx_env_t *env, var *a)
 {
     if (a->data)
     {
-        if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
-        else if (a->type == VAR_MAP) map_table_delete(a->data);
-        else if (a->type == VAR_ARRAY) array_delete(a->data);
+        if (a->type == VAR_DOUBLE) chfree(env->pool_of_doubles, a->data);
+        else if (a->type == VAR_MAP) map_table_delete(env, a->data);
+        else if (a->type == VAR_ARRAY) array_delete(env, a->data);
         else free(a->data);
     }
 }
 
 BYTE var_echo_level = 0;
 
-void var_echo(var *a)
+void var_echo(bombyx_env_t *env, var *a)
 {
     char *str;
     map_t *list;
@@ -348,12 +352,12 @@ void var_echo(var *a)
         switch (a->type)
         {
             case VAR_UNSET:
-            web_puts("UNSET");
+            web_puts(env, "UNSET");
             break;
 
             case VAR_STRING:
-            if (a->data && a->data_size) web_printf(a->data, 0);
-            else web_printf("NULL%c", 0);
+            if (a->data && a->data_size) web_printf(env, a->data, 0);
+            else web_printf(env, "NULL%c", 0);
             break;
 
             case VAR_DOUBLE:
@@ -370,7 +374,7 @@ void var_echo(var *a)
                     if (list->v.type)
                     {
                         fprintf(stdout, "%.*s\"%s\" : ", var_echo_level, "\t\t\t\t\t", list->name);
-                        var_echo(&list->v);
+                        var_echo(env, &list->v);
                         fprintf(stdout, "\n");
                     }
                     list = list->next;
@@ -386,7 +390,7 @@ void var_echo(var *a)
                 if (((array_t *)a->data)->vars[i]->type)
                 {
                     fprintf(stdout, "%.*s\"%d\" : ", var_echo_level, "\t\t\t\t\t", i);
-                    var_echo(((array_t *)a->data)->vars[i]);
+                    var_echo(env, ((array_t *)a->data)->vars[i]);
                     fprintf(stdout, "\n");
                 }
             }
@@ -405,7 +409,7 @@ void var_echo(var *a)
     }
     else
     {
-        web_puts("(null)");
+        web_puts(env, "(null)");
     }
     --var_echo_level;
 }

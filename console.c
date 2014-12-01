@@ -5,13 +5,12 @@
 #include <libgen.h>
 #include <unistd.h>
 
-#include "common.h"
+#include "core/common.h"
 #include "core/larva.h"
 
 int main(int argc, char *argv[])
 {
     verbose = 0;
-    gl_error = 0;
     char *source;
     size_t newLen = 0;
 
@@ -35,7 +34,10 @@ int main(int argc, char *argv[])
     mtrace();
 #endif
 
-    pRequest = NULL;
+    bombyx_env_t *env = calloc(1, sizeof(bombyx_env_t));
+
+    env->gl_error = 0;
+
     FILE *fp = fopen(argv[1], "rt");
 
     if (fp != NULL)
@@ -75,40 +77,41 @@ int main(int argc, char *argv[])
 
         fclose(fp);
 
-        getcwd(dir_home, sizeof(dir_home));
+        getcwd(env->dir_home, sizeof(env->dir_home));
         char *dir_leaf_temp = dirname(argv[1]);
-        strcpy(dir_leaf, dir_leaf_temp);
-        chdir(dir_leaf);
+        strcpy(env->dir_leaf, dir_leaf_temp);
+        chdir(env->dir_leaf);
 
 #ifdef __APPLE__
         free(dir_leaf_temp);
 #endif
 
-        setjmp(error_exit);
+        setjmp(env->error_exit);
 
-        if (gl_error)
+        if (env->gl_error)
         {
-            larva_stop();
+            larva_stop(env);
         }
         else
         {
-            larva_init(source, newLen);
-            larva_digest();
-
-            larva_silk();
-
-            larva_stop();
+            larva_init(env, source, newLen);
+            larva_digest(env);
+            larva_silk(env);
+            larva_stop(env);
         }
     }
     else
     {
         fputs("File does not exist.\n", stderr);
+        if (env) free(env);
         return -1;
     }
+
+    if (env) free(env);
 
 #ifdef BOMBYX_MCHECK
     muntrace();
 #endif
 
-    return gl_error;
+    return env->gl_error;
 }

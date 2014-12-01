@@ -1,6 +1,6 @@
 #include <sys/time.h>
 #include <stddef.h>
-#include "../common.h"
+#include "common.h"
 
 /**
  *  Trim spaces here and there

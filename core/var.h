@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "block.h"
-#include "../vendor/jansson.h"
 
 #define VAR_UNSET       0
 #define VAR_DOUBLE      1
@@ -41,41 +40,5 @@ typedef struct _var_table_t_
     unsigned int size;
     var_t **table;
 } var_table_t;
-
-var_table_t *var_table_create(int);
-unsigned int var_hash(var_table_t *, char *);
-var_t *var_lookup(var_table_t *, char *);
-var_t *var_add(var_table_t *, char *, BYTE, block_t *);
-int var_delete(var_table_t *, char *);
-void var_table_delete(var_table_t *);
-
-void var_echo(var *);
-void var_unset(var *);
-
-var var_as_double(double);
-var var_as_string(char *, size_t);
-var var_from_json(char *);
-var var_as_var_t(var_t *);
-
-void var_sync(var *);
-void op_copy(var *, var *);
-void op_add(var *, var *);
-void op_subtract(var *, var *);
-void op_multiply(var *, var *);
-void op_divide(var *, var *);
-void op_invert(var *);
-void op_unary_minus(var *);
-void op_increment(var *);
-void op_decrement(var *);
-void op_and(var *, var *);
-void op_or(var *, var *);
-void op_swap(var *, var *);
-
-BYTE var_is_true(var *);
-BYTE var_cmp(var *, var *);
-BYTE var_is_more(var *, var *);
-BYTE var_is_less(var *, var *);
-BYTE var_is_more_equal(var *, var *);
-BYTE var_is_less_equal(var *, var *);
 
 #endif

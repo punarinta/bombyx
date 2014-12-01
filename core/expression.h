@@ -3,7 +3,7 @@
 
 #include <math.h>
 #include <string.h>
-#include "../common.h"
+#include "common.h"
 #include "larva.h"
 
 void parse();
@@ -66,6 +66,8 @@ typedef struct
 	
 	/** @brief error string to display, or query on failure */
 	const char *error;
+
+	bombyx_env_t *env;
 } parser_data;
 
 /**
@@ -73,7 +75,7 @@ typedef struct
  @param[in] expr expression to parse
  @return expression value
  */
-void parse_expression( const char *expr, size_t size);
+void parse_expression(bombyx_env_t *env, const char *expr, size_t size);
 
 /**
  @brief primary public routine for the library

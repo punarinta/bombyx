@@ -1,4 +1,5 @@
 #include "array.h"
+#include "var_2.h"
 
 #define MIN_ARRAY_SIZE 100
 
@@ -38,7 +39,7 @@ void array_push(array_t *array, var v)
     array->vars[array->size++] = pv;
 }
 
-array_t *array_clone(array_t *array)
+array_t *array_clone(bombyx_env_t *env, array_t *array)
 {
     array_t *new_array = malloc(sizeof(array_t));
 
@@ -53,7 +54,7 @@ array_t *array_clone(array_t *array)
             if (array->vars[i])
             {
                 new_array->vars[i] = calloc(1, sizeof(var));
-                op_copy(new_array->vars[i], array->vars[i]);
+                op_copy(env, new_array->vars[i], array->vars[i]);
             }
             else new_array->vars[i] = NULL;
         }
@@ -62,7 +63,7 @@ array_t *array_clone(array_t *array)
     return new_array;
 }
 
-void array_delete(array_t *array)
+void array_delete(bombyx_env_t *env, array_t *array)
 {
     if (!array) return;
 
@@ -74,7 +75,7 @@ void array_delete(array_t *array)
             // no necessity to nullify the var, as it will be deleted soon
             if (array->vars[i])
             {
-                var_unset(array->vars[i]);
+                var_unset(env, array->vars[i]);
                 free(array->vars[i]);
             }
         }

@@ -1,9 +1,6 @@
 #ifndef _BOMBYX_BYTECODE_H_
 #define _BOMBYX_BYTECODE_H_ 1
 
-#include "../common.h"
-#include "var.h"
-
 #define BC_INITIAL_SIZE         25000
 #define BC_GROW_SIZE            10000
 #define POOL_OF_DOUBLES_SIZE    1024
@@ -62,14 +59,16 @@
 #define BCO_SWAP            202
 #define BCO_AS_VOID         203
 
-void bc_init();
-void bc_free();
-void bc_add_cmd(BYTE);
-void bc_add_token(char *);
-void bc_add_double(double);
-void bc_add_string(char *);
-void bc_grow();
-void bc_ready();
-void bc_poo();
+#include "common.h"
+
+void bc_init(bombyx_env_t *);
+void bc_free(bombyx_env_t *);
+void bc_add_cmd(bombyx_env_t *, BYTE);
+void bc_add_token(bombyx_env_t *, char *);
+void bc_add_double(bombyx_env_t *, double);
+void bc_add_string(bombyx_env_t *, char *);
+void bc_grow(bombyx_env_t *);
+void bc_ready(bombyx_env_t *);
+void bc_poo(bombyx_env_t *);
 
 #endif

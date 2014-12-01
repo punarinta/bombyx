@@ -1,13 +1,16 @@
 #include "var.h"
+#include "var_2.h"
+#include "map_2.h"
+#include "array_2.h"
 #include "sys.h"
 #include "map.h"
 #include "array.h"
 #include "larva.h"
 #include "bytecode.h"
-#include "../common.h"
+#include "common.h"
 #include "../vendor/jansson.h"
 
-void op_copy(var *a, var *b)
+void op_copy(bombyx_env_t *env, var *a, var *b)
 {
     if (a->data)
     {
@@ -16,21 +19,21 @@ void op_copy(var *a, var *b)
             if (a->data_size == b->data_size && a->type == b->type)
             {
                 if (a->type == VAR_DOUBLE) *(double *)a->data = *(double *)b->data;
-                else if (a->type == VAR_MAP) a->data = map_table_clone(b->data);
-                else if (a->type == VAR_ARRAY) a->data = array_clone(b->data);
+                else if (a->type == VAR_MAP) a->data = map_table_clone(env, b->data);
+                else if (a->type == VAR_ARRAY) a->data = array_clone(env, b->data);
                 else memcpy(a->data, b->data, b->data_size);
                 // it's done :)
                 return;
             }
             else
             {
-                if (a->type == VAR_DOUBLE) chfree(pool_of_doubles, a->data);
-                else if (a->type == VAR_MAP) map_table_delete(a->data);
-                else if (a->type == VAR_ARRAY) array_delete(a->data);
+                if (a->type == VAR_DOUBLE) chfree(env->pool_of_doubles, a->data);
+                else if (a->type == VAR_MAP) map_table_delete(env, a->data);
+                else if (a->type == VAR_ARRAY) array_delete(env, a->data);
                 else free(a->data);
 
-                if (b->type == VAR_MAP) a->data = map_table_clone(b->data);
-                else if (b->type == VAR_ARRAY) a->data = array_clone(b->data);
+                if (b->type == VAR_MAP) a->data = map_table_clone(env, b->data);
+                else if (b->type == VAR_ARRAY) a->data = array_clone(env, b->data);
                 else
                 {
                     a->data = malloc(b->data_size);
@@ -50,11 +53,11 @@ void op_copy(var *a, var *b)
         {
             if (b->type == VAR_DOUBLE)
             {
-                a->data = challoc(pool_of_doubles);
+                a->data = challoc(env->pool_of_doubles);
                 *(double *)a->data = *(double *)b->data;
             }
-            else if (b->type == VAR_MAP) a->data = map_table_clone(b->data);
-            else if (b->type == VAR_ARRAY) a->data = array_clone(b->data);
+            else if (b->type == VAR_MAP) a->data = map_table_clone(env, b->data);
+            else if (b->type == VAR_ARRAY) a->data = array_clone(env, b->data);
             else
             {
                 a->data = malloc(b->data_size);
@@ -68,7 +71,7 @@ void op_copy(var *a, var *b)
     a->ref = b->ref;
 }
 
-void op_add(var *a, var *b)
+void op_add(bombyx_env_t *env, var *a, var *b)
 {
     var r = {0};
 
@@ -79,7 +82,7 @@ void op_add(var *a, var *b)
         memcpy(r.data, a->data, a->data_size - 1);
         memcpy(r.data + a->data_size - 1, b->data, b->data_size);   // copy together with EOS
 
-        var_unset(a);
+        var_unset(env, a);
         a->data = malloc(r.data_size);
         strcpy(a->data, r.data);
         a->data_size = r.data_size;
@@ -103,7 +106,7 @@ void op_add(var *a, var *b)
         *((char *) (r.data + r.data_size - 1)) = '\0';
 
         // realloc
-        var_unset(a);
+        var_unset(env, a);
         a->data = malloc(r.data_size);
         memcpy(a->data, r.data, r.data_size);
         a->data_size = r.data_size;
@@ -123,7 +126,7 @@ void op_add(var *a, var *b)
         memcpy(r.data + len, b->data, b->data_size);
 
         // realloc
-        var_unset(a);
+        var_unset(env, a);
         a->data = malloc(r.data_size);
         memcpy(a->data, r.data, r.data_size);
         a->type = VAR_STRING;
@@ -133,13 +136,13 @@ void op_add(var *a, var *b)
     }
     else
     {
-        larva_error("Operator '+' is not defined for given operands.");
+        larva_error(env, "Operator '+' is not defined for given operands.");
     }
 
     if (r.data) free(r.data);
 }
 
-void op_subtract(var *a, var *b)
+void op_subtract(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
@@ -147,11 +150,11 @@ void op_subtract(var *a, var *b)
     }
     else
     {
-        larva_error("Operator '-' is not defined for given operands.");
+        larva_error(env, "Operator '-' is not defined for given operands.");
     }
 }
 
-void op_multiply(var *a, var *b)
+void op_multiply(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
@@ -159,11 +162,11 @@ void op_multiply(var *a, var *b)
     }
     else
     {
-        larva_error("Operator '*' is not defined for given operands.");
+        larva_error(env, "Operator '*' is not defined for given operands.");
     }
 }
 
-void op_divide(var *a, var *b)
+void op_divide(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
@@ -171,11 +174,11 @@ void op_divide(var *a, var *b)
     }
     else
     {
-        larva_error("Operator '/' is not defined for given operands.");
+        larva_error(env, "Operator '/' is not defined for given operands.");
     }
 }
 
-void op_unary_minus(var *a)
+void op_unary_minus(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
@@ -205,14 +208,14 @@ void op_unary_minus(var *a)
     }
     else
     {
-        larva_error("Unary minus operator is not defined for the given operand.");
+        larva_error(env, "Unary minus operator is not defined for the given operand.");
     }
 }
 
 /*
     Logical negation
 */
-void op_invert(var *a)
+void op_invert(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
@@ -220,11 +223,11 @@ void op_invert(var *a)
     }
     else
     {
-        larva_error("Inversion operator is not defined for the given operand.");
+        larva_error(env, "Inversion operator is not defined for the given operand.");
     }
 }
 
-void op_increment(var *a)
+void op_increment(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
@@ -232,13 +235,13 @@ void op_increment(var *a)
     }
     else
     {
-        larva_error("Operator '++' is not defined for the given operand type.");
+        larva_error(env, "Operator '++' is not defined for the given operand type.");
     }
 
-    if (a->ref) op_copy(&((var_t *)a->ref)->v, a);
+    if (a->ref) op_copy(env, &((var_t *)a->ref)->v, a);
 }
 
-void op_decrement(var *a)
+void op_decrement(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE)
     {
@@ -246,10 +249,10 @@ void op_decrement(var *a)
     }
     else
     {
-        larva_error("Operator '--' is not defined for the given operand type.");
+        larva_error(env, "Operator '--' is not defined for the given operand type.");
     }
 
-    if (a->ref) op_copy(&((var_t *)a->ref)->v, a);
+    if (a->ref) op_copy(env, &((var_t *)a->ref)->v, a);
 }
 
 void op_swap(var *a, var *b)
@@ -259,23 +262,23 @@ void op_swap(var *a, var *b)
     *b = t;
 }
 
-void op_and(var *a, var *b)
+void op_and(bombyx_env_t *env, var *a, var *b)
 {
     // TODO: implement
 }
 
-void op_or(var *a, var *b)
+void op_or(bombyx_env_t *env, var *a, var *b)
 {
     // TODO: implement
 }
 
-BYTE var_is_true(var *a)
+BYTE var_is_true(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE) return *(double *)a->data != 0;
     else if (a->type == VAR_STRING) return a->data_size > 1;
     else
     {
-        larva_error("Comparison operator is not defined for the given operand type.");
+        larva_error(env, "Comparison operator is not defined for the given operand type.");
     }
     return 0;
 }
@@ -283,55 +286,55 @@ BYTE var_is_true(var *a)
 /*
     '1' is 'equal'
 */
-BYTE var_cmp(var *a, var *b)
+BYTE var_cmp(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return memcmp(a->data, b->data, sizeof(double)) ? 0 : 1;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data);
     else
     {
-        larva_error("Comparison operator is not defined for the given operand type.");
+        larva_error(env, "Comparison operator is not defined for the given operand type.");
     }
     return 0;
 }
 
-BYTE var_is_more(var *a, var *b)
+BYTE var_is_more(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data > *(double *)b->data;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
     {
-        larva_error("Operator '>' is not defined for the given operand type.");
+        larva_error(env, "Operator '>' is not defined for the given operand type.");
     }
     return 0;
 }
 
-BYTE var_is_less(var *a, var *b)
+BYTE var_is_less(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data < *(double *)b->data;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
     {
-        larva_error("Operator '<' is not defined for the given operand type.");
+        larva_error(env, "Operator '<' is not defined for the given operand type.");
     }
     return 0;
 }
 
-BYTE var_is_more_equal(var *a, var *b)
+BYTE var_is_more_equal(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data >= *(double *)b->data;
     else
     {
-        larva_error("Operator '>=' is defined for numbers only.");
+        larva_error(env, "Operator '>=' is defined for numbers only.");
     }
     return 0;
 }
 
-BYTE var_is_less_equal(var *a, var *b)
+BYTE var_is_less_equal(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data <= *(double *)b->data;
     else
     {
-        larva_error("Operator '<=' is defined for numbers only.");
+        larva_error(env, "Operator '<=' is defined for numbers only.");
     }
     return 0;
 }

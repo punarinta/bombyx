@@ -1,48 +1,51 @@
-#include "../common.h"
+#include "common.h"
 #include "larva.h"
 #include "var.h"
+#include "var_2.h"
+#include "cocoon_2.h"
 #include "block.h"
 #include "sys.h"
 #include "bytecode.h"
+#include "expression.h"
 
 /**
  *  Sets up the processor
  */
-void larva_init(char *incoming_code, size_t len)
+void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
 {
-    blocks       = block_table_create(MIN_BLOCKS);
-    vars         = var_table_create(MIN_VARIABLES);
-    cocoons      = cocoon_table_create(MIN_COCOONS);
+    env->blocks       = block_table_create(MIN_BLOCKS);
+    env->vars         = var_table_create(MIN_VARIABLES);
+    env->cocoons      = cocoon_table_create(MIN_COCOONS);
 
-    bc_init();
+    bc_init(env);
 
-    code_pos = 0;
+    env->code_pos = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
 
     // strip da shit out
-    code = larva_chew(incoming_code, len, &code_length);
+    env->code = larva_chew(env, incoming_code, len, &env->code_length);
 
-    while (code_pos < code_length)
+    while (env->code_pos < env->code_length)
     {
-        size_t line_start = code_pos;
+        size_t line_start = env->code_pos;
 
-        if (line_start && code[line_start - 1] != 13)
+        if (line_start && env->code[line_start - 1] != 13)
         {
             // just skip such cases for now
-            ++code_pos;
+            ++env->code_pos;
         }
 
-        larva_read_token(token);
+        larva_read_token(env, token);
 
         if (!memcmp(token, "include\0", 8))
         {
-            larva_read_string_token(token);
+            larva_read_string_token(env, token);
 
             FILE *fp = fopen(token, "rt");
             if (!fp)
             {
                 fprintf(stderr, "Cannot include file '%s'.", token);
-                larva_error(0);
+                larva_error(env, 0);
             }
 
             fseek(fp, 0L, SEEK_END);
@@ -54,26 +57,26 @@ void larva_init(char *incoming_code, size_t len)
             // included files do not contain trailing zeroes
 
             size_t included_size;
-            source = larva_chew(source, file_len, &included_size);
+            source = larva_chew(env, source, file_len, &included_size);
 
             // now 'source' contains cleaned code from included file
             // we insert this code into code_pos and increase code_length on its length
 
-            code = realloc(code, code_length + included_size - (code_pos - line_start));
+            env->code = realloc(env->code, env->code_length + included_size - (env->code_pos - line_start));
 
-            if (!code)
+            if (!env->code)
             {
-                larva_error("Your system has been hijacked by alohasnackbars.");
+                larva_error(env, "Your system has been hijacked by alohasnackbars.");
             }
 
             // move the unprocessed code
             // thus the trailing zero will be moved to the very end
-            memmove(code + line_start + included_size, code + code_pos, code_length - code_pos);
+            memmove(env->code + line_start + included_size, env->code + env->code_pos, env->code_length - env->code_pos);
 
             // move the included source
-            memmove(code + line_start, source, included_size);
+            memmove(env->code + line_start, source, included_size);
 
-            code_length += (included_size - (code_pos - line_start));
+            env->code_length += (included_size - (env->code_pos - line_start));
 
             // temporary
             free(source);
@@ -82,15 +85,15 @@ void larva_init(char *incoming_code, size_t len)
         }
         else if (!memcmp(token, "use\0", 4))
         {
-            larva_read_token(token);
-            cocoon_t *cocoon = cocoon_add(cocoons, token);
+            larva_read_token(env, token);
+            cocoon_t *cocoon = cocoon_add(env, env->cocoons, token);
         }
 
-        ++code_pos;
+        ++env->code_pos;
     }
 }
 
-char *larva_chew(char *incoming_code, size_t len, size_t *new_len)
+char *larva_chew(bombyx_env_t *env, char *incoming_code, size_t len, size_t *new_len)
 {
     BYTE quotes_on = 0;
     char *new_code = malloc(len + 1);
@@ -134,20 +137,20 @@ char *larva_chew(char *incoming_code, size_t len, size_t *new_len)
 /**
  *  Processes code buffer
  */
-void larva_digest()
+void larva_digest(bombyx_env_t *env)
 {
-    code_pos = 0;
+    env->code_pos = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
 
-    while (code[code_pos])
+    while (env->code[env->code_pos])
     {
-        size_t line_start = code_pos;
-        larva_read_token(token);
+        size_t line_start = env->code_pos;
+        larva_read_token(env, token);
 
         // start with the most often operator
         if (!memcmp(token, "}\0", 2))
         {
-            bc_add_cmd(BCO_BLOCK_END);
+            bc_add_cmd(env, BCO_BLOCK_END);
         }
         else if (!memcmp(token, "var\0", 4) || !memcmp(token, "param\0", 6))
         {
@@ -156,7 +159,7 @@ void larva_digest()
 
             re_read_var:
 
-            larva_read_token(token);
+            larva_read_token(env, token);
 
             if (   !memcmp(token, "if\0", 3)
                 || !memcmp(token, "else\0", 5)
@@ -168,245 +171,235 @@ void larva_digest()
             )
             {
                 fprintf(stderr, "Token '%s' is reserved and cannot be used as a variable name.", token);
-                larva_error(0);
+                larva_error(env, 0);
             }
 
             // skip spaces
-            while (code[code_pos] == ' ') ++code_pos;
+            while (env->code[env->code_pos] == ' ') ++env->code_pos;
 
             // variable is just initialized, but not defined
-            if (code[code_pos] == '\n' || !code[code_pos])
+            if (env->code[env->code_pos] == '\n' || !env->code[env->code_pos])
             {
-                bc_add_cmd(is_param ? BCO_PARAM : BCO_VAR);
-                bc_add_token(token);
+                bc_add_cmd(env, is_param ? BCO_PARAM : BCO_VAR);
+                bc_add_token(env, token);
                 continue;
             }
 
-            if (code[code_pos] == ',')
+            if (env->code[env->code_pos] == ',')
             {
-                bc_add_cmd(is_param ? BCO_PARAM : BCO_VAR);
-                bc_add_token(token);
-                ++code_pos;
+                bc_add_cmd(env, is_param ? BCO_PARAM : BCO_VAR);
+                bc_add_token(env, token);
+                ++env->code_pos;
                 goto re_read_var;
             }
 
-            if (code[code_pos] != '=')
+            if (env->code[env->code_pos] != '=')
             {
-                fprintf(stderr, "Operator '=' expected, found '%c' '%s'", code[code_pos], token);
-                larva_error(0);
+                fprintf(stderr, "Operator '=' expected, found '%c' '%s'", env->code[env->code_pos], token);
+                larva_error(env, 0);
             }
 
-            ++code_pos;
+            ++env->code_pos;
 
             // skip spaces
-            while (code[code_pos] == ' ') ++code_pos;
+            while (env->code[env->code_pos] == ' ') ++env->code_pos;
 
-            if (code[code_pos] == '{' || code[code_pos] == '[')
+            if (env->code[env->code_pos] == '{' || env->code[env->code_pos] == '[')
             {
                 // This is madness!
                 // Madness? No. This. Is. JSON!
 
-                size_t json_string_start = code_pos;
-                while (code[code_pos] && code[code_pos] != '\n' && code[code_pos] != '\r')
+                size_t json_string_start = env->code_pos;
+                while (env->code[env->code_pos] && env->code[env->code_pos] != '\n' && env->code[env->code_pos] != '\r')
                 {
-                    ++code_pos;
+                    ++env->code_pos;
                 }
 
-                char *json_string = malloc(code_pos - json_string_start + 1);
-                memcpy(json_string, code + json_string_start, code_pos - json_string_start);
-                json_string[code_pos - json_string_start] = 0;
+                char *json_string = malloc(env->code_pos - json_string_start + 1);
+                memcpy(json_string, env->code + json_string_start, env->code_pos - json_string_start);
+                json_string[env->code_pos - json_string_start] = 0;
 
-                bc_add_cmd(BCO_FROM_JSON);
-                bc_add_string(json_string);
+                bc_add_cmd(env, BCO_FROM_JSON);
+                bc_add_string(env, json_string);
 
                 free(json_string);
 
-                bc_add_cmd(BCO_VARX);
-                bc_add_token(token);
+                bc_add_cmd(env, BCO_VARX);
+                bc_add_token(env, token);
             }
             else
             {
                 parse();
 
-                bc_add_cmd(is_param ? BCO_PARAMX : BCO_VARX);
-                bc_add_token(token);
+                bc_add_cmd(env, is_param ? BCO_PARAMX : BCO_VARX);
+                bc_add_token(env, token);
             }
 
             // we have one more var to init
-            if (code[code_pos] == ',')
+            if (env->code[env->code_pos] == ',')
             {
-                ++code_pos;
+                ++env->code_pos;
                 goto re_read_var;
             }
         }
         else if (!memcmp(token, "return\0", 7))
         {
-            bc_add_cmd(BCO_CLEAR_STACK);
+            bc_add_cmd(env, BCO_CLEAR_STACK);
 
             // parse until newline
-            parse();
-            bc_add_cmd(BCO_RETURN);
+            parse(env);
+            bc_add_cmd(env, BCO_RETURN);
         }
         else if (!memcmp(token, "block\0", 6))
         {
-            larva_read_token(token);
-            bc_add_cmd(BCO_BLOCK_DEF);
-            bc_add_token(token);
+            larva_read_token(env, token);
+            bc_add_cmd(env, BCO_BLOCK_DEF);
+            bc_add_token(env, token);
         }
         else if (!memcmp(token, "if\0", 3))
         {
-            unsigned long expr_start = code_pos, level = 0;
+            unsigned long expr_start = env->code_pos, level = 0;
 
             // find expression
-            while (code[code_pos])
+            while (env->code[env->code_pos])
             {
-                if (code[code_pos] == '(') ++level;
-                else if (code[code_pos] == ')')
+                if (env->code[env->code_pos] == '(') ++level;
+                else if (env->code[env->code_pos] == ')')
                 {
                     --level;
-                    if (level < 1) { ++code_pos; break; }
+                    if (level < 1) { ++env->code_pos; break; }
                 }
-                ++code_pos;
+                ++env->code_pos;
             }
 
-            size_t diff = code_pos - expr_start;
+            size_t diff = env->code_pos - expr_start;
             char *expr = malloc(diff + 1);
-            memcpy(expr, code + expr_start, diff + 1);
+            memcpy(expr, env->code + expr_start, diff + 1);
             expr[diff] = '\0';
 
-            bc_add_cmd(BCO_IF);
-            parse_expression(expr, diff);
-            bc_add_cmd(BCO_CEIT);
+            bc_add_cmd(env, BCO_IF);
+            parse_expression(env, expr, diff);
+            bc_add_cmd(env, BCO_CEIT);
             free(expr);
         }
         else if (!memcmp(token, "while\0", 6))
         {
-            unsigned long expr_start = code_pos, level = 0;
+            unsigned long expr_start = env->code_pos, level = 0;
 
             // find expression
-            while (code[code_pos])
+            while (env->code[env->code_pos])
             {
-                if (code[code_pos] == '(') ++level;
-                else if (code[code_pos] == ')')
+                if (env->code[env->code_pos] == '(') ++level;
+                else if (env->code[env->code_pos] == ')')
                 {
                     --level;
-                    if (level < 1) { ++code_pos; break; }
+                    if (level < 1) { ++env->code_pos; break; }
                 }
-                ++code_pos;
+                ++env->code_pos;
             }
 
-            size_t diff = code_pos - expr_start;
+            size_t diff = env->code_pos - expr_start;
             char *expr = malloc(diff + 1);
-            memcpy(expr, code + expr_start, diff + 1);
+            memcpy(expr, env->code + expr_start, diff + 1);
             expr[diff] = '\0';
 
-            bc_add_cmd(BCO_WHILE);
-            parse_expression(expr, diff);
-            bc_add_cmd(BCO_CEIT);
+            bc_add_cmd(env, BCO_WHILE);
+            parse_expression(env, expr, diff);
+            bc_add_cmd(env, BCO_CEIT);
             free(expr);
         }
         else if (!memcmp(token, "else\0", 5))
         {
-            bc_add_cmd(BCO_ELSE);
+            bc_add_cmd(env, BCO_ELSE);
         }
         else if (!memcmp(token, "{\0", 2))
         {
-            bc_add_cmd(BCO_BLOCK_START);
+            bc_add_cmd(env, BCO_BLOCK_START);
         }
         else if (!memcmp(token, "use\0", 4))
         {
             // TODO(?): cut out uses within chew()
 
             // just skip
-            larva_read_token(token);
+            larva_read_token(env, token);
         }
         else
         {
-            code_pos = line_start;
-            parse();
+            env->code_pos = line_start;
+            parse(env);
         }
 
-        ++code_pos;
+        ++env->code_pos;
     }
 }
 
-void larva_read_token(char *token)
+void larva_read_token(bombyx_env_t *env, char *token)
 {
-    while (isspace(code[code_pos])) ++code_pos;
+    while (isspace(env->code[env->code_pos])) ++env->code_pos;
 
-    size_t start = code_pos, token_pos = 0;
+    size_t token_pos = 0, start = env->code_pos;
 
     // read until newline
-    while (++code_pos < code_length)
+    while (++env->code_pos < env->code_length)
     {
         if (++token_pos == PARSER_MAX_TOKEN_SIZE)
         {
-            larva_error("Token name is too long.");
+            larva_error(env, "Token name is too long.");
         }
 
         // either it's a function call or just a command
-        if (code[code_pos] == '(' || code[code_pos] == ',' || code[code_pos] == '=' || isspace(code[code_pos])) break;
+        if (env->code[env->code_pos] == '(' || env->code[env->code_pos] == ',' || env->code[env->code_pos] == '=' || isspace(env->code[env->code_pos])) break;
     }
 
-    memcpy(token, code + start, token_pos);
+    memcpy(token, env->code + start, token_pos);
 
     token[token_pos] = '\0';
 }
 
-void larva_read_string_token(char *token)
+void larva_read_string_token(bombyx_env_t *env, char *token)
 {
-    while (isspace(code[code_pos])) ++code_pos;
+    while (isspace(env->code[env->code_pos])) ++env->code_pos;
 
-    if (code[code_pos] != '\'')
-    {
-        larva_error("String token should be placed into quotes.");
-    }
+    if (env->code[env->code_pos] != '\'') larva_error(env, "String token should be placed into quotes.");
 
-    size_t start = ++code_pos, token_pos = 0;
+    size_t token_pos = 0, start = ++env->code_pos;
 
     // read until newline
-    while (++code_pos < code_length)
+    while (++env->code_pos < env->code_length)
     {
-        if (++token_pos == PARSER_MAX_TOKEN_SIZE)
-        {
-            larva_error("Token name is too long.");
-        }
-
-        if (code[code_pos] == '\'') break;
-        if (code[code_pos] == 13)
-        {
-            larva_error("Multiline string tokens are not allowed");
-        }
+        if (++token_pos == PARSER_MAX_TOKEN_SIZE) larva_error(env, "Token name is too long.");
+        if (env->code[env->code_pos] == '\'') break;
+        if (env->code[env->code_pos] == 13) larva_error(env, "Multiline string tokens are not allowed");
     }
-    ++code_pos;
+    ++env->code_pos;
 
-    memcpy(token, code + start, token_pos);
+    memcpy(token, env->code + start, token_pos);
 
     token[token_pos] = '\0';
 }
 
-void larva_skip_block()
+void larva_skip_block(bombyx_env_t *env)
 {
     unsigned int level = 0;
-    while (code[code_pos])
+    while (env->code[env->code_pos])
     {
-        if (code[code_pos] == '{') ++level;
-        else if (code[code_pos] == '}' && --level < 1)
+        if (env->code[env->code_pos] == '{') ++level;
+        else if (env->code[env->code_pos] == '}' && --level < 1)
         {
-            ++code_pos;
+            ++env->code_pos;
             return;
         }
-        ++code_pos;
+        ++env->code_pos;
     }
 }
 
-void larva_error(char *err)
+void larva_error(bombyx_env_t *env, char *err)
 {
     unsigned int line = 1, sym = 0, i = 0;
 
-    if (err) web_puts(err);
+    if (err) web_puts(env, err);
 
-    while (code[i] != '\0')
+ /*   while (code[i] != '\0')
     {
         ++i;
         ++sym;
@@ -417,45 +410,45 @@ void larva_error(char *err)
         }
 
         if (i == code_pos) break;
-    }
+    }*/
 
-    web_printf("\nError on line %d, sym %d.\n\n", line, sym);
+    web_printf(env, "\nError on line %d, sym %d.\n\n", line, sym);
 
-    gl_error = 1;
-    longjmp(error_exit, 1);
+    env->gl_error = 1;
+    longjmp(env->error_exit, 1);
 }
 
 /**
  *  Call to stop execution
  */
-void larva_stop()
+void larva_stop(bombyx_env_t *env)
 {
     if (verbose)
     {
         puts("================= DUMP ===============");
-        larva_poo();
+        larva_poo(env);
         puts("=============== BYTECODE =============");
-        printf("Ops count = %u.\n", bc_ops);
-        printf("Code size = %u byte(s).\n", bc_length);
-        printf("Stack size = %u.\n", bc_stack_size);
-    //    bc_poo();
+        printf("Ops count = %u.\n", env->bc_ops);
+        printf("Code size = %u byte(s).\n", env->bc_length);
+        printf("Stack size = %u.\n", env->bc_stack_size);
+    //    bc_poo(env);
         puts("======================================");
     }
 
-    var_table_delete(vars);
-    block_table_delete(blocks);
-    cocoon_table_delete(cocoons);
+    var_table_delete(env, env->vars);
+    block_table_delete(env->blocks);
+    cocoon_table_delete(env->cocoons);
 
-    if (code) free(code);
+    if (env->code) free(env->code);
 
-    bc_free();
+    bc_free(env);
 
 #ifdef BOMBYX_MCHECK
     muntrace();
 #endif
 }
 
-void larva_poo()
+void larva_poo(bombyx_env_t *env)
 {
     unsigned int i;
     char types[][10] = {"UNSET", "DOUBLE", "STRING", "-reserved-", "BLOCK", "ARRAY", "MAP", "CUSTOM"};
@@ -464,20 +457,20 @@ void larva_poo()
     var_t *v_list;
     block_t *b_list;
 
-    for (i = 0; i < vars->size; ++i)
+    for (i = 0; i < env->vars->size; ++i)
     {
-        for (v_list = vars->table[i]; v_list != NULL; v_list = v_list->next)
+        for (v_list = env->vars->table[i]; v_list != NULL; v_list = v_list->next)
         {
             fprintf(stdout, "'%s' [%s of size %u] = ", v_list->v.name, types[v_list->v.type], v_list->v.data_size);
 
-            var_echo(&v_list->v);
+            var_echo(env, &v_list->v);
             putc('\n', stdout);
         }
     }
 
-    for (i = 0; i < blocks->size; ++i)
+    for (i = 0; i < env->blocks->size; ++i)
     {
-        for (b_list = blocks->table[i]; b_list != NULL; b_list = b_list->next)
+        for (b_list = env->blocks->table[i]; b_list != NULL; b_list = b_list->next)
         {
             if (b_list->pos) fprintf(stdout, "Block '%s' at pos %u\n", b_list->name, b_list->pos);
         }

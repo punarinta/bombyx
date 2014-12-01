@@ -4,38 +4,38 @@
 #include "sys.h"
 #include "larva.h"
 
-void parse()
+void parse(bombyx_env_t *env)
 {
     BYTE quote_opened = 0;
     BYTE br_level = 0;
     char *expression;
     size_t expression_size;
-    size_t expression_start = code_pos;
+    size_t expression_start = env->code_pos;
 
     // find expression end, note that newline does don't count if it's inside a string
-    while (code_pos < code_length)
+    while (env->code_pos < env->code_length)
     {
-        if (!code[code_pos]) break;
+        if (!env->code[env->code_pos]) break;
 
         if (!quote_opened)
         {
-            if (code[code_pos] == '\n') break;
-            else if (code[code_pos] == '(') ++br_level;
-            else if (code[code_pos] == ')') --br_level;
-            else if (code[code_pos] == ',' && !br_level) break;
+            if (env->code[env->code_pos] == '\n') break;
+            else if (env->code[env->code_pos] == '(') ++br_level;
+            else if (env->code[env->code_pos] == ')') --br_level;
+            else if (env->code[env->code_pos] == ',' && !br_level) break;
         }
 
-        if (code[code_pos] == '\'') quote_opened = !quote_opened;
+        if (env->code[env->code_pos] == '\'') quote_opened = !quote_opened;
 
-        ++code_pos;
+        ++env->code_pos;
     }
 
-    expression_size = code_pos - expression_start;
+    expression_size = env->code_pos - expression_start;
     expression = malloc(expression_size + 1);
-    memcpy(expression, code + expression_start, expression_size);
+    memcpy(expression, env->code + expression_start, expression_size);
     expression[expression_size] = '\0';
 
-    parse_expression(expression, expression_size);
+    parse_expression(env, expression, expression_size);
     free(expression);
 }
 
@@ -45,7 +45,7 @@ void parse()
         James Gregson (james.gregson@gmail.com)
  ******************************************************/
 
-void parse_expression(const char *expr, size_t size)
+void parse_expression(bombyx_env_t *env, const char *expr, size_t size)
 {
     if (!expr[0]) return;
 
@@ -54,12 +54,13 @@ void parse_expression(const char *expr, size_t size)
     pd.len = ++size;
     pd.pos = 0;
     pd.error = NULL;
+    pd.env = env;
     parser_parse(&pd);
 
     if (pd.error)
     {
         fprintf(stderr, "Failed to parse expression '%s'. ", expr);
-        larva_error((char *)pd.error);
+        larva_error(env, (char *)pd.error);
     }
 
     /*if (verbose)
@@ -79,13 +80,13 @@ void parser_parse(parser_data *pd)
 
     if (pd->pos < pd->len - 1)
     {
-        larva_error("Failed to reach end of input expression, likely malformed input");
+        larva_error(pd->env, "Failed to reach end of input expression, likely malformed input");
     }
 }
 
 void parser_error(parser_data *pd, const char *err)
 {
-	larva_error((char *)err);
+	larva_error(pd->env, (char *)err);
 }
 
 char parser_peek(parser_data *pd)
@@ -143,8 +144,8 @@ void parser_read_double(parser_data *pd)
         while (parser_peek(pd) != c) token[pos++] = parser_eat(pd);
         token[pos] = '\0';
 
-        bc_add_cmd(BCO_AS_STRING);
-        bc_add_string(token);
+        bc_add_cmd(pd->env, BCO_AS_STRING);
+        bc_add_string(pd->env, token);
 
         // the closing quote
         parser_skip(pd);
@@ -188,8 +189,8 @@ void parser_read_double(parser_data *pd)
         if (pos == 0) parser_error(pd, "Failed to read operand");
 
         double d = strtod(token, NULL);
-        bc_add_cmd(BCO_AS_DOUBLE);
-        bc_add_double(d);
+        bc_add_cmd(pd->env, BCO_AS_DOUBLE);
+        bc_add_double(pd->env, d);
     }
 }
 
@@ -284,16 +285,16 @@ void parser_read_builtin(parser_data *pd)
 			if (memcmp(token, "print\0", 6) == 0)
             {
 				parser_read_boolean_or(pd);
-                bc_add_cmd(BCO_PRINT);
+                bc_add_cmd(pd->env, BCO_PRINT);
 			}
 		/*	else if (memcmp(token, "swap\0", 5) == 0)
             {
                 // TODO: add swapping
-            	bc_add_cmd(BCO_SWAP);
+            	bc_add_cmd(pd->env, BCO_SWAP);
 			}*/
 			else if (memcmp(token, "microtime\0", 10) == 0)
             {
-				bc_add_cmd(BCO_MICROTIME);
+				bc_add_cmd(pd->env, BCO_MICROTIME);
 			}
 			else
 			{
@@ -304,12 +305,12 @@ void parser_read_builtin(parser_data *pd)
 				    parser_error(pd, "Max 32 arguments allowed.");
 				}
 
-				if (num_args > 0) bc_add_cmd(BCO_REVERSE_STACK);
+				if (num_args > 0) bc_add_cmd(pd->env, BCO_REVERSE_STACK);
 
 				// insert 1 byte
-                bc_add_cmd((BYTE) num_args);
-				bc_add_cmd(BCO_CALL);
-				bc_add_token(token);
+                bc_add_cmd(pd->env, (BYTE) num_args);
+				bc_add_cmd(pd->env, BCO_CALL);
+				bc_add_token(pd->env, token);
 			}
 
 			// eat closing bracket of function call
@@ -328,8 +329,8 @@ void parser_read_builtin(parser_data *pd)
             else
             {
                 parser_read_expr(pd);
-                bc_add_cmd(BCO_ACCESS);
-                bc_add_token(token);
+                bc_add_cmd(pd->env, BCO_ACCESS);
+                bc_add_token(pd->env, token);
 
                 if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
             }
@@ -366,13 +367,13 @@ void parser_read_builtin(parser_data *pd)
 				    parser_error(pd, "Max 32 arguments allowed.");
 				}
 
-			//	if (num_args > 0) bc_add_cmd(BCO_REVERSE_STACK);
+			//	if (num_args > 0) bc_add_cmd(pd->env, BCO_REVERSE_STACK);
 
 				// insert 1 byte
-				bc_add_cmd(BCO_XCALL);
-				bc_add_token(token);        // library
-				bc_add_token(token2);       // function
-                bc_add_cmd((BYTE) num_args);
+				bc_add_cmd(pd->env, BCO_XCALL);
+				bc_add_token(pd->env, token);        // library
+				bc_add_token(pd->env, token2);       // function
+                bc_add_cmd(pd->env, (BYTE) num_args);
 
                 // eat closing bracket of function call
                 if (parser_eat(pd) != ')') parser_error(pd, "Expected ')' in a function call.");
@@ -386,12 +387,12 @@ void parser_read_builtin(parser_data *pd)
 		{
 		    if (!memcmp(token, "_\0", 2))
 		    {
-                bc_add_cmd(BCO_AS_VOID);
+                bc_add_cmd(pd->env, BCO_AS_VOID);
 		    }
 		    else
 		    {
-                bc_add_cmd(BCO_AS_VAR);
-                bc_add_token(token);
+                bc_add_cmd(pd->env, BCO_AS_VAR);
+                bc_add_token(pd->env, token);
 		    }
 		}
 	}
@@ -445,7 +446,7 @@ void parser_read_unary(parser_data *pd)
 		parser_eat_whitespace(pd);
 		parser_read_paren(pd);
 
-		bc_add_cmd(BCO_INVERT);
+		bc_add_cmd(pd->env, BCO_INVERT);
 	}
 	else if (c == '-')
     {
@@ -454,7 +455,7 @@ void parser_read_unary(parser_data *pd)
 			parser_skip(pd);
 			parser_eat_whitespace(pd);
 			parser_read_term(pd);
-			bc_add_cmd(BCO_DECR);
+			bc_add_cmd(pd->env, BCO_DECR);
     	}
     	else
     	{
@@ -463,7 +464,7 @@ void parser_read_unary(parser_data *pd)
 			parser_skip(pd);
 			parser_eat_whitespace(pd);
 			parser_read_paren(pd);
-			bc_add_cmd(BCO_UNARY_MINUS);
+			bc_add_cmd(pd->env, BCO_UNARY_MINUS);
 		}
 	}
 	else if (c == '+')
@@ -473,7 +474,7 @@ void parser_read_unary(parser_data *pd)
 			parser_skip(pd);
 			parser_eat_whitespace(pd);
 			parser_read_term(pd);
-		    bc_add_cmd(BCO_INCR);
+		    bc_add_cmd(pd->env, BCO_INCR);
     	}
     	else
     	{
@@ -556,12 +557,12 @@ void parser_read_term(parser_data *pd)
 		if (c == '*')
         {
         	parser_read_power(pd);
-			bc_add_cmd(BCO_MUL);
+			bc_add_cmd(pd->env, BCO_MUL);
 		}
 		else if (c == '/')
         {
         	parser_read_power(pd);
-			bc_add_cmd(BCO_DIV);
+			bc_add_cmd(pd->env, BCO_DIV);
 		}
 
 		parser_eat_whitespace(pd);
@@ -584,7 +585,7 @@ void parser_read_expr(parser_data *pd)
 		if (c == '-' && parser_peek(pd) != '-')
 		{
 			parser_read_term(pd);
-			bc_add_cmd(BCO_UNARY_MINUS);
+			bc_add_cmd(pd->env, BCO_UNARY_MINUS);
 		}
 		else parser_read_term(pd);
 	}
@@ -608,13 +609,13 @@ void parser_read_expr(parser_data *pd)
 		if (c == '+')
         {
 			parser_read_term(pd);
-			bc_add_cmd(BCO_ADD);
+			bc_add_cmd(pd->env, BCO_ADD);
 		}
 		else if (c == '-')
         {
         	// reset name for v0
 			parser_read_term(pd);
-			bc_add_cmd(BCO_SUB);
+			bc_add_cmd(pd->env, BCO_SUB);
 		}
 
 		parser_eat_whitespace(pd);
@@ -659,19 +660,19 @@ void parser_read_boolean_comparison(parser_data *pd)
 		// perform the boolean operations
 		if (memcmp(oper, "<\0", 2) == 0)
         {
-			bc_add_cmd(BCO_LESS);
+			bc_add_cmd(pd->env, BCO_LESS);
 		}
 		else if (memcmp(oper, ">\0", 2) == 0)
         {
-			bc_add_cmd(BCO_MORE);
+			bc_add_cmd(pd->env, BCO_MORE);
 		}
 		else if (memcmp(oper, "<=\0", 3) == 0)
         {
-			bc_add_cmd(BCO_LESS_EQ);
+			bc_add_cmd(pd->env, BCO_LESS_EQ);
 		}
 		else if (memcmp(oper, ">=\0", 3) == 0)
         {
-			bc_add_cmd(BCO_MORE_EQ);
+			bc_add_cmd(pd->env, BCO_MORE_EQ);
 		}
 		else
 		{
@@ -729,15 +730,15 @@ void parser_read_boolean_equality(parser_data *pd)
 		// perform the boolean operations
 		if (memcmp(oper, "==\0", 3) == 0)
         {
-			bc_add_cmd(BCO_CMP);
+			bc_add_cmd(pd->env, BCO_CMP);
 		}
 		else if (memcmp(oper, "!=\0", 3) == 0)
         {
-			bc_add_cmd(BCO_CMP_NOT);
+			bc_add_cmd(pd->env, BCO_CMP_NOT);
 		}
 		else if (memcmp(oper, "=\0", 2) == 0)
         {
-            bc_add_cmd(BCO_SET);
+            bc_add_cmd(pd->env, BCO_SET);
 		}
 		else
 		{
@@ -779,7 +780,7 @@ void parser_read_boolean_and(parser_data *pd)
 
 		// perform the operation, returning 1.0 for TRUE and 0.0 for FALSE
 		//var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
-		bc_add_cmd(BCO_AND);
+		bc_add_cmd(pd->env, BCO_AND);
 
         parser_eat_whitespace(pd);
 
@@ -817,7 +818,7 @@ void parser_read_boolean_or(parser_data *pd)
 
 		// perform the 'or' operation
 		//var_set_double(v0, (fabs(var_extract_double(v0)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(var_extract_double(v1)) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1.0 : 0.0);
-		bc_add_cmd(BCO_OR);
+		bc_add_cmd(pd->env, BCO_OR);
 
         parser_eat_whitespace(pd);
 

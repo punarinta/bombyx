@@ -1,5 +1,7 @@
 #include "map.h"
 #include "sys.h"
+#include "var_2.h"
+#include "map_2.h"
 
 map_table_t *map_table_create(int size)
 {
@@ -96,7 +98,7 @@ int map_delete(map_table_t *hashtable, char *str)
     return 0;
 }
 
-void map_table_delete(map_table_t *hashtable)
+void map_table_delete(bombyx_env_t *env, map_table_t *hashtable)
 {
     map_t *list, *temp;
 
@@ -110,7 +112,7 @@ void map_table_delete(map_table_t *hashtable)
             temp = list;
             list = list->next;
             free(temp->name);
-            var_unset(&temp->v);
+            var_unset(env, &temp->v);
             free(temp);
         }
     }
@@ -119,7 +121,7 @@ void map_table_delete(map_table_t *hashtable)
     free(hashtable);
 }
 
-map_table_t *map_table_clone(map_table_t *hashtable)
+map_table_t *map_table_clone(bombyx_env_t *env, map_table_t *hashtable)
 {
     map_t *list;
 
@@ -133,7 +135,7 @@ map_table_t *map_table_clone(map_table_t *hashtable)
         while (list != NULL)
         {
             var v = {0};
-            op_copy(&v, &list->v);
+            op_copy(env, &v, &list->v);
             map_add(new_map, list->name, v);
             list = list->next;
         }

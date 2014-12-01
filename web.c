@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "fcgiapp.h"
-#include "common.h"
+#include "core/common.h"
 #include "core/larva.h"
 
 static int socketId;    // is not written within the thread — safe
@@ -19,6 +19,7 @@ int main(void)
 {
     int i;
     pthread_t id[THREAD_COUNT];
+    verbose = 0;
 
     FCGX_Init();
     umask(0);
@@ -46,9 +47,9 @@ int main(void)
 void *thread(void *a)
 {
     int rc;
-    FCGX_Request request;
+    bombyx_env_t *env = calloc(1, sizeof(bombyx_env_t));
 
-    if (FCGX_InitRequest(&request, socketId, 0) != 0)
+    if (FCGX_InitRequest(&env->request, socketId, 0) != 0)
     {
         printf("Cannot init request\n");
         return NULL;
@@ -57,9 +58,10 @@ void *thread(void *a)
     for (;;)
     {
         static pthread_mutex_t accept_mutex = PTHREAD_MUTEX_INITIALIZER;
+        static pthread_mutex_t setup_mutex  = PTHREAD_MUTEX_INITIALIZER;
 
         pthread_mutex_lock(&accept_mutex);
-        rc = FCGX_Accept_r(&request);
+        rc = FCGX_Accept_r(&env->request);
         pthread_mutex_unlock(&accept_mutex);
 
         if (rc < 0)
@@ -68,26 +70,26 @@ void *thread(void *a)
             break;
         }
 
-        char *uri = FCGX_GetParam("DOCUMENT_URI", request.envp),
-             *query = FCGX_GetParam("QUERY_STRING", request.envp),
-             *cookies = FCGX_GetParam("HTTP_COOKIE", request.envp),
-             *filename = FCGX_GetParam("SCRIPT_FILENAME", request.envp),
-             *method = FCGX_GetParam("REQUEST_METHOD", request.envp);
+        char *uri = FCGX_GetParam("DOCUMENT_URI", env->request.envp),
+             *query = FCGX_GetParam("QUERY_STRING", env->request.envp),
+             *cookies = FCGX_GetParam("HTTP_COOKIE", env->request.envp),
+             *filename = FCGX_GetParam("SCRIPT_FILENAME", env->request.envp),
+             *method = FCGX_GetParam("REQUEST_METHOD", env->request.envp);
 
-        FCGX_PutS("Content-type: text/html\r\n", request.out);
-        FCGX_PutS("X-Powered-By: Bombyx 0.1\r\n", request.out);
-        FCGX_PutS("\r\n", request.out);
+        FCGX_PutS("Content-type: text/html\r\n", env->request.out);
+        FCGX_PutS("X-Powered-By: Bombyx 0.1\r\n", env->request.out);
+        FCGX_PutS("\r\n", env->request.out);
 
-        pRequest = &request;
-        verbose = 0;
-        gl_error = 0;
-        char *source;
+        env->gl_error = 0;
         size_t newLen = 0;
+        char *source;
 
         FILE *fp = fopen(filename, "rt");
 
         if (fp != NULL)
         {
+            pthread_mutex_lock(&setup_mutex);
+
             fseek(fp, 0L, SEEK_END);
             long bufsize = ftell(fp);
             source = malloc(sizeof(char) * (bufsize + 2));
@@ -96,29 +98,29 @@ void *thread(void *a)
             source[newLen++] = '\0';
             fclose(fp);
 
-            getcwd(dir_home, sizeof(dir_home));
+            getcwd(env->dir_home, sizeof(env->dir_home));
             char *dir_leaf_temp = dirname(filename);
-            strcpy(dir_leaf, dir_leaf_temp);
-            chdir(dir_leaf);
+            strcpy(env->dir_leaf, dir_leaf_temp);
+            chdir(env->dir_leaf);
+
+            pthread_mutex_unlock(&setup_mutex);
 
 #ifdef __APPLE__
             free(dir_leaf_temp);
 #endif
 
-            setjmp(error_exit);
+            setjmp(env->error_exit);
 
-            if (gl_error)
+            if (env->gl_error)
             {
-                larva_stop();
+                larva_stop(env);
             }
             else
             {
-                larva_init(source, newLen);
-                larva_digest();
-
-                larva_silk(&request);
-
-                larva_stop();
+                larva_init(env, source, newLen);
+                larva_digest(env);
+                larva_silk(env);
+                larva_stop(env);
             }
         }
         else
@@ -128,8 +130,10 @@ void *thread(void *a)
 
         end_request:;
 
-        FCGX_Finish_r(&request);
+        FCGX_Finish_r(&env->request);
     }
+
+    if (env) free(env);
 
     return NULL;
 }

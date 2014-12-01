@@ -1,7 +1,8 @@
 #include <unistd.h>
-#include "../common.h"
+#include "common.h"
 #include "sys.h"
 #include "larva.h"
+#include "cocoon_2.h"
 
 cocoon_table_t *cocoon_table_create(int size)
 {
@@ -49,7 +50,7 @@ cocoon_t *cocoon_lookup(cocoon_table_t *hashtable, char *str)
     return NULL;
 }
 
-cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *cocoon_name)
+cocoon_t *cocoon_add(bombyx_env_t *env, cocoon_table_t *hashtable, char *cocoon_name)
 {
     cocoon_t *new_list;
     cocoon_t *current_list;
@@ -67,7 +68,7 @@ cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *cocoon_name)
 
     // TODO: get red of these allocations
     char *filename = malloc(4096);
-    strcpy(filename, dir_home);
+    strcpy(filename, env->dir_home);
     strcat(filename, "/cocoons/");
     strcat(filename, cocoon_name);
     strcat(filename, ".ccn");
@@ -76,13 +77,14 @@ cocoon_t *cocoon_add(cocoon_table_t *hashtable, char *cocoon_name)
 
     if (!lib_handle)
     {
-        web_printf("Cannot load cocoon '%s'.%s%s%s", filename, WEB_NEWLINE, dlerror(), WEB_NEWLINE);
-        free(filename);
-        larva_error(0);
+    //    web_printf("Cannot load cocoon '%s'.%s%s%s", filename, WEB_NEWLINE, dlerror(), WEB_NEWLINE);
+    //    free(filename);
+    //    larva_error(0);
+    return NULL;
     }
 
     free(filename);
-    chdir(dir_home);
+    chdir(env->dir_home);
 
     /* Insert into list */
     new_list->name = strdup(cocoon_name);
