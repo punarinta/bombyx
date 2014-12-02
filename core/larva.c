@@ -393,24 +393,32 @@ void larva_skip_block(bombyx_env_t *env)
     }
 }
 
-void larva_error(bombyx_env_t *env, char *err)
+void larva_error(bombyx_env_t *env, char *err, ...)
 {
     unsigned int line = 1, sym = 0, i = 0;
 
-    if (err) web_puts(env, err);
+    if (err)
+    {
+        char error_text[256];
+        va_list args;
+        va_start(args, err);
+        vsprintf(error_text, err, args);
+        web_puts(env, error_text);
+        va_end(args);
+    }
 
- /*   while (code[i] != '\0')
+    while (env->code[i] != '\0')
     {
         ++i;
         ++sym;
-        if (code[i] == 10 || code[i] == 13)
+        if (env->code[i] == 10 || env->code[i] == 13)
         {
             ++line;
             sym = 0;
         }
 
-        if (i == code_pos) break;
-    }*/
+        if (i == env->code_pos) break;
+    }
 
     web_printf(env, "\nError on line %d, sym %d.\n\n", line, sym);
 

@@ -13,10 +13,15 @@
 #include "bytecode.h"
 #include "../vendor/jansson.h"
 
-void stack_push(bombyx_env_t *env, var v)
+inline void stack_push(bombyx_env_t *env, var v)
 {
     v.level = env->gl_level;
     env->bc_stack[env->bc_stack_size++] = v;
+}
+
+inline var stack_pop(bombyx_env_t *env)
+{
+    return env->bc_stack[--env->bc_stack_size];
 }
 
 /*
@@ -107,8 +112,7 @@ void larva_silk(bombyx_env_t *env)
             vt = var_lookup(env->vars, token);
             if (!vt)
             {
-                sprintf(env->temp_error, "Unknown variable '%s'.", token);
-                larva_error(env, env->temp_error);
+                larva_error(env, "Unknown variable '%s'.", token);
             }
             env->bc_stack[env->bc_stack_size++] = var_as_var_t(env, vt);
             env->bc_pos += size;
@@ -116,7 +120,7 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_SET:
             debug_verbose_puts("BCO_SET");
-            v2 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
             if (!env->bc_stack[env->bc_stack_size - 1].ref)
             {
             	larva_error(env, "Left part of an equation should be a variable.");
@@ -183,7 +187,7 @@ void larva_silk(bombyx_env_t *env)
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
 
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v1 = stack_pop(env);
 
             // TODO: parse APath and access JSON recursively
 
@@ -227,8 +231,7 @@ void larva_silk(bombyx_env_t *env)
             block_t *this_block = block_lookup(env->blocks, token);
             if (!this_block)
             {
-                sprintf(env->temp_error, "Unknown function '%s'.", token);
-                larva_error(env, env->temp_error);
+                larva_error(env, "Unknown function '%s'.", token);
             }
             else
             {
@@ -262,8 +265,7 @@ void larva_silk(bombyx_env_t *env)
             cocoon_t *cocoon = cocoon_lookup(env->cocoons, token);
             if (!cocoon)
             {
-                sprintf(env->temp_error, "Cocoon '%s' was not loaded.", token);
-                larva_error(env, env->temp_error);
+                larva_error(env, "Cocoon '%s' was not loaded.", token);
             }
             else
             {
@@ -301,8 +303,7 @@ void larva_silk(bombyx_env_t *env)
 
                 if (v1.type == VAR_ERROR)
                 {
-                    sprintf(env->temp_error, "%s(): %s", token2, (char *) v1.data);
-                    larva_error(env, env->temp_error);
+                    larva_error(env, "%s(): %s", token2, (char *) v1.data);
                 }
 
                 stack_push(env, v1);
@@ -419,7 +420,7 @@ void larva_silk(bombyx_env_t *env)
             if (env->bc_stack_size >= 1)
             {
                 // stack has got something during the RETURN parsing
-                v1 = env->bc_stack[--env->bc_stack_size];
+                v1 = stack_pop(env);
 
                 // just in case, as stack can have more than 1 atom
                 stack_clear(env);
@@ -466,7 +467,7 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_CEIT:
             debug_verbose_puts("BCO_CEIT");
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v1 = stack_pop(env);
 
             if (!var_is_true(env, &v1))
             {
@@ -478,8 +479,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_CMP:
             debug_verbose_puts("BCO_CMP");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             env->bc_stack[env->bc_stack_size++] = var_as_double(env, var_cmp(env, &v1, &v2));
             var_unset(env, &v1);
             var_unset(env, &v2);
@@ -487,8 +488,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_CMP_NOT:
             debug_verbose_puts("BCO_CMP_NOT");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             env->bc_stack[env->bc_stack_size++] = var_as_double(env, !var_cmp(env, &v1, &v2));
             var_unset(env, &v1);
             var_unset(env, &v2);
@@ -496,8 +497,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_MORE:
             debug_verbose_puts("BCO_MORE");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             env->bc_stack[env->bc_stack_size++] = var_as_double(env, var_is_more(env, &v1, &v2));
             var_unset(env, &v1);
             var_unset(env, &v2);
@@ -505,8 +506,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_MORE_EQ:
             debug_verbose_puts("BCO_MORE_EQ");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             env->bc_stack[env->bc_stack_size++] = var_as_double(env, var_is_more_equal(env, &v1, &v2));
             var_unset(env, &v1);
             var_unset(env, &v2);
@@ -514,8 +515,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_LESS:
             debug_verbose_puts("BCO_LESS");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             env->bc_stack[env->bc_stack_size++] = var_as_double(env, var_is_less(env, &v1, &v2));
             var_unset(env, &v1);
             var_unset(env, &v2);
@@ -523,8 +524,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_LESS_EQ:
             debug_verbose_puts("BCO_LESS_EQ");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             env->bc_stack[env->bc_stack_size++] = var_as_double(env, var_is_less_equal(env, &v1, &v2));
             var_unset(env, &v1);
             var_unset(env, &v2);
@@ -532,8 +533,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_AND:
             debug_verbose_puts("BCO_AND");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             op_and(env, &v1, &v2);
             var_unset(env, &v2);
             env->bc_stack[env->bc_stack_size++] = v1;
@@ -541,8 +542,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_OR:
             debug_verbose_puts("BCO_OR");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             op_or(env, &v1, &v2);
             var_unset(env, &v2);
             env->bc_stack[env->bc_stack_size++] = v1;
@@ -550,8 +551,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_ADD:
             debug_verbose_puts("BCO_ADD");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             op_add(env, &v1, &v2);
             var_unset(env, &v2);
             env->bc_stack[env->bc_stack_size++] = v1;
@@ -559,8 +560,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_SUB:
             debug_verbose_puts("BCO_SUB");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             op_subtract(env, &v1, &v2);
             var_unset(env, &v2);
             env->bc_stack[env->bc_stack_size++] = v1;
@@ -568,8 +569,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_MUL:
             debug_verbose_puts("BCO_MUL");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             op_multiply(env, &v1, &v2);
             var_unset(env, &v2);
             env->bc_stack[env->bc_stack_size++] = v1;
@@ -577,8 +578,8 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_DIV:
             debug_verbose_puts("BCO_DIV");
-            v2 = env->bc_stack[--env->bc_stack_size];
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
             op_divide(env, &v1, &v2);
             var_unset(env, &v2);
             env->bc_stack[env->bc_stack_size++] = v1;
@@ -631,7 +632,7 @@ void larva_silk(bombyx_env_t *env)
             vt = var_add(env->vars, token, VAR_STRING, NULL);
             env->bc_pos += size;
 
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v1 = stack_pop(env);
             v1.name = token;
 
             // v1 was taken from stack and still points on the old var, reset this shit!
@@ -682,8 +683,8 @@ void larva_silk(bombyx_env_t *env)
             vt = var_add(env->vars, token, VAR_STRING, NULL);
 
             // pop the var from stack anyway
-            v1 = env->bc_stack[--env->bc_stack_size];
-            v2 = env->bc_stack[--env->bc_stack_size];
+            v1 = stack_pop(env);
+            v2 = stack_pop(env);
 
             if (v2.type == VAR_UNSET)
             {
@@ -700,7 +701,7 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_PRINT:
             debug_verbose_puts("BCO_PRINT");
-            v1 = env->bc_stack[--env->bc_stack_size];
+            v1 = stack_pop(env);
             var_echo(env, &v1);
             var_unset(env, &v1);
             break;

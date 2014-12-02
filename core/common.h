@@ -55,7 +55,6 @@ typedef struct _bombyx_env_t_
     ChunkAllocator* pool_of_doubles;
 
     unsigned int gl_error;
-    char temp_error[256];
     char dir_leaf[256];
     char dir_home[256];
     jmp_buf error_exit;
