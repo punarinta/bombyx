@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd "$(dirname "$0")"
+
 gcc \
 web.c \
 ../../core/block.c \
