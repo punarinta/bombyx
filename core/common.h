@@ -76,6 +76,7 @@ typedef struct _bombyx_env_t_
     size_t code_pos;
     size_t code_length;
     FCGX_Request request;
+    int thread_id;
 } bombyx_env_t;
 
 // thread safe variables

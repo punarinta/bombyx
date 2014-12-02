@@ -18,6 +18,7 @@ void *thread(void *);
 int main(void)
 {
     int i;
+    bombyx_env_t *env[THREAD_COUNT];
     pthread_t id[THREAD_COUNT];
     verbose = 0;
 
@@ -33,7 +34,9 @@ int main(void)
 
     for (i = 0; i < THREAD_COUNT; i++)
     {
-        pthread_create(&id[i], NULL, thread, NULL);
+        env[i] = calloc(1, sizeof(bombyx_env_t));
+        env[i]->thread_id = i + 1;
+        pthread_create(&id[i], NULL, thread, (void *)env[i]);
     }
 
     for (i = 0; i < THREAD_COUNT; i++)
@@ -47,11 +50,11 @@ int main(void)
 void *thread(void *a)
 {
     int rc;
-    bombyx_env_t *env = calloc(1, sizeof(bombyx_env_t));
+    bombyx_env_t *env = (bombyx_env_t *)a;
 
     if (FCGX_InitRequest(&env->request, socketId, 0) != 0)
     {
-        printf("Cannot init request\n");
+        printf("Cannot init request in thread #%d.\n", env->thread_id);
         return NULL;
     }
 
@@ -66,7 +69,7 @@ void *thread(void *a)
 
         if (rc < 0)
         {
-            printf("Can not accept new request\n");
+            printf("Can not accept new request.\n");
             break;
         }
 
@@ -75,6 +78,8 @@ void *thread(void *a)
              *cookies = FCGX_GetParam("HTTP_COOKIE", env->request.envp),
              *filename = FCGX_GetParam("SCRIPT_FILENAME", env->request.envp),
              *method = FCGX_GetParam("REQUEST_METHOD", env->request.envp);
+
+        printf("Requested '%s', accepted by thread %d.\n", uri, env->thread_id);
 
         FCGX_PutS("Content-type: text/html\r\n", env->request.out);
         FCGX_PutS("X-Powered-By: Bombyx 0.1\r\n", env->request.out);
@@ -106,7 +111,7 @@ void *thread(void *a)
             pthread_mutex_unlock(&setup_mutex);
 
 #ifdef __APPLE__
-            free(dir_leaf_temp);
+            // free(dir_leaf_temp);
 #endif
 
             setjmp(env->error_exit);
@@ -128,12 +133,10 @@ void *thread(void *a)
             fputs("File does not exist.\n", stderr);
         }
 
-        end_request:;
-
         FCGX_Finish_r(&env->request);
     }
 
-    if (env) free(env);
+    //if (env) free(env);
 
     return NULL;
 }
