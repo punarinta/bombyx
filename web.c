@@ -1,5 +1,6 @@
 #define THREAD_COUNT 8
 #define SOCKET_PATH ":8000"
+#define BOMBYX_WEB 1
 
 #include <stdio.h>
 #include <stdlib.h>

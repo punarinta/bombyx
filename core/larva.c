@@ -41,6 +41,11 @@ void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
         {
             larva_read_string_token(env, token);
 
+#ifdef BOMBYX_WEB
+            static pthread_mutex_t include_mutex = PTHREAD_MUTEX_INITIALIZER;
+            pthread_mutex_lock(&accept_mutex);
+#endif
+
             FILE *fp = fopen(token, "rt");
             if (!fp)
             {
@@ -82,6 +87,10 @@ void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
             free(source);
 
             fclose(fp);
+
+#ifdef BOMBYX_WEB
+            pthread_mutex_unlock(&accept_mutex);
+#endif
         }
         else if (!memcmp(token, "use\0", 4))
         {
