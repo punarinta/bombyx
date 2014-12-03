@@ -65,6 +65,21 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
 
     if (html)
     {
+        map_t *list;
+        char token[64];
+        for (unsigned int i = 0; i < ((map_table_t *)stack[1].data)->size; i++)
+        {
+            list = ((map_table_t *)stack[1].data)->table[i];
+            while (list != NULL)
+            {
+                strcpy(token, "{{ ");
+                strcat(token, list->name);
+                strcat(token, " }}");
+                html = str_replace(html, token, list->v.data);
+                list = list->next;
+            }
+        }
+
         if (env->request.out) FCGX_PutS(html, env->request.out);
         else puts(html);
         free(html);
