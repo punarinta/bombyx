@@ -7,6 +7,7 @@
 #include <mysql/mysql.h>
 #include "../common.h"
 #include "../../core/var_2.h"
+#include "../../core/array_2.h"
 #include "../../vendor/jansson.h"
 
 #ifdef __cplusplus
