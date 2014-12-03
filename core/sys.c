@@ -80,6 +80,7 @@ char *get_file_contents(char *filename)
         {
             fread(buffer, 1, length, fp);
         }
+        buffer[length] = 0;
         fclose(fp);
     }
 
