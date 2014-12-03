@@ -85,12 +85,23 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
 var secret_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
-
     return v;
 }
 
 /**
- * Extracts a parameter value by its name from HTTP posted body.
+ * Extracts a parameter value by its name from HTTP GET query.
+ *
+ * @param string key
+ * @return mixed
+ */
+var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
+{
+    var v = {0};
+    return v;
+}
+
+/**
+ * Extracts a parameter value by its name from HTTP POST body.
  *
  * @param string key
  * @return mixed
@@ -98,6 +109,31 @@ var secret_(bombyx_env_t *env, BYTE argc, var *stack)
 var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
+    return v;
+}
 
+/**
+ * Performs a GET request.
+ *
+ * @param string url
+ * @param map params
+ * @return mixed
+ */
+var get_(bombyx_env_t *env, BYTE argc, var *stack)
+{
+    var v = {0};
+    return v;
+}
+
+/**
+ * Performs a POST request.
+ *
+ * @param string url
+ * @param map params
+ * @return mixed
+ */
+var post_(bombyx_env_t *env, BYTE argc, var *stack)
+{
+    var v = {0};
     return v;
 }
