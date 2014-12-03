@@ -97,7 +97,7 @@ int block_delete(block_table_t *hashtable, char *str)
     return 0;
 }
 
-void block_table_delete(block_table_t *hashtable)
+void block_table_delete(block_table_t *hashtable, int reset_only)
 {
     block_t *list, *temp;
 
@@ -115,6 +115,13 @@ void block_table_delete(block_table_t *hashtable)
         }
     }
 
-    free(hashtable->table);
-    free(hashtable);
+    if (reset_only)
+    {
+        memset(hashtable->table, 0, sizeof(block_t *) * hashtable->size);
+    }
+    else
+    {
+        free(hashtable->table);
+        free(hashtable);
+    }
 }

@@ -24,7 +24,7 @@ unsigned int block_hash(block_table_t *, char *);
 block_t *block_lookup(block_table_t *, char *);
 block_t *block_add(block_table_t *, char *, unsigned int, block_t *);
 int block_delete(block_table_t *, char *);
-void block_table_delete(block_table_t *);
+void block_table_delete(block_table_t *, int);
 
 // ideas: http://m.sparknotes.com/cs/searching/hashtables/problems_2.html
 

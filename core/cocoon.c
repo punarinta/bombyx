@@ -95,7 +95,7 @@ cocoon_t *cocoon_add(bombyx_env_t *env, cocoon_table_t *hashtable, char *cocoon_
     return new_list;
 }
 
-void cocoon_table_delete(cocoon_table_t *hashtable)
+void cocoon_table_delete(cocoon_table_t *hashtable, int reset_only)
 {
     cocoon_t *list, *temp;
 
@@ -114,6 +114,14 @@ void cocoon_table_delete(cocoon_table_t *hashtable)
         }
     }
 
-    free(hashtable->table);
-    free(hashtable);
+    if (reset_only)
+    {
+        memset(hashtable->table, 0, sizeof(cocoon_t *) * hashtable->size);
+    }
+    else
+    {
+        free(hashtable->table);
+        free(hashtable);
+    }
+
 }

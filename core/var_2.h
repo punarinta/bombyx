@@ -12,7 +12,7 @@ unsigned int var_hash(var_table_t *, char *);
 var_t *var_lookup(var_table_t *, char *);
 var_t *var_add(var_table_t *, char *, BYTE, block_t *);
 int var_delete(var_table_t *, char *);
-void var_table_delete(bombyx_env_t *, var_table_t *);
+void var_table_delete(bombyx_env_t *, var_table_t *, int);
 
 void var_echo(bombyx_env_t *, var *);
 void var_unset(bombyx_env_t *, var *);

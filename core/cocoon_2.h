@@ -12,6 +12,6 @@ cocoon_table_t *cocoon_table_create(int);
 unsigned int cocoon_hash(cocoon_table_t *, char *);
 cocoon_t *cocoon_lookup(cocoon_table_t *, char *);
 cocoon_t *cocoon_add(bombyx_env_t *, cocoon_table_t *, char *);
-void cocoon_table_delete(cocoon_table_t *);
+void cocoon_table_delete(cocoon_table_t *, int);
 
 #endif

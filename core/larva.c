@@ -13,9 +13,11 @@
  */
 void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
 {
+#ifndef BOMBYX_WEB
     env->blocks       = block_table_create(MIN_BLOCKS);
     env->vars         = var_table_create(MIN_VARIABLES);
     env->cocoons      = cocoon_table_create(MIN_COCOONS);
+#endif
 
     bc_init(env);
 
@@ -452,9 +454,15 @@ void larva_stop(bombyx_env_t *env)
         puts("======================================");
     }
 
-    var_table_delete(env, env->vars);
-    block_table_delete(env->blocks);
-    cocoon_table_delete(env->cocoons);
+#ifdef BOMBYX_WEB
+    var_table_delete(env, env->vars, 1);
+    block_table_delete(env->blocks, 1);
+    cocoon_table_delete(env->cocoons, 1);
+#else
+    var_table_delete(env, env->vars, 0);
+    block_table_delete(env->blocks, 0);
+    cocoon_table_delete(env->cocoons, 0);
+#endif
 
     if (env->code) free(env->code);
 

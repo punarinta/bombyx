@@ -110,7 +110,7 @@ int var_delete(var_table_t *hashtable, char *str)
     return 0;
 }
 
-void var_table_delete(bombyx_env_t *env, var_table_t *hashtable)
+void var_table_delete(bombyx_env_t *env, var_table_t *hashtable, int reset_only)
 {
     var_t *list, *temp;
 
@@ -129,8 +129,15 @@ void var_table_delete(bombyx_env_t *env, var_table_t *hashtable)
         }
     }
 
-    free(hashtable->table);
-    free(hashtable);
+    if (reset_only)
+    {
+        memset(hashtable->table, 0, sizeof(var_t *) * hashtable->size);
+    }
+    else
+    {
+        free(hashtable->table);
+        free(hashtable);
+    }
 }
 
 
