@@ -1,4 +1,4 @@
-#define THREAD_COUNT 8
+#define THREAD_COUNT 4
 #define SOCKET_PATH ":8000"
 #define BOMBYX_WEB 1
 
