@@ -1,6 +1,6 @@
 #include "common.h"
 
-void larva_error(bombyx_env_t *env, char *err)
+void larva_error(bombyx_env_t *env, char *err, ...)
 {
     // TODO
 }

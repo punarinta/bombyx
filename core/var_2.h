@@ -2,6 +2,8 @@
 #define _BOMBYX_VAR_2_H_ 1
 
 #include "var.h"
+#include "map.h"
+#include "array.h"
 #include "common.h"
 #include "../vendor/jansson.h"
 
@@ -40,5 +42,8 @@ BYTE var_is_more(bombyx_env_t *, var *, var *);
 BYTE var_is_less(bombyx_env_t *, var *, var *);
 BYTE var_is_more_equal(bombyx_env_t *, var *, var *);
 BYTE var_is_less_equal(bombyx_env_t *, var *, var *);
+
+map_table_t *json_to_map(bombyx_env_t *env, json_t *);
+array_t *json_to_array(bombyx_env_t *env, json_t *);
 
 #endif

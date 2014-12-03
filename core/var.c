@@ -9,9 +9,6 @@
 #include "common.h"
 #include "larva.h"
 
-map_table_t *json_to_map(bombyx_env_t *env, json_t *);
-array_t *json_to_array(bombyx_env_t *env, json_t *);
-
 var_table_t *var_table_create(int size)
 {
     unsigned int i;
@@ -265,12 +262,12 @@ map_table_t *json_to_map(bombyx_env_t *env, json_t *json)
                 v.data = strdup(json_string_value(value));
                 v.data_size = json_string_length(value) + 1;
             }
-            else if (json_is_integer(value))
+            else if (json_is_number(value))
             {
                 v.type = VAR_DOUBLE;
                 v.data = challoc(env->pool_of_doubles);
                 v.data_size = sizeof(double);
-                *(double *)v.data = json_integer_value(value);
+                *(double *)v.data = json_number_value(value);
             }
             map_add(map, (char *)key, v);
         }
@@ -311,12 +308,12 @@ array_t *json_to_array(bombyx_env_t *env, json_t *json)
                 v.data = strdup(json_string_value(value));
                 v.data_size = json_string_length(value) + 1;
             }
-            else if (json_is_integer(value))
+            else if (json_is_number(value))
             {
                 v.type = VAR_DOUBLE;
                 v.data = challoc(env->pool_of_doubles);
                 v.data_size = sizeof(double);
-                *(double *)v.data = json_integer_value(value);
+                *(double *)v.data = json_number_value(value);
             }
             array_push(array, v);
         }

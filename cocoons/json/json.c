@@ -46,7 +46,71 @@ var to_(bombyx_env_t *env, BYTE argc, var *stack)
  */
 var from_(bombyx_env_t *env, BYTE argc, var *stack)
 {
+    if (argc != 1 || stack[0].type != VAR_STRING)
+    {
+        return cocoon_error(env, "Parameters should be of type STRING.");
+    }
+
+    json_error_t error;
+    json_t *j = json_loads(stack[0].data, 0, &error);  // JSON_DECODE_ANY
+
+    if (!j)
+    {
+        larva_error(env, "Cannot decode JSON variable '%s'.", stack[0].data);
+    }
+
     var v = {0};
+
+    if (json_is_object(j))
+    {
+        v.type = VAR_MAP;
+        v.data = json_to_map(env, j);
+        v.data_size = sizeof(map_table_t);
+    }
+    else if (json_is_array(j))
+    {
+        v.type = VAR_ARRAY;
+        v.data = json_to_array(env, j);
+        v.data_size = sizeof(array_t);
+    }
+    else if (json_is_string(j))
+    {
+        v.type = VAR_STRING;
+        v.data = strdup(json_string_value(j));
+        v.data_size = json_string_length(j) + 1;
+    }
+    else if (json_is_number(j))
+    {
+        v.type = VAR_DOUBLE;
+        v.data = challoc(env->pool_of_doubles);
+        v.data_size = sizeof(double);
+        *(double *)v.data = json_number_value(j);
+    }
+    else if (json_is_true(j))
+    {
+        v.type = VAR_DOUBLE;
+        v.data = challoc(env->pool_of_doubles);
+        v.data_size = sizeof(double);
+        *(double *)v.data = 1;
+    }
+    else if (json_is_false(j))
+    {
+        v.type = VAR_DOUBLE;
+        v.data = challoc(env->pool_of_doubles);
+        v.data_size = sizeof(double);
+        *(double *)v.data = 0;
+    }
+    else if (json_is_null(j))
+    {
+        v.type = VAR_UNSET;
+    }
+    else
+    {
+        // unsupported data type?
+        larva_error(env, "JSON parsing error");
+    }
+
+    json_decref(j);
 
     return v;
 }
