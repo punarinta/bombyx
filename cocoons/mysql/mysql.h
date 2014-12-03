@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mysql/mysql.h>
 #include "../common.h"
 #include "../../core/var_2.h"
 #include "../../vendor/jansson.h"

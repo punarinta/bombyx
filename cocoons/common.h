@@ -9,6 +9,6 @@
 #include "fcgiapp.h"
 
 void larva_error(bombyx_env_t *env, char *, ...);
-var cocoon_error(bombyx_env_t *env, char *);
+var cocoon_error(bombyx_env_t *env, char *, ...);
 
 #endif
