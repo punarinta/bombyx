@@ -43,9 +43,15 @@ var connect_(bombyx_env_t *env, BYTE argc, var *stack)
         return cocoon_error(env, "Parameters should be of type STRING.");
     }
 
+    unsigned int port = 0;
+    if (argc > 4)
+    {
+        port = *(double*)stack[4].data;
+    }
+
     var v = {0};
     v.data = mysql_init(NULL);
-    if (!mysql_real_connect(v.data, stack[0].data, stack[1].data, stack[2].data, stack[3].data, (unsigned int)(*(double*)stack[4].data), NULL, 0))
+    if (!mysql_real_connect(v.data, stack[0].data, stack[1].data, stack[2].data, stack[3].data, port, NULL, 0))
     {
     	return cocoon_error(env, "DB error: %s\n", mysql_error(v.data));
     }
