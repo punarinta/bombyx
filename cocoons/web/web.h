@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../common.h"
+#include "../../core/map_2.h"
 
 #ifdef __cplusplus
 extern "C" {

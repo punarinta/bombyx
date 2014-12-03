@@ -35,6 +35,7 @@ var version_()
  */
 var render_(bombyx_env_t *env, BYTE argc, var *stack)
 {
+    // TODO: CLI support
     var null_var = {0};
 
     char *dir_leaf_temp, dir_home[1024], dir_leaf[1024];
@@ -63,25 +64,45 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
         return cocoon_error(env, "Parameters should be of type MAP.");
     }
 
-    if (html)
+    if (html && html[0] && html[1])    // at least 2 byte are present
     {
-        map_t *list;
-        char token[64];
-        for (unsigned int i = 0; i < ((map_table_t *)stack[1].data)->size; i++)
+        replace:;
+        int i = 1;
+        char *token, *search, *frame = NULL;
+        size_t frame_length = 0;
+
+        while (html[i])
         {
-            list = ((map_table_t *)stack[1].data)->table[i];
-            while (list != NULL)
+            if (frame) ++frame_length;
+            if (html[i - 1] == '{' && html[i - 2] == '{') frame = html + i;
+            if (html[i] == '}' && html[i - 1] == '}')
             {
-                strcpy(token, "{{ ");
-                strcat(token, list->name);
-                strcat(token, " }}");
-                html = str_replace(html, token, list->v.data);
-                list = list->next;
+                // form a search string
+                search = malloc(frame_length + 4);
+                memcpy(search, frame - 2, frame_length + 3);
+                search[frame_length + 3] = '\0';
+
+                // find a token name
+                --frame_length;
+                token = malloc(frame_length);
+                memcpy(token, frame, --frame_length);
+                token[frame_length] = '\0';
+                trim(token);
+                frame = NULL;
+
+                map_t *m = map_lookup((map_table_t *)stack[1].data, token);
+                if (m && m->v.type)
+                {
+                    html = str_replace(html, search, m->v.data);
+                    free(token);
+                    free(search);
+                    goto replace;
+                }
             }
+            ++i;
         }
 
-        if (env->request.out) FCGX_PutS(html, env->request.out);
-        else puts(html);
+        FCGX_PutS(html, env->request.out);
         free(html);
     }
 
