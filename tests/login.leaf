@@ -1,6 +1,7 @@
 # Login example
 
 use web
+use json
 use mysql
 
 block myLogin
@@ -8,7 +9,7 @@ block myLogin
     param username, password
 
     # 'db' is accessible from here as it was defined on a higher level
-    var row = mysql::row(db, 'SELECT password FROM user WHERE username = ' + username)
+    var row = mysql::row(db, 'SELECT password FROM user WHERE username = \'' + username + '\'')
 
     return (web::secret(password, salt) == row[0])
 }
