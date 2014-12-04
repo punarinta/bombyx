@@ -208,7 +208,9 @@ void larva_silk(bombyx_env_t *env)
                 {
                     larva_error(env, "Array index must be a number");
                 }
-                stack_push(env, *( ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]) );
+                memset(&v2, 0, sizeof(var));
+                op_copy(env, &v2, ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]);
+                stack_push(env, v2);
             }
             else
             {
