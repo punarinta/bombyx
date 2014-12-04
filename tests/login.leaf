@@ -7,28 +7,29 @@ block myLogin
 {
     param username, password
 
-    var result = mysql::query(db, 'SELECT password FROM user WHERE username = ?', username),
-        row = mysql::fetchRow(result)
+    # 'db' is accessible from here as it was defined on a higher level
+    var row = mysql::row(db, 'SELECT password FROM user WHERE username = ' + username)
 
     return (web::secret(password, salt) == row[0])
 }
 
-# -- connect to your DB --
+# connect to your DB
 var db = mysql::connect('127.0.0.1', 'root', '', 'test_db')
 
-# -- try to login --
+# try to login using the previously defined procedure
 if (myLogin(web::fromPost('username'), web::fromPost('password')))
 {
-    web::render('success', [username = web::fromPost('username')])
+    # yes, it's ugly, but associative array operators are not yet 100% done, so we use 'json' cocoon
+    web::render('success.html', json::from('{"username":"' + web::fromPost('username') + '"}')
 }
 else
 {
-    web::render('failure')
+    web::render('failure.html')
 }
 
 
 ##
-And the template file 'success.tpl' may look something like that:
+And the template file 'success.html' may look something like that:
 
 <h2>Hello {{ username }},</h2>
 <br/>
