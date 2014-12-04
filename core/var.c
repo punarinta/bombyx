@@ -336,6 +336,7 @@ void var_unset(bombyx_env_t *env, var *a)
         if (a->type == VAR_DOUBLE) chfree(env->pool_of_doubles, a->data);
         else if (a->type == VAR_MAP) map_table_delete(env, a->data);
         else if (a->type == VAR_ARRAY) array_delete(env, a->data);
+        else if (a->type == VAR_POINTER) return;
         else free(a->data);
     }
 }
@@ -402,8 +403,13 @@ void var_echo(bombyx_env_t *env, var *a)
             default:
             if (verbose)
             {
-                fprintf(stdout, "\nvar_echo() failed, type = %d, data = ", a->type);
-                if (a->data) puts(a->data);
+                fprintf(stdout, "\ntype = %d, data = ", a->type);
+                if (a->data)
+                {
+                    // puts(a->data);
+                    fwrite(a->data, a->data_size, 1, stdout);
+                    fflush(stdout);
+                }
                 else puts("NULL");
             }
             break;

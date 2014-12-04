@@ -1,5 +1,6 @@
 #include "array.h"
 #include "var_2.h"
+#include "var_2.h"
 
 #define MIN_ARRAY_SIZE 100
 
@@ -17,6 +18,9 @@ array_t *array_create(size_t size)
     return array;
 }
 
+/*
+    Warning: array_push() uses direct variable copying, not an op_copy()
+*/
 void array_push(array_t *array, var v)
 {
     if (array->size >= array->max_size)

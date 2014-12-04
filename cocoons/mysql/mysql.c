@@ -46,7 +46,7 @@ var connect_(bombyx_env_t *env, BYTE argc, var *stack)
     unsigned int port = 0;
     if (argc > 4)
     {
-        port = *(double*)stack[4].data;
+        port = (unsigned int)(*(double*)stack[4].data);
     }
 
     var v = {0};
@@ -56,7 +56,7 @@ var connect_(bombyx_env_t *env, BYTE argc, var *stack)
     	return cocoon_error(env, "MySQL connection error: %s", mysql_error(v.data));
     }
 
-    v.type = VAR_CUSTOM;
+    v.type = VAR_POINTER;
     v.data_size = sizeof(MYSQL);
 
     return v;
@@ -84,7 +84,7 @@ var query_(bombyx_env_t *env, BYTE argc, var *stack)
 
 	var v = {0};
 
-    v.type = VAR_CUSTOM;
+    v.type = VAR_POINTER;
     v.data = mysql_use_result(stack[0].data);
     v.data_size = sizeof(MYSQL_RES);
 
@@ -107,8 +107,14 @@ var fetchRow_(bombyx_env_t *env, BYTE argc, var *stack)
     }
 
 	var v = {0};
-	MYSQL_ROW row;
-	row = mysql_fetch_row(stack[0].data);
+	MYSQL_ROW row = mysql_fetch_row(stack[0].data);
+
+	if (!row)
+    {
+        // no data was fetched
+        return v;
+    }
+
     unsigned int num_rows = mysql_num_fields(stack[0].data);
 
     v.type = VAR_ARRAY;
@@ -118,9 +124,13 @@ var fetchRow_(bombyx_env_t *env, BYTE argc, var *stack)
     for (unsigned int i = 0; i < num_rows; i++)
     {
         var v2 = {0};
-        v.type = VAR_STRING;
-        v.data_size = strlen(row[i]) + 1;
-        v.data = strdup(row[i]);
+
+        if (row[i])
+        {
+            v2.type = VAR_STRING;
+            v2.data = strdup(row[i]);
+            v2.data_size = strlen(v2.data) + 1;
+        }
 
         array_push(v.data, v2);
     }
