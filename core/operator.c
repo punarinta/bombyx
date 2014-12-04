@@ -31,7 +31,7 @@ void op_copy(bombyx_env_t *env, var *a, var *b)
                 if (a->type == VAR_DOUBLE) chfree(env->pool_of_doubles, a->data);
                 else if (a->type == VAR_MAP) map_table_delete(env, a->data);
                 else if (a->type == VAR_ARRAY) array_delete(env, a->data);
-                else free(a->data);
+                else if (a->type != VAR_POINTER) free(a->data);
 
                 if (b->type == VAR_MAP) a->data = map_table_clone(env, b->data);
                 else if (b->type == VAR_ARRAY) a->data = array_clone(env, b->data);
