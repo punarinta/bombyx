@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "web.h"
+#include "bcrypt.h"
 
 #define LIBRARY_VERSION 0.1
 
@@ -31,6 +32,7 @@ var version_()
  *
  * @param string filename
  * @param map variables
+ *
  * @return string
  */
 var render_(bombyx_env_t *env, BYTE argc, var *stack)
@@ -116,11 +118,26 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
  *
  * @param string password
  * @param string salt
+ *
  * @return string
  */
 var secret_(bombyx_env_t *env, BYTE argc, var *stack)
 {
+    if (argc < 1 || stack[0].type != VAR_STRING)
+    {
+        return cocoon_error(env, "Password must be of type STRING.");
+    }
+    if (argc < 2 || stack[1].type != VAR_STRING)
+    {
+        return cocoon_error(env, "Salt must be of type STRING.");
+    }
+
     var v = {0};
+    v.type = VAR_STRING;
+    v.data_size = BCRYPT_HASHSIZE;
+    v.data = malloc(BCRYPT_HASHSIZE);
+    bcrypt_hashpw(stack[0].data, stack[1].data, v.data);
+
     return v;
 }
 
@@ -128,6 +145,7 @@ var secret_(bombyx_env_t *env, BYTE argc, var *stack)
  * Extracts a parameter value by its name from HTTP GET query.
  *
  * @param string key
+ *
  * @return mixed
  */
 var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
@@ -140,6 +158,7 @@ var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
  * Extracts a parameter value by its name from HTTP POST body.
  *
  * @param string key
+ *
  * @return mixed
  */
 var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
@@ -153,6 +172,7 @@ var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
  *
  * @param string url
  * @param map params
+ *
  * @return mixed
  */
 var get_(bombyx_env_t *env, BYTE argc, var *stack)
@@ -166,6 +186,7 @@ var get_(bombyx_env_t *env, BYTE argc, var *stack)
  *
  * @param string url
  * @param map params
+ *
  * @return mixed
  */
 var post_(bombyx_env_t *env, BYTE argc, var *stack)
