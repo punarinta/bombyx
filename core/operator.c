@@ -21,6 +21,7 @@ void op_copy(bombyx_env_t *env, var *a, var *b)
                 if (a->type == VAR_DOUBLE) *(double *)a->data = *(double *)b->data;
                 else if (a->type == VAR_MAP) a->data = map_table_clone(env, b->data);
                 else if (a->type == VAR_ARRAY) a->data = array_clone(env, b->data);
+                else if (a->type == VAR_POINTER) a->data = b->data;
                 else memcpy(a->data, b->data, b->data_size);
                 // it's done :)
                 return;
@@ -34,6 +35,7 @@ void op_copy(bombyx_env_t *env, var *a, var *b)
 
                 if (b->type == VAR_MAP) a->data = map_table_clone(env, b->data);
                 else if (b->type == VAR_ARRAY) a->data = array_clone(env, b->data);
+                else if (b->type == VAR_POINTER) a->data = b->data;
                 else
                 {
                     a->data = malloc(b->data_size);
