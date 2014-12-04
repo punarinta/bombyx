@@ -108,11 +108,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    int ret_value = env->gl_error;
+
     if (env) free(env);
 
 #ifdef BOMBYX_MCHECK
     muntrace();
 #endif
 
-    return env->gl_error;
+    return ret_value;
 }
