@@ -31,7 +31,7 @@ void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
     {
         size_t line_start = env->code_pos;
 
-        if (line_start && env->code[line_start - 1] != 13)
+        if (line_start && env->code[line_start - 1] != 13 && env->code[line_start - 1] != 10)
         {
             // just skip such cases for now
             ++env->code_pos;
