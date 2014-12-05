@@ -287,7 +287,7 @@ BYTE var_is_true(bombyx_env_t *env, var *a)
 BYTE var_cmp(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return memcmp(a->data, b->data, sizeof(double)) ? 0 : 1;
-    else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data);
+    else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) ? 0 : 1;
     else
     {
         larva_error(env, "Comparison operator is not defined for the given operand type.");
@@ -297,6 +297,7 @@ BYTE var_cmp(bombyx_env_t *env, var *a, var *b)
 
 BYTE var_is_more(bombyx_env_t *env, var *a, var *b)
 {
+    // TODO: discuss string more/less comparisons
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data > *(double *)b->data;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
@@ -308,6 +309,7 @@ BYTE var_is_more(bombyx_env_t *env, var *a, var *b)
 
 BYTE var_is_less(bombyx_env_t *env, var *a, var *b)
 {
+    // TODO: discuss string more/less comparisons
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data < *(double *)b->data;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
