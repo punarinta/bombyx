@@ -117,26 +117,38 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
  * Generates a hash for a password.
  *
  * @param string password
- * @param string salt
+ * @param mixed salt|strength
  *
  * @return string
  */
 var secret_(bombyx_env_t *env, BYTE argc, var *stack)
 {
-    if (argc < 1 || stack[0].type != VAR_STRING)
+    if (argc < 2 || stack[0].type != VAR_STRING)
     {
-        return cocoon_error(env, "Password must be of type STRING.");
-    }
-    if (argc < 2 || stack[1].type != VAR_STRING)
-    {
-        return cocoon_error(env, "Salt must be of type STRING.");
+        return cocoon_error(env, "Password [STRING] of a wrong type or too few arguments.");
     }
 
     var v = {0};
     v.type = VAR_STRING;
     v.data_size = BCRYPT_HASHSIZE;
     v.data = malloc(BCRYPT_HASHSIZE);
-    bcrypt_hashpw(stack[0].data, stack[1].data, v.data);
+
+    if (stack[1].type == VAR_DOUBLE)
+    {
+        // generate salt
+        char salt[BCRYPT_HASHSIZE];
+        bcrypt_gensalt((int)*(double *)stack[1].data, salt);
+        bcrypt_hashpw(stack[0].data, salt, v.data);
+    }
+    else if (stack[1].type == VAR_STRING)
+    {
+        // use salt
+        bcrypt_hashpw(stack[0].data, stack[1].data, v.data);
+    }
+    else
+    {
+        return cocoon_error(env, "Second argument should be either a salt [STRING] or a strength [NUMBER].");
+    }
 
     return v;
 }
