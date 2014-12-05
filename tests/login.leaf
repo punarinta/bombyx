@@ -4,21 +4,21 @@ use web
 use json
 use mysql
 
-block myLogin
+block checkPassword
 {
     param username, password
 
     # 'db' is accessible from here as it was defined on a higher level
     var row = mysql::row(db, 'SELECT password FROM user WHERE username = \'' + username + '\'')
 
-    return (web::secret(password, salt) == row[0])
+    return (web::secret(password, row[0]) == row[0])
 }
 
 # connect to your DB
 var db = mysql::connect('127.0.0.1', 'root', '', 'test_db')
 
 # try to login using the previously defined procedure
-if (myLogin(web::fromPost('username'), web::fromPost('password')))
+if (checkPassword(web::fromPost('username'), web::fromPost('password')))
 {
     # yes, it's ugly, but associative array operators are not yet 100% done, so we use 'json' cocoon
     web::render('success.html', json::from('{"username":"' + web::fromPost('username') + '"}')
