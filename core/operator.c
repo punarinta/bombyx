@@ -80,15 +80,10 @@ void op_add(bombyx_env_t *env, var *a, var *b)
 
     if (a->type == VAR_STRING && b->type == VAR_STRING)
     {
-        r.data_size = a->data_size + b->data_size - 1;
-        r.data = malloc(r.data_size);
-        memcpy(r.data, a->data, a->data_size - 1);
-        memcpy(r.data + a->data_size - 1, b->data, b->data_size);   // copy together with EOS
-
-        var_unset(env, a);
-        a->data = malloc(r.data_size);
-        strcpy(a->data, r.data);
-        a->data_size = r.data_size;
+        size_t t = --a->data_size;
+        a->data_size = a->data_size + b->data_size;
+        a->data = realloc(a->data, a->data_size);
+        memcpy(a->data + t, b->data, b->data_size);
     }
     else if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE)
     {
