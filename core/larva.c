@@ -359,7 +359,12 @@ void larva_read_token(bombyx_env_t *env, char *token)
         }
 
         // either it's a function call or just a command
-        if (env->code[env->code_pos] == '(' || env->code[env->code_pos] == ',' || env->code[env->code_pos] == '=' || isspace(env->code[env->code_pos])) break;
+        if (env->code[env->code_pos] == '('
+        || env->code[env->code_pos] == ','
+        || env->code[env->code_pos] == '='
+        || isspace(env->code[env->code_pos])
+        || env->code[env->code_pos] == '{'
+        || env->code[env->code_pos] == '}' ) break;
     }
 
     memcpy(token, env->code + start, token_pos);
