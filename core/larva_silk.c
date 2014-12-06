@@ -327,10 +327,11 @@ void larva_silk(bombyx_env_t *env)
             if (parent_block)
             {
                 char *parent_name = parent_block->name;
-                memcpy(token + strlen(parent_name) + 1, token, size);
-                memcpy(token, parent_name, strlen(parent_name));
-                token[strlen(parent_name)] = '.';
-                token[strlen(parent_name) + 1 + size] = '\0';
+                size_t pnl = strlen(parent_name);
+                memcpy(token + pnl + 1, token, size);
+                memcpy(token, parent_name, pnl);
+                token[pnl] = '.';
+                token[pnl + 1 + size] = '\0';
             }
 
             parent_block = block_add(env->blocks, token, env->bc_pos, parent_block);
