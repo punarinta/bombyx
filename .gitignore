@@ -6,3 +6,4 @@ vendor/*.a
 *.ccn*
 *.out
 *.dSYM
+*.log
