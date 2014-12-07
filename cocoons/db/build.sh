@@ -3,7 +3,7 @@
 cd "$(dirname "$0")"
 
 gcc \
-mysql.c \
+db.c \
 ../../core/block.c \
 ../../core/challoc.c \
 ../../core/map.c \
@@ -14,6 +14,6 @@ mysql.c \
 ../common.c \
 \
 -std=c99 \
--O0 -shared -fPIC -o ../mysql.ccn -L../../vendor/ -lfcgi -ljansson -lmysqlclient_r
+-O0 -shared -fPIC -o ../db.ccn -L../../vendor/ -lfcgi -ljansson -lmysqlclient_r
 
-# -O3 -DNDEBUG -shared -fPIC -o ../mysql.ccn -L../../vendor/ -lfcgi -ljansson
+# -O3 -DNDEBUG -shared -fPIC -o ../db.ccn -L../../vendor/ -lfcgi -ljansson

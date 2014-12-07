@@ -4,7 +4,7 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "mysql.h"
+#include "db.h"
 
 #define LIBRARY_VERSION 0.1
 

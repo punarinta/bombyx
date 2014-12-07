@@ -1,5 +1,5 @@
-#ifndef _COCOON_MYSQL_H_
-#define _COCOON_MYSQL_H_ 1
+#ifndef _COCOON_DB_H_
+#define _COCOON_DB_H_ 1
 
 #include <stdio.h>
 #include <stdlib.h>
