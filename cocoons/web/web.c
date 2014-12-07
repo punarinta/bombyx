@@ -161,9 +161,45 @@ var secret_(bombyx_env_t *env, BYTE argc, var *stack)
  *
  * @return mixed
  */
+char *strtok_r(char *, const char *, char **);
 var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
 {
+    if (argc < 1 || stack[0].type != VAR_STRING)
+    {
+        return cocoon_error(env, "No key [STRING] given.");
+    }
+
     var v = {0};
+
+    // explode GET
+    char *key, *val, *tok = NULL, *query = strdup(FCGX_GetParam("QUERY_STRING", env->request.envp));
+
+    tok = strtok(query, "&");
+
+    while (tok)
+    {
+        char *pair = strdup(tok);
+        char *saveptr;
+
+        key = strtok_r(pair, "=", &saveptr);
+        val = strtok_r(NULL, "=", &saveptr);
+
+        if (!memcmp(stack[0].data, key, stack[0].data_size))
+        {
+            // key found, return
+            v.type = VAR_STRING;
+            v.data = strdup(val);
+            v.data_size = strlen(v.data) + 1;
+            free(pair);
+            return v;
+        }
+
+        free(pair);
+        tok = strtok(NULL, "&");
+
+        if (!tok) break;
+    }
+
     return v;
 }
 
