@@ -48,7 +48,7 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
     }
 
     getcwd(dir_home, sizeof(dir_home));
-    dir_leaf_temp = dirname(FCGX_GetParam("SCRIPT_FILENAME", env->request.envp));
+    dir_leaf_temp = dirname(FCGX_GetParam("LEAF_FILENAME", env->request.envp));
     strcpy(dir_leaf, dir_leaf_temp);
     chdir(dir_leaf);
 
@@ -63,6 +63,7 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
 
     if (argc == 2 && stack[1].type != VAR_MAP)
     {
+        chdir(dir_home);
         return cocoon_error(env, "Parameters should be of type MAP.");
     }
 
@@ -176,6 +177,35 @@ var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
 var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
+
+    const unsigned long STDIN_MAX = 1000000;
+    unsigned long content_length = STDIN_MAX;
+    char *content_length_str = FCGX_GetParam("CONTENT_LENGTH", env->request.envp);
+
+    if (content_length_str)
+    {
+        content_length = strtol(content_length_str, &content_length_str, 10);
+
+        if (content_length > STDIN_MAX)
+        {
+            content_length = STDIN_MAX;
+        }
+    }
+    else
+    {
+        // Do not read from stdin if CONTENT_LENGTH is missing
+        return v;
+    }
+
+    v.type = VAR_STRING;
+    v.data_size = content_length + 1;
+    v.data = malloc(v.data_size);
+
+    char *content_buffer = malloc(content_length);
+    fread(v.data, 1, content_length, stdin);
+
+    puts(v.data);
+
     return v;
 }
 
