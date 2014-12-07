@@ -9,7 +9,15 @@ echo "Building web version..."
 ./build-web.sh
 
 echo "Building cocoons..."
-cocoons/web/build.sh
-cocoons/text/build.sh
-cocoons/json/build.sh
-cocoons/mysql/build.sh
+cd cocoons
+
+for f in *
+do
+    if [ -d "$f" ]
+    then
+        echo "* $f";
+        ./$f/build.sh
+    fi
+done
+
+cd ..
