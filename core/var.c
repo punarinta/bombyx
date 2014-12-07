@@ -364,7 +364,7 @@ void var_echo(bombyx_env_t *env, var *a)
             break;
 
             case VAR_DOUBLE:
-            fprintf(stdout, "%.6g", *(double *)a->data);
+            web_printf(env, "%.6g", *(double *)a->data);
             break;
 
             case VAR_MAP:
