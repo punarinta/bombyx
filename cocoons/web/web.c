@@ -178,33 +178,117 @@ var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
 
-    const unsigned long STDIN_MAX = 1000000;
-    unsigned long content_length = STDIN_MAX;
-    char *content_length_str = FCGX_GetParam("CONTENT_LENGTH", env->request.envp);
-
-    if (content_length_str)
+    if (!env->http_length)
     {
-        content_length = strtol(content_length_str, &content_length_str, 10);
-
-        if (content_length > STDIN_MAX)
-        {
-            content_length = STDIN_MAX;
-        }
-    }
-    else
-    {
-        // Do not read from stdin if CONTENT_LENGTH is missing
+        // just return NULL
         return v;
     }
 
     v.type = VAR_STRING;
-    v.data_size = content_length + 1;
-    v.data = malloc(v.data_size);
+    v.data_size = env->http_length + 1;
+    v.data = strdup(env->http_content);
 
-    char *content_buffer = malloc(content_length);
-    fread(v.data, 1, content_length, stdin);
+    return v;
+}
 
-    puts(v.data);
+/**
+ * Extracts a parameter value by its name from HTTP POST body posted as JSON.
+ *
+ * @param string key
+ *
+ * @return mixed
+ */
+var fromJson_(bombyx_env_t *env, BYTE argc, var *stack)
+{
+    var v = {0};
+
+    if (!env->http_length)
+    {
+        // just return NULL
+        return v;
+    }
+
+    json_error_t error;
+    json_t *jo = json_loads(env->http_content, 0, &error), *j;
+
+    if (!jo)
+    {
+        return cocoon_error(env, "Cannot decode JSON variable '%s'.", env->http_content);
+    }
+
+    if (argc == 1)
+    {
+        // get an element
+
+        if (stack[0].type == VAR_STRING)
+        {
+            // TODO: support APath
+            j = json_object_get(jo, stack[0].data);
+        }
+        else if (stack[0].type == VAR_DOUBLE)
+        {
+            j = json_array_get(jo, (int)*(double*)stack[0].data);
+        }
+        else
+        {
+            return cocoon_error(env, "Element access if not allowed for this type");
+        }
+    }
+    else
+    {
+        j = jo;
+    }
+
+    if (json_is_object(j))
+    {
+        v.type = VAR_MAP;
+        v.data = json_to_map(env, j);
+        v.data_size = sizeof(map_table_t);
+    }
+    else if (json_is_array(j))
+    {
+        v.type = VAR_ARRAY;
+        v.data = json_to_array(env, j);
+        v.data_size = sizeof(array_t);
+    }
+    else if (json_is_string(j))
+    {
+        v.type = VAR_STRING;
+        v.data = strdup(json_string_value(j));
+        v.data_size = json_string_length(j) + 1;
+    }
+    else if (json_is_number(j))
+    {
+        v.type = VAR_DOUBLE;
+        v.data = challoc(env->pool_of_doubles);
+        v.data_size = sizeof(double);
+        *(double *)v.data = json_number_value(j);
+    }
+    else if (json_is_true(j))
+    {
+        v.type = VAR_DOUBLE;
+        v.data = challoc(env->pool_of_doubles);
+        v.data_size = sizeof(double);
+        *(double *)v.data = 1;
+    }
+    else if (json_is_false(j))
+    {
+        v.type = VAR_DOUBLE;
+        v.data = challoc(env->pool_of_doubles);
+        v.data_size = sizeof(double);
+        *(double *)v.data = 0;
+    }
+    else if (json_is_null(j))
+    {
+        v.type = VAR_UNSET;
+    }
+    else
+    {
+        // unsupported data type?
+        return cocoon_error(env, "JSON parsing error. Unsupported type.");
+    }
+
+    json_decref(j);
 
     return v;
 }

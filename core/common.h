@@ -58,6 +58,8 @@ typedef struct _bombyx_env_t_
     char dir_leaf[256];
     char dir_home[256];
     jmp_buf error_exit;
+    char *http_content;
+    size_t http_length;
 
     // levels
     BYTE gl_level;

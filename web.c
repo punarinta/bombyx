@@ -115,6 +115,31 @@ void *thread(void *a)
             // free(dir_leaf_temp);
 #endif
 
+            // cache POST
+            const unsigned long STDIN_MAX = 1000000;
+            unsigned long content_length = STDIN_MAX;
+            char *content_length_str = FCGX_GetParam("CONTENT_LENGTH", env->request.envp);
+
+            if (content_length_str)
+            {
+                content_length = strtol(content_length_str, &content_length_str, 10);
+
+                if (content_length > STDIN_MAX)
+                {
+                    content_length = STDIN_MAX;
+                }
+
+                env->http_length = content_length;
+                env->http_content = malloc(content_length + 1);
+                FCGX_GetStr(env->http_content, content_length, env->request.in);
+                env->http_content[content_length] = '\0';
+            }
+            else
+            {
+                env->http_length = 0;
+                env->http_content = NULL;
+            }
+
             setjmp(env->error_exit);
 
             if (env->gl_error)

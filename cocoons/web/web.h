@@ -6,6 +6,8 @@
 #include <string.h>
 #include "../common.h"
 #include "../../core/map_2.h"
+#include "../../core/var_2.h"
+#include "../../vendor/jansson.h"
 
 #ifdef __cplusplus
 extern "C" {

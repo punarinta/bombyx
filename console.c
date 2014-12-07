@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
 
     env->gl_error = 0;
     env->request.out = NULL;
+    env->http_content = NULL;
+    env->http_length = 0;
 
     FILE *fp = fopen(argv[1], "rt");
 
