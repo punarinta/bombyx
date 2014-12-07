@@ -9,6 +9,8 @@
 #include "../../core/var_2.h"
 #include "../../vendor/jansson.h"
 
+char *strtok_r(char *, const char *, char **);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

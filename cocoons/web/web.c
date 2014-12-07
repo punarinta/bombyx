@@ -161,7 +161,6 @@ var secret_(bombyx_env_t *env, BYTE argc, var *stack)
  *
  * @return mixed
  */
-char *strtok_r(char *, const char *, char **);
 var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     if (argc < 1 || stack[0].type != VAR_STRING)
