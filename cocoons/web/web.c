@@ -157,9 +157,9 @@ var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
     }
 
     // explode COOKIE string
-    char *key, *val, *tok = NULL, *query = strdup(FCGX_GetParam("HTTP_COOKIE", env->request.envp));
+    char *key, *val, *fullptr, *tok = NULL, *query = strdup(FCGX_GetParam("HTTP_COOKIE", env->request.envp));
 
-    tok = strtok(query, ";");
+    tok = strtok_r(query, ";", &fullptr);
 
     while (tok)
     {
@@ -180,7 +180,7 @@ var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
         }
 
         free(pair);
-        tok = strtok(NULL, ";");
+        tok = strtok_r(NULL, ";", &fullptr);
 
         if (!tok) break;
     }
@@ -245,17 +245,17 @@ var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
     var v = {0};
 
     // explode GET
-    char *key, *val, *tok = NULL, *query = strdup(FCGX_GetParam("QUERY_STRING", env->request.envp));
+    char *key, *val, *fullptr, *tok = NULL, *query = strdup(FCGX_GetParam("QUERY_STRING", env->request.envp));
 
-    tok = strtok(query, "&");
+    tok = strtok_r(query, "&", &fullptr);
 
     while (tok)
     {
         char *pair = strdup(tok);
-        char *saveptr;
+        char *pairptr;
 
-        key = strtok_r(pair, "=", &saveptr);
-        val = strtok_r(NULL, "=", &saveptr);
+        key = strtok_r(pair, "=", &pairptr);
+        val = strtok_r(NULL, "=", &pairptr);
 
         if (!memcmp(stack[0].data, key, stack[0].data_size))
         {
@@ -268,7 +268,7 @@ var fromGet_(bombyx_env_t *env, BYTE argc, var *stack)
         }
 
         free(pair);
-        tok = strtok(NULL, "&");
+        tok = strtok_r(NULL, "&", &fullptr);
 
         if (!tok) break;
     }

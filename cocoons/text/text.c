@@ -116,12 +116,13 @@ var split_(bombyx_env_t *env, BYTE argc, var *stack)
     }
 
     var v = {0};
+    char *saveptr;
     char *tok = NULL;
     v.type = VAR_ARRAY;
     v.data_size = sizeof(array_t);
     v.data = array_create(0);
 
-    tok = strtok(stack[0].data, stack[1].data);
+    tok = strtok_r(stack[0].data, stack[1].data, &saveptr);
 
     while (tok)
     {
@@ -133,7 +134,7 @@ var split_(bombyx_env_t *env, BYTE argc, var *stack)
 
         array_push(v.data, vt);
 
-        tok = strtok(NULL, stack[1].data);
+        tok = strtok_r(NULL, stack[1].data, &saveptr);
 
         if (!tok) break;
     }
