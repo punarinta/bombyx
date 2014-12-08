@@ -350,6 +350,13 @@ void var_echo(bombyx_env_t *env, var *a)
     map_table_t *ht;
     ++var_echo_level;
 
+    // in web version the first echo starts the body (no more headers will be allowed)
+    if (env->wd && !env->wd->body_started)
+    {
+        env->wd->body_started = 1;
+        web_puts(env, "\r\n");
+    }
+
     if (a)
     {
         switch (a->type)

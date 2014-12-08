@@ -42,7 +42,7 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
 
     char *dir_leaf_temp, dir_home[1024], dir_leaf[1024];
 
-    if (!env->request.out)
+    if (!env->wd)
     {
         return cocoon_error(env, "Rendering disabled for CLI.");
     }
@@ -105,6 +105,12 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
             ++i;
         }
 
+        if (!env->wd->body_started)
+        {
+            env->wd->body_started = 1;
+            FCGX_PutS("\r\n", env->request.out);
+        }
+
         FCGX_PutS(html, env->request.out);
         free(html);
     }
@@ -125,6 +131,12 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
  */
 var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
 {
+    if (!env->wd)
+    {
+        // doubtful, maybe it's better just to return null
+        return cocoon_error(env, "Cookies are not present in CLI.");
+    }
+
     if (argc < 1 || stack[0].type != VAR_STRING)
     {
         return cocoon_error(env, "No key given or type is not [STRING].");
@@ -134,6 +146,11 @@ var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
 
     if (argc > 1)
     {
+        if (env->wd->body_started)
+        {
+            return cocoon_error(env, "Headers have already been sent.");
+        }
+
         // TODO: support more convenient way of setting cookies
         FCGX_FPrintF(env->request.out, "Set-Cookie: %s=%s;\r\n", stack[0].data, stack[1].data);
         return v;
@@ -270,15 +287,15 @@ var fromPost_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
 
-    if (!env->http_length)
+    if (!env->wd || !env->wd->http_length)
     {
         // just return NULL
         return v;
     }
 
     v.type = VAR_STRING;
-    v.data_size = env->http_length + 1;
-    v.data = strdup(env->http_content);
+    v.data_size = env->wd->http_length + 1;
+    v.data = strdup(env->wd->http_content);
 
     return v;
 }
@@ -294,18 +311,18 @@ var fromJson_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
 
-    if (!env->http_length)
+    if (!env->wd || !env->wd->http_length)
     {
         // just return NULL
         return v;
     }
 
     json_error_t error;
-    json_t *jo = json_loads(env->http_content, 0, &error), *j;
+    json_t *jo = json_loads(env->wd->http_content, 0, &error), *j;
 
     if (!jo)
     {
-        return cocoon_error(env, "Cannot decode JSON variable '%s'.", env->http_content);
+        return cocoon_error(env, "Cannot decode JSON variable '%s'.", env->wd->http_content);
     }
 
     if (argc == 1)

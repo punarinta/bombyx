@@ -59,6 +59,8 @@ void *thread(void *a)
         return NULL;
     }
 
+    env->wd = malloc(sizeof(web_data));
+
     for (;;)
     {
         static pthread_mutex_t accept_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -81,11 +83,12 @@ void *thread(void *a)
 
         FCGX_PutS("Content-type: text/html\r\n", env->request.out);
         FCGX_PutS("X-Powered-By: Bombyx 0.1\r\n", env->request.out);
-        FCGX_PutS("\r\n", env->request.out);
 
         env->gl_error = 0;
-        size_t newLen = 0;
+        env->wd->body_started = 0;
+
         char *source;
+        size_t newLen = 0;
 
         FILE *fp = fopen(filename, "rt");
 
@@ -126,21 +129,22 @@ void *thread(void *a)
                     content_length = STDIN_MAX;
                 }
 
-                env->http_length = content_length;
-                env->http_content = malloc(content_length + 1);
-                FCGX_GetStr(env->http_content, content_length, env->request.in);
-                env->http_content[content_length] = '\0';
+                env->wd->http_length = content_length;
+                env->wd->http_content = malloc(content_length + 1);
+                FCGX_GetStr(env->wd->http_content, content_length, env->request.in);
+                env->wd->http_content[content_length] = '\0';
             }
             else
             {
-                env->http_length = 0;
-                env->http_content = NULL;
+                env->wd->http_length = 0;
+                env->wd->http_content = NULL;
             }
 
             setjmp(env->error_exit);
 
             if (env->gl_error)
             {
+                // stop execution, but don't kill thread
                 larva_stop(env);
             }
             else
@@ -158,8 +162,6 @@ void *thread(void *a)
 
         FCGX_Finish_r(&env->request);
     }
-
-    //if (env) free(env);
 
     return NULL;
 }
