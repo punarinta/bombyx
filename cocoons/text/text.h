@@ -11,6 +11,8 @@
 #include <fcntl.h>
 #include "../common.h"
 
+char *strtok_r(char *, const char *, char **);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
