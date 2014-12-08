@@ -331,8 +331,27 @@ var fromJson_(bombyx_env_t *env, BYTE argc, var *stack)
 
         if (stack[0].type == VAR_STRING)
         {
-            // TODO: support APath
-            j = json_object_get(jo, stack[0].data);
+            j = jo;
+
+            char *tok, *saveptr;
+            tok = strtok_r(stack[0].data, ".", &saveptr);
+
+            while (tok)
+            {
+                if (atoi(tok) || tok[0] == '0')
+                {
+                    // it's a number -> array access
+                    j = json_array_get(j, atoi(tok));
+                }
+                else
+                {
+                    // it's a string -> map access
+                    j = json_object_get(j, tok);
+                }
+
+                tok = strtok_r(NULL, ".", &saveptr);
+                if (!tok) break;
+            }
         }
         else if (stack[0].type == VAR_DOUBLE)
         {
