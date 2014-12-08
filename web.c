@@ -1,12 +1,13 @@
-#define THREAD_COUNT 4
-#define SOCKET_PATH ":8000"
 #define BOMBYX_WEB 1
+#define THREADS_PER_CPU 1
+#define SOCKET_PATH ":8000"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "fcgiapp.h"
@@ -15,12 +16,14 @@
 
 static int socketId;    // is not written within the thread — safe
 void *thread(void *);
+long getCpuCount();
 
 int main(void)
 {
-    int i;
-    bombyx_env_t *env[THREAD_COUNT];
-    pthread_t id[THREAD_COUNT];
+    pthread_t *id;
+    bombyx_env_t **env;
+    int i, thread_count;
+
     verbose = 0;
 
     FCGX_Init();
@@ -28,19 +31,26 @@ int main(void)
     socketId = FCGX_OpenSocket(SOCKET_PATH, 2000);
     if (socketId < 0)
     {
+        fprintf(stderr, "Cannot open socket: %s\n", strerror(errno));
         return 1;
     }
 
-    printf("Socket is opened. Creating %d threads...\n", THREAD_COUNT);
+    printf("Socket opened, listening to %s.\n", SOCKET_PATH);
 
-    for (i = 0; i < THREAD_COUNT; i++)
+    thread_count = THREADS_PER_CPU * getCpuCount();
+    printf("Creating %d threads (%d per CPU)...\n", thread_count, THREADS_PER_CPU);
+
+    env = malloc(sizeof(bombyx_env_t *) * thread_count);
+    id = malloc(sizeof(pthread_t) * thread_count);
+
+    for (i = 0; i < thread_count; i++)
     {
         env[i] = calloc(1, sizeof(bombyx_env_t));
         env[i]->thread_id = i + 1;
         pthread_create(&id[i], NULL, thread, (void *)env[i]);
     }
 
-    for (i = 0; i < THREAD_COUNT; i++)
+    for (i = 0; i < thread_count; i++)
     {
         pthread_join(id[i], NULL);
     }
@@ -170,4 +180,19 @@ void *thread(void *a)
     }
 
     return NULL;
+}
+
+long getCpuCount()
+{
+    long nprocs = sysconf(_SC_NPROCESSORS_ONLN);
+
+    if (nprocs < 1)
+    {
+        fprintf(stderr, "Cannot determine number of CPUs online:\n%s\n", strerror(errno));
+        return 1;
+    }
+
+    printf("%ld x CPU found.\n", nprocs);
+
+    return nprocs;
 }
