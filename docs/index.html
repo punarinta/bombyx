@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bombyx</title>
+<link rel="shortcut icon" href="favicon.ico">
+<style>
+    body {font-family:"Lucida Grande","Trebuchet MS",sans-serif;margin:0 auto;max-width:800px}
+    code {padding:0 4px 1px;background:#393939;color:#adc5d0;border-radius:2px;display: inline-block}
+    code.block {padding:3px 10px 6px;line-height:150%}
+    .var {color:#9876AA}
+    .oper {color: #ffbd8e}
+    section {margin-bottom:50px}
+    tab {display: inline-block;width:30px}
+</style>
+</head>
+<body>
+    <section>
+        <h2>The experiment</h2>
+        <div style="float:left;margin-right:20px">
+            <img src="logo.png" alt="Bombyx logo" width="200px"/>
+        </div>
+        <p>
+            Bombyx is a web development environment consisting of a lightweight compiler and a set of dynamic libraries called <em>cocoons</em>.
+            Programs built with Bombyx are intended for server-side execution.
+            The name is taken from a
+            <a href="http://en.wikipedia.org/wiki/Bombyx_mori" target="_blank">domesticated silkworm</a> whose silk can also be used to weave a web.
+            Hence also the name of the files with code — <em>leafs</em> with an extension *.leaf and other minor stuff.
+        </p>
+        <p>
+            This document is a sketch and will be developed further but still should give you a brief explanation of Bombyx.
+        </p>
+    </section>
+
+    <section>
+        <h3>Variables</h3>
+        <p>
+            Variables are declared by a keyword <code>var</code>. The type is defined during the first equation and may be changed during any of the next equations. Possible types are:
+        </p>
+        <ul>
+            <li>string — a string literal of an unlimited size</li>
+            <li>number — a floating point number with double precision</li>
+            <li>null — nothing, just nothing</li>
+            <li>array — an array</li>
+            <li>map — an associative array</li>
+            <li>pointer — a pointer to an arbitrary object</li>
+        </ul>
+        <p><em>Arrays</em> and <em>maps</em> are defined using JSON format. Further down you'll see that I like JSON.</p>
+        <p>
+            As <em>maps</em> may be of an unlimited depth they may contain other <em>maps</em> or <em>arrays</em>.
+            So I've implemented a convenient way of accessing elements within this tree, called APath (array path), previously designed for my job project.
+            The advantage of such an access seems to me in the possibility to control access with an ordinary string, instead of language operators.
+        </p>
+        <p>
+            <code class="block">
+                var x = {"garden":[{"name":"apricot"}, {"name":"mulberry"}, {"name":"cherry"}]}
+                <br/>
+                print('Bombyx lives on ' + x['garden.1.name'] + 'tree.')
+            </code>
+        </p>
+    </section>
+
+    <section>
+        <h3>Blocks</h3>
+        <p>
+            A part of code with limited variable visibility is called <em>block</em>. Both functions and bodies of control statements
+            are technically blocks with the exception that functions have names and control-statement blocks do not.
+        </p>
+        <p>
+            A <em>block</em> is declared by a keyword <code>block</code> and must be enclosed in figure brackets,
+            even if it's a single line statement. Blocks can accept parameters if they are called with such. Using keyword <code>param</code>
+            you may read a parameter. Parameter may have default values.
+        </p>
+        <p>
+            <code class="block">
+                block myPrettyFunction
+                <br/>
+                {
+                <br/>
+                    <tab></tab>param x, y = 42
+                <br/>
+                }
+            </code>
+        </p>
+    </section>
+
+    <section>
+        <h3>Operators</h3>
+
+        <p>Arithmetic operators:</p>
+        <ul>
+            <li>a = b — assignment</li>
+            <li>a + b — addition</li>
+            <li>a - b — subtraction</li>
+            <li>a * b — multiplication</li>
+            <li>a / b — division</li>
+            <li>-a — unary minus</li>
+            <li>++a — increment</li>
+            <li>--a — decrement</li>
+        </ul>
+
+        <p>Comparison operators:</p>
+        <ul>
+            <li>a == b — equal to</li>
+            <li>a != b — not equal to</li>
+            <li>a > b — more</li>
+            <li>a < b — less</li>
+            <li>a >= b — more or equal</li>
+            <li>a <= b — less or equal</li>
+        </ul>
+
+        <p>Logical operators:</p>
+        <ul>
+            <li>!a — logical negation</li>
+            <li>a && b — logical AND</li>
+            <li>a || b — logical OR</li>
+        </ul>
+
+        <p>Access operators:</p>
+        <ul>
+            <li>a[b] — access element number <em>b</em> of an array <em>a</em></li>
+            <li>a['b'] — access element named <em>b</em> in a map <em>a</em></li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>Control statements</h3>
+
+        <ul>
+            <li>if (statement) { code } — executes <em>code</em> if <em>statement</em> is true</li>
+            <li>while (statement) { code } — repeatedly executes <em>code</em> while <em>statement</em> is true</li>
+            <li>return — returns on the previous level</li>
+        </ul>
+    </section>
+
+</body>
+</html>
