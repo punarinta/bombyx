@@ -75,10 +75,7 @@ void *thread(void *a)
         }
 
         char *uri = FCGX_GetParam("DOCUMENT_URI", env->request.envp),
-             *query = FCGX_GetParam("QUERY_STRING", env->request.envp),
-             *cookies = FCGX_GetParam("HTTP_COOKIE", env->request.envp),
-             *filename = FCGX_GetParam("SCRIPT_FILENAME", env->request.envp),
-             *method = FCGX_GetParam("REQUEST_METHOD", env->request.envp);
+             *filename = FCGX_GetParam("LEAF_FILENAME", env->request.envp);
 
         printf("Requested '%s', accepted by thread %d.\n", uri, env->thread_id);
 
