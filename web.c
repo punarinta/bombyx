@@ -160,6 +160,12 @@ void *thread(void *a)
             fputs("File does not exist.\n", stderr);
         }
 
+        if (!env->wd->body_started)
+        {
+            // no body was sent
+            FCGX_PutS("\r\n", env->request.out);
+        }
+
         FCGX_Finish_r(&env->request);
     }
 
