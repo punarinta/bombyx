@@ -115,6 +115,63 @@ var render_(bombyx_env_t *env, BYTE argc, var *stack)
 }
 
 /**
+ * Reads / writes a cookie.
+ *
+ * @param string name
+ * @param [string value]
+ * @param [map options]
+ *
+ * @return string
+ */
+var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
+{
+    if (argc < 1 || stack[0].type != VAR_STRING)
+    {
+        return cocoon_error(env, "No key given or type is not [STRING].");
+    }
+
+    var v = {0};
+
+    if (argc > 1)
+    {
+        // TODO: support more convenient way of setting cookies
+        FCGX_FPrintF(env->request.out, "Set-Cookie: %s=%s;\r\n", stack[0].data, stack[1].data);
+        return v;
+    }
+
+    // explode COOKIE string
+    char *key, *val, *tok = NULL, *query = strdup(FCGX_GetParam("HTTP_COOKIE", env->request.envp));
+
+    tok = strtok(query, ";");
+
+    while (tok)
+    {
+        char *pair = strdup(tok);
+        char *saveptr;
+
+        key = strtok_r(pair, "=", &saveptr);
+        val = strtok_r(NULL, "=", &saveptr);
+
+        if (!memcmp(stack[0].data, key, stack[0].data_size))
+        {
+            // key found, return
+            v.type = VAR_STRING;
+            v.data = strdup(val);
+            v.data_size = strlen(v.data) + 1;
+            free(pair);
+            return v;
+        }
+
+        free(pair);
+        tok = strtok(NULL, ";");
+
+        if (!tok) break;
+    }
+
+    return v;
+}
+
+/**
  * Generates a hash for a password.
  *
  * @param string password
