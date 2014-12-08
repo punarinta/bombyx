@@ -189,6 +189,49 @@ var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
 }
 
 /**
+ * Starts or resumes the session.
+ *
+ * @param [string id | number 0]
+ *
+ * @return string
+ */
+var session_(bombyx_env_t *env, BYTE argc, var *stack)
+{
+    var v = {0};
+
+    if (argc == 1)
+    {
+        if (stack[0].type == VAR_STRING)
+        {
+            // load existing session by id
+            return v;
+        }
+        else
+        {
+            // generate a new session
+            char *id = malloc(42);
+            strcpy(id, "sessions/");
+            random_string(id + 9, 32);
+
+            FILE *fp = fopen(id, "wb");
+            if (!fp)
+            {
+                free(id);
+                return cocoon_error(env, "Cannot start session.");
+            }
+
+            free(id);
+            fclose(fp);
+
+            return v;
+        }
+    }
+
+    // try to resume session by id from cookies
+    return v;
+}
+
+/**
  * Generates a hash for a password.
  *
  * @param string password
