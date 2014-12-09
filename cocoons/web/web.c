@@ -198,36 +198,64 @@ var cookie_(bombyx_env_t *env, BYTE argc, var *stack)
 var session_(bombyx_env_t *env, BYTE argc, var *stack)
 {
     var v = {0};
+    FILE *fp = NULL;
+    size_t jsonLength = 0;
+    char *jsonSession, *id = malloc(42);
+
+    memcpy(id, "sessions/", 9);
 
     if (argc == 1)
     {
         if (stack[0].type == VAR_STRING)
         {
             // load existing session by id
-            return v;
+            if (stack[0].data_size != 33)
+            {
+                v = cocoon_error(env, "Wrong session ID length.");
+                goto session_failed;
+            }
+
+            memcpy(id + 9, stack[0].data, 33);
+
+            if (!(fp = fopen(id, "rb")))
+            {
+                v = cocoon_error(env, "Cannot start session.");
+                goto session_failed;
+            }
+
+            fread(&jsonLength, 4, 1, fp);
+            fread(jsonSession, jsonLength, 1, fp);
+
+            // TODO: JSON to map
         }
         else
         {
             // generate a new session
-            char *id = malloc(42);
-            strcpy(id, "sessions/");
             random_string(id + 9, 32);
 
-            FILE *fp = fopen(id, "wb");
-            if (!fp)
+            if (!(fp = fopen(id, "wb")))
             {
-                free(id);
-                return cocoon_error(env, "Cannot start session.");
+                v = cocoon_error(env, "Cannot start session.");
+                goto session_failed;
             }
 
-            free(id);
-            fclose(fp);
+            // TODO: map to JSON
 
-            return v;
+            fwrite(&jsonLength, 4, 1, fp);
+            fwrite(jsonSession, jsonLength, 1, fp);
         }
     }
+    else
+    {
+        // try to resume session by id from cookies
 
-    // try to resume session by id from cookies
+    }
+
+    session_failed:;
+
+    if (fp) fclose(fp);
+    free(id);
+
     return v;
 }
 

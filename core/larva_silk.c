@@ -200,7 +200,9 @@ void larva_silk(bombyx_env_t *env)
                     larva_error(env, "Map key must be a string.");
                 }
                 map_t *m = map_lookup(vt->v.data, v1.data);
-                stack_push(env, m->v);
+                memset(&v2, 0, sizeof(var));
+                op_copy(env, &v2, &m->v);
+                stack_push(env, v2);
             }
             else if (vt->v.type == VAR_ARRAY)
             {

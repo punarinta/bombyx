@@ -1,6 +1,5 @@
 #include "array.h"
 #include "var_2.h"
-#include "var_2.h"
 
 #define MIN_ARRAY_SIZE 100
 

@@ -49,7 +49,10 @@ map_t *map_lookup(map_table_t *hashtable, char *str)
     return NULL;
 }
 
-map_t *map_add(map_table_t *hashtable, char *str, var v)
+/*
+    Warning: map_add() uses direct variable copying, not an op_copy()
+*/
+map_t *map_add(bombyx_env_t *env, map_table_t *hashtable, char *str, var v)
 {
     map_t *new_list;
     map_t *current_list;
@@ -64,7 +67,10 @@ map_t *map_add(map_table_t *hashtable, char *str, var v)
 
     /* Insert into list */
     new_list->name = strdup(str);
+
+    // op_copy(env, &new_list->v, &v);
     new_list->v = v;
+
     new_list->next = hashtable->table[hashval];
     hashtable->table[hashval] = new_list;
 
@@ -135,8 +141,9 @@ map_table_t *map_table_clone(bombyx_env_t *env, map_table_t *hashtable)
         while (list != NULL)
         {
             var v = {0};
+            // map_add will not copy 'v'
             op_copy(env, &v, &list->v);
-            map_add(new_map, list->name, v);
+            map_add(env, new_map, list->name, v);
             list = list->next;
         }
     }

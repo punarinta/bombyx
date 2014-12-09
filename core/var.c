@@ -276,7 +276,7 @@ map_table_t *json_to_map(bombyx_env_t *env, json_t *json)
                 v.data_size = sizeof(double);
                 *(double *)v.data = json_number_value(value);
             }
-            map_add(map, (char *)key, v);
+            map_add(env, map, (char *)key, v);
         }
     }
 
