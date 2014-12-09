@@ -200,7 +200,7 @@ void larva_silk(bombyx_env_t *env)
                     larva_error(env, "Map key must be a string.");
                 }
                 map_t *m = map_lookup(vt->v.data, v1.data);
-                memset(&v2, 0, sizeof(var));
+                v2.data = NULL;
                 op_copy(env, &v2, &m->v);
                 stack_push(env, v2);
             }
@@ -210,7 +210,7 @@ void larva_silk(bombyx_env_t *env)
                 {
                     larva_error(env, "Array index must be a number");
                 }
-                memset(&v2, 0, sizeof(var));
+                v2.data = NULL;
                 op_copy(env, &v2, ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]);
                 stack_push(env, v2);
             }
