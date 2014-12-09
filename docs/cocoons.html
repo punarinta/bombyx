@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Bombyx cocoons</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <style>
+        body {font-family:"Lucida Grande","Trebuchet MS",sans-serif;margin:0 auto;max-width:800px;padding-top:20px}
+        code {padding:0 4px 1px;background:#393939;color:#adc5d0;border-radius:2px;display:inline-block}
+        code.block {padding:3px 10px 6px;line-height:150%}
+        section {margin-bottom:45px;background:#f0f0f0;padding:5px 25px 10px;border-radius:3px}
+        tab {display:inline-block;width:30px}
+    </style>
+</head>
+<body>
+    <section>
+        <h3>web</h3>
+        <p>
+            This cocoon is intended to be used mostly with web-version of Bombyx, most of the functions will show an error when run in CLI.
+            NB: function description is very brief, for now it's almost just a list.
+        </p>
+        <ul>
+            <li>render(filename, [variables]) — outputs template</li>
+            <li>secret(string, strength | hash) — generates/checks a password</li>
+            <li>cookie(name, [value], [options]) — reads/writes a cookie</li>
+            <li>session([id]) — creates/loads a session</li>
+            <li>fromGet(keyname) — gets a value of GET key</li>
+            <li>fromPost(keyname) — gets a value of POST key</li>
+            <li>fromJson([apath]) — gets a variable from posted JSON</li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>text</h3>
+        <p>
+            A cocoon for working with text.
+        </p>
+        <ul>
+            <li>split(string, separator) — splits a string into an array using separator</li>
+            <li>trim(string) — trims a string</li>
+            <li>replace(string, old, new) — performs global replacement</li>
+            <li>length(string) — computes length of a string in symbols (not in bytes)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>db</h3>
+        <p>
+            A cocoon for working with a database.
+        </p>
+        <ul>
+            <li>connect(host, user, pass, db, port) — connects to a database</li>
+            <li>row(link, query) — automatically gets a row from DB in a form of an array</li>
+            <li>query(link, query) — executes a query</li>
+            <li>fetchRow(sql_result) — manually extracts a row from sql-result</li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>json</h3>
+        <p>
+            Utilitary JSON cocoon.
+        </p>
+        <ul>
+            <li>to(variable) — converts a variable into a string</li>
+            <li>from(string) — converts a string into a variable</li>
+        </ul>
+    </section>
+
+</body>
+</html>
