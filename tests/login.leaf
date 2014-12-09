@@ -4,10 +4,8 @@ use web
 use json
 use mysql
 
-block checkPassword
+block checkPassword(username, password)
 {
-    param username, password
-
     # 'db' is accessible from here as it was defined on a higher level
     var row = mysql::row(db, 'SELECT password FROM user WHERE username = \'' + username + '\'')
 
