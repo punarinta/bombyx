@@ -5,14 +5,13 @@
 <title>Bombyx</title>
 <link rel="shortcut icon" href="favicon.ico">
 <style>
-    body {font-family:"Lucida Grande","Trebuchet MS",sans-serif;margin:0 auto;max-width:800px}
-    code {padding:0 4px 1px;background:#393939;color:#adc5d0;border-radius:2px;display: inline-block}
+    body {font-family:"Lucida Grande","Trebuchet MS",sans-serif;margin:0 auto;max-width:800px;padding-top:20px}
+    code {padding:0 4px 1px;background:#393939;color:#adc5d0;border-radius:2px;display:inline-block}
     code.block {padding:3px 10px 6px;line-height:150%}
-    .var {color:#9876AA}
-    .oper {color: #ffbd8e}
-    section {margin-bottom:50px}
-    tab {display: inline-block;width:30px}
+    section {margin-bottom:45px;background:#f0f0f0;padding:5px 25px 10px;border-radius:3px}
+    tab {display:inline-block;width:30px}
 </style>
+<script src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
 </head>
 <body>
     <section>
@@ -26,65 +25,118 @@
             The name is taken from a
             <a href="http://en.wikipedia.org/wiki/Bombyx_mori" target="_blank">domesticated silkworm</a> whose silk can also be used to weave a web.
             Hence also the name of the files with code — <em>leafs</em> with an extension *.leaf and other minor stuff.
+            All the source code is available <a href="https://github.com/punarinta/bombyx" target="_blank">here</a>.
         </p>
         <p>
-            This document is a sketch and will be developed further but still should give you a brief explanation of Bombyx.
+            This document is a sketch and will be developed further but still should give you a brief explanation of what all this is.
+        </p>
+        <ol>
+            <li><a href="#code-comments">Code comments</a></li>
+            <li><a href="#variables">Variables</a></li>
+            <li><a href="#blocks">Blocks</a></li>
+            <li><a href="#operators">Operators</a></li>
+            <li><a href="#control-statements">Control statements</a></li>
+            <li><a href="#extending-the-code">Extending the code</a></li>
+        </ol>
+    </section>
+
+    <section>
+        <a name="code-comments"></a>
+        <h3>Code comments</h3>
+        <p>
+            Two types of comments are supported: single line and multiple line. Both of them may start wherever you want.
+            Comments inside a string will, of course, act just like <em>#</em> symbols.
+            Single line comments comment everything up to the end of line, while multiple line stops after it is closed.
+        </p>
+        <p>
+            <code># this is a single line comment</code>
+        </p>
+        <p>
+            <code class="block">
+                ##
+                <tab></tab>this is a
+                <tab></tab>multiple line
+                <tab></tab>comment
+                ##
+            </code>
         </p>
     </section>
 
     <section>
+        <a name="variables"></a>
         <h3>Variables</h3>
         <p>
-            Variables are declared by a keyword <code>var</code>. The type is defined during the first equation and may be changed during any of the next equations. Possible types are:
+            Variables are declared by a keyword <code>var</code>. Their type is defined during the first equation and may be changed during any of the next equations.
+            Possible types are:
         </p>
         <ul>
-            <li>string — a string literal of an unlimited size</li>
+            <li>string — a string literal</li>
             <li>number — a floating point number with double precision</li>
             <li>null — nothing, just nothing</li>
             <li>array — an array</li>
             <li>map — an associative array</li>
             <li>pointer — a pointer to an arbitrary object</li>
         </ul>
-        <p><em>Arrays</em> and <em>maps</em> are defined using JSON format. Further down you'll see that I like JSON.</p>
+        <p><em>Arrays</em> and <em>maps</em> are defined using JSON format.</p>
         <p>
             As <em>maps</em> may be of an unlimited depth they may contain other <em>maps</em> or <em>arrays</em>.
-            So I've implemented a convenient way of accessing elements within this tree, called APath (array path), previously designed for my job project.
+            So I've implemented a convenient way of accessing elements within this tree, called APath (array path), previously designed for one of my job project.
             The advantage of such an access seems to me in the possibility to control access with an ordinary string, instead of language operators.
         </p>
         <p>
             <code class="block">
                 var x = {"garden":[{"name":"apricot"}, {"name":"mulberry"}, {"name":"cherry"}]}
-                <br/>
-                print('Bombyx lives on ' + x['garden.1.name'] + 'tree.')
+                print('Bombyx lives on ' + x['garden.1.name'] + ' tree.')
             </code>
         </p>
     </section>
 
     <section>
+        <a name="blocks"></a>
         <h3>Blocks</h3>
         <p>
-            A part of code with limited variable visibility is called <em>block</em>. Both functions and bodies of control statements
-            are technically blocks with the exception that functions have names and control-statement blocks do not.
+            A part of code with limited variable visibility is called <em>block</em>. Both functional blocks and bodies of control statements
+            are technically blocks with the exception that functions have names and control-statement blocks do not. Any block must be enclosed
+            in figure brackets, even if it's a single line statement.
         </p>
         <p>
-            A <em>block</em> is declared by a keyword <code>block</code> and must be enclosed in figure brackets,
-            even if it's a single line statement. Blocks can accept parameters if they are called with such. Using keyword <code>param</code>
-            you may read a parameter. Parameter may have default values.
+            A functional <em>block</em> is declared by a keyword <code>block</code> and. It can accept parameters if they are called with such. Parameter may have default values.
         </p>
         <p>
             <code class="block">
-                block myPrettyFunction
-                <br/>
+                block myPrettyFunction(x, y = 42)
                 {
-                <br/>
-                    <tab></tab>param x, y = 42
-                <br/>
+                    <tab></tab>return x * y
                 }
             </code>
         </p>
+        <p>
+            Functional blocks are called with a usual function syntax: <code>chew('mulberry leave', 10, 42)</code>.
+            If it is necessary to omit an argument in the middle use an underscore: <code>chew('mulberry leave', _, 42)</code>.
+            In this case the default value for the argument will be used.
+        </p>
+        <p>Blocks can be stacked</p>
+        <p>
+            <code class="block">
+                block F
+                {
+                <tab></tab>block G
+                <tab></tab>{
+                <tab></tab>}
+                }
+                
+                G() # this will cause an error 
+                F.G() # this will too 
+                
+                F() # Initialize parent block first 
+                F.G() # This is OK
+            </code>
+        </p>
+
     </section>
 
     <section>
+        <a name="operators"></a>
         <h3>Operators</h3>
 
         <p>Arithmetic operators:</p>
@@ -116,22 +168,76 @@
             <li>a || b — logical OR</li>
         </ul>
 
-        <p>Access operators:</p>
+        <p>Other operators:</p>
         <ul>
-            <li>a[b] — access element number <em>b</em> of an array <em>a</em></li>
-            <li>a['b'] — access element named <em>b</em> in a map <em>a</em></li>
+            <li>'a' — define a text variable</li>
+            <li>a::b — access function <em>b</em> of cocoon <em>a</em></li>
+            <li>a.b — access block/variable <em>b</em> of block <em>a</em></li>
+            <li>a[b] — access element with index <em>b</em> of array <em>a</em></li>
+            <li>a['b'] — access element with APath <em>'b'</em> in map <em>a</em></li>
         </ul>
     </section>
 
     <section>
+        <a name="control-statements"></a>
         <h3>Control statements</h3>
 
         <ul>
             <li>if (statement) { code } — executes <em>code</em> if <em>statement</em> is true</li>
+            <li>else (statement) { code } — executes <em>code</em> if the previous <em>if</em> clause was false</li>
             <li>while (statement) { code } — repeatedly executes <em>code</em> while <em>statement</em> is true</li>
             <li>return — returns on the previous level</li>
         </ul>
+
+        <p>
+            Note that <em>if</em> and <em>else</em> may not stick together, but have an intermediate unconditional statement.
+            The following code will output "X <==":
+        </p>
+        <code class="block">
+            var pos = 'left'
+            if (pos == 'right')
+            {
+                <tab></tab>print('==> ')
+            }
+            print('X')
+            else
+            {
+                <tab></tab>print(' <==')
+            }
+        </code>
+    </section>
+
+    <section>
+        <a name="extending-the-code"></a>
+        <h3>Extending the code</h3>
+        <p>
+            Bombyx core has only one function — <em>print()</em>. All other functions are external in relation to the core.
+            There are two ways of extending functionality: by including other leaf-files and by dynamically accessing functions in cocoons.
+            The first is done by <code>include</code> keyword, the second — by <code>use</code> keyword.
+        </p>
+        <p>(to be correct, during the development stage one more function, <em>microtime()</em>, is also available for convenient in-situ profiling)</p>
+        <p>Functions within cocoons are accessed using <code>::</code> operator, see above.</p>
+        <p>
+            <code class="block">
+                use web
+                include 'login-page.leaf'
+
+                var params = {"a":41, "b":"88"}
+                web::render('index.html', params)
+            </code>
+        </p>
+        <p>
+            See the list of currently maintained cocoons and their functions <a href="cocoons.html">here</a>.
+        </p>
     </section>
 
 </body>
+<script>
+    $('code.block').each(function(i, e)
+    {
+        var html = $(e).html().split('\n');
+        html.shift();
+        $(e).html(html.join('<br/>'));
+    })
+</script>
 </html>
