@@ -1,0 +1,8 @@
+var t = microtime(), n = 10000, a, arr = {"foo":"bar"}
+
+while(--n)
+{
+    a = arr['foo']
+}
+
+print('\nExecution took: ' + (microtime() - t) + ' microsecond(s).\n')
