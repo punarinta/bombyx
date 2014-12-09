@@ -684,7 +684,10 @@ void larva_silk(bombyx_env_t *env)
 
             // pop the var from stack anyway
             v1 = stack_pop(env);
-            v2 = stack_pop(env);
+
+            // stack may be empty
+            if (env->bc_stack_size) v2 = stack_pop(env);
+            else memset(&v2, 0, sizeof(var));
 
             if (v2.type == VAR_UNSET || param_count < 0)
             {
