@@ -129,9 +129,8 @@ print('Blocks (b1, b1.b2):\n')
 
 block b1
 {
-    block b2
+    block b2(x)
     {
-        param x
         print('b1.b2() should return 95\n')
         return x
     }

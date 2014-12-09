@@ -69,7 +69,7 @@ void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
             // now 'source' contains cleaned code from included file
             // we insert this code into code_pos and increase code_length on its length
 
-            env->code = realloc(env->code, env->code_length + included_size - (env->code_pos - line_start));
+            env->code = realloc(env->code, env->code_length + included_size - (env->code_pos - line_start) + 1);
 
             if (!env->code)
             {
@@ -78,10 +78,13 @@ void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
 
             // move the unprocessed code
             // thus the trailing zero will be moved to the very end
-            memmove(env->code + line_start + included_size, env->code + env->code_pos, env->code_length - env->code_pos);
+            memmove(env->code + line_start + 1 + included_size, env->code + env->code_pos, env->code_length - env->code_pos);
 
             // move the included source
-            memmove(env->code + line_start, source, included_size);
+            memmove(env->code + line_start + 1, source, included_size);
+
+            // insert a newline
+            env->code[line_start] = '\n';
 
             env->code_length += (included_size - (env->code_pos - line_start));
 
@@ -150,6 +153,8 @@ char *larva_chew(bombyx_env_t *env, char *incoming_code, size_t len, size_t *new
  */
 void larva_digest(bombyx_env_t *env)
 {
+    BYTE is_param;
+    BYTE expect_block = 0;
     env->code_pos = 0;
     char token[PARSER_MAX_TOKEN_SIZE];
 
@@ -163,10 +168,9 @@ void larva_digest(bombyx_env_t *env)
         {
             bc_add_cmd(env, BCO_BLOCK_END);
         }
-        else if (!memcmp(token, "var\0", 4) || !memcmp(token, "param\0", 6))
+        else if (!memcmp(token, "var\0", 4))
         {
-            BYTE is_param = 0;
-            if (!memcmp(token, "param\0", 6)) is_param = 1;
+            is_param = 0;
 
             re_read_var:
 
@@ -178,7 +182,6 @@ void larva_digest(bombyx_env_t *env)
                 || !memcmp(token, "block\0", 6)
                 || !memcmp(token, "return\0", 7)
                 || !memcmp(token, "while\0", 6)
-                || !memcmp(token, "param\0", 6)
             )
             {
                 fprintf(stderr, "Token '%s' is reserved and cannot be used as a variable name.", token);
@@ -204,6 +207,14 @@ void larva_digest(bombyx_env_t *env)
                 goto re_read_var;
             }
 
+            if (env->code[env->code_pos] == ')')
+            {
+                bc_add_cmd(env, BCO_PARAM);
+                bc_add_token(env, token);
+                ++env->code_pos;
+                continue;
+            }
+
             if (env->code[env->code_pos] != '=')
             {
                 fprintf(stderr, "Operator '=' expected, found '%c' '%s'", env->code[env->code_pos], token);
@@ -221,7 +232,7 @@ void larva_digest(bombyx_env_t *env)
                 // Madness? No. This. Is. JSON!
 
                 size_t json_string_start = env->code_pos;
-                while (env->code[env->code_pos] && env->code[env->code_pos] != '\n' && env->code[env->code_pos] != '\r')
+                while (env->code[env->code_pos] && env->code[env->code_pos] != '\n' && env->code[env->code_pos] != '\r' && env->code[env->code_pos] != ')')
                 {
                     ++env->code_pos;
                 }
@@ -266,6 +277,15 @@ void larva_digest(bombyx_env_t *env)
             larva_read_token(env, token);
             bc_add_cmd(env, BCO_BLOCK_DEF);
             bc_add_token(env, token);
+            bc_add_cmd(env, BCO_BLOCK_START);
+            expect_block = 1;
+
+            if (env->code[env->code_pos] == '(')
+            {
+                ++env->code_pos;
+                is_param = 1;
+                goto re_read_var;
+            }
         }
         else if (!memcmp(token, "if\0", 3))
         {
@@ -325,7 +345,8 @@ void larva_digest(bombyx_env_t *env)
         }
         else if (!memcmp(token, "{\0", 2))
         {
-            bc_add_cmd(env, BCO_BLOCK_START);
+            if (!expect_block) bc_add_cmd(env, BCO_BLOCK_START);
+            else expect_block = 0;
         }
         else if (!memcmp(token, "use\0", 4))
         {
@@ -360,6 +381,7 @@ void larva_read_token(bombyx_env_t *env, char *token)
 
         // either it's a function call or just a command
         if (env->code[env->code_pos] == '('
+        || env->code[env->code_pos] == ')'
         || env->code[env->code_pos] == ','
         || env->code[env->code_pos] == '='
         || isspace(env->code[env->code_pos])

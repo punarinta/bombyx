@@ -59,7 +59,7 @@ void larva_silk(bombyx_env_t *env)
     env->run_flag[0] = 0;    // do we need this?
     size_t size = 0;
     BYTE skip_mode = 0;
-    size_t param_count = 0;
+    int param_count = 0;
     block_t *parent_block = NULL;
     char token[PARSER_MAX_TOKEN_SIZE];
     char token2[PARSER_MAX_TOKEN_SIZE];
@@ -657,7 +657,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (!(param_count--))
             {
-                larva_error(env, "Block was called with less arguments than you are fetching.");
+                larva_error(env, "Function requires more arguments.");
             }
 
             memcpy(token, env->bytecode + env->bc_pos, size);
@@ -676,10 +676,7 @@ void larva_silk(bombyx_env_t *env)
             }
             debug_verbose_puts("BCO_PARAMX");
 
-            if (!(param_count--))
-            {
-                larva_error(env, "Block was called with less arguments than you are fetching.");
-            }
+            param_count--;
 
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
@@ -689,7 +686,7 @@ void larva_silk(bombyx_env_t *env)
             v1 = stack_pop(env);
             v2 = stack_pop(env);
 
-            if (v2.type == VAR_UNSET)
+            if (v2.type == VAR_UNSET || param_count < 0)
             {
                 op_copy(env, &vt->v, &v1);
             }

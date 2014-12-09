@@ -7,7 +7,7 @@
 void parse(bombyx_env_t *env)
 {
     BYTE quote_opened = 0;
-    BYTE br_level = 0;
+    int br_level = 0;   // must be signed!
     char *expression;
     size_t expression_size;
     size_t expression_start = env->code_pos;
@@ -23,6 +23,11 @@ void parse(bombyx_env_t *env)
             else if (env->code[env->code_pos] == '(') ++br_level;
             else if (env->code[env->code_pos] == ')') --br_level;
             else if (env->code[env->code_pos] == ',' && !br_level) break;
+        }
+
+        if (br_level < 0)
+        {
+            break;
         }
 
         if (env->code[env->code_pos] == '\'') quote_opened = !quote_opened;
@@ -80,7 +85,7 @@ void parser_parse(parser_data *pd)
 
     if (pd->pos < pd->len - 1)
     {
-        larva_error(pd->env, "Failed to reach end of input expression, likely malformed input");
+        larva_error(pd->env, "Failed to reach end of input expression: '%s'.", pd->str);
     }
 }
 
@@ -93,7 +98,7 @@ char parser_peek(parser_data *pd)
 {
     unsigned int p = pd->pos;
 	if (p < pd->len) return pd->str[p];
-	parser_error(pd, "Tried to read past end of string!");
+	parser_error(pd, "Tried to read past end of string.");
 
 	return 0;
 }
@@ -101,7 +106,7 @@ char parser_peek(parser_data *pd)
 char parser_peek_n(parser_data *pd, int n)
 {
 	if (pd->pos+n < pd->len) return pd->str[pd->pos+n];
-	parser_error(pd, "Tried to read past end of string!");
+	parser_error(pd, "Tried to read past end of string.");
 
 	return 0;
 }
@@ -109,7 +114,7 @@ char parser_peek_n(parser_data *pd, int n)
 char parser_eat(parser_data *pd)
 {
 	if (pd->pos < pd->len) return pd->str[pd->pos++];
-	parser_error(pd, "Tried to read past end of string!");
+	parser_error(pd, "Tried to read past end of string.");
 
 	return 0;
 }
@@ -122,7 +127,7 @@ void parser_eat_whitespace( parser_data *pd )
 void parser_skip(parser_data *pd)
 {
 	if (pd->pos < pd->len) pd->pos++;
-	else parser_error(pd, "Tried to read past end of string!");
+	else parser_error(pd, "Tried to read past end of string.");
 }
 
 void parser_read_double(parser_data *pd)
