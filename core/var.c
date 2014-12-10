@@ -235,6 +235,49 @@ var var_from_json(bombyx_env_t *env, char *a)
     return v;
 }
 
+/*
+    Returns a pointer to a variable object pointed by APath
+*/
+var *var_apath(bombyx_env_t *env, void *pointer, char *apath)
+{
+    var v = {0};
+    var *object = pointer;
+
+    int index;
+    char *saveptr, *tok = strtok_r(apath, ".", &saveptr);
+
+    while (tok && pointer)
+    {
+        index = atoi(tok);
+
+        if (index || tok[0] == '0')
+        {
+            // it's a number -> array access
+            if (object->type != VAR_ARRAY)
+            {
+                return NULL;
+            }
+
+            object = ((array_t *)object->data)->vars[index];
+        }
+        else
+        {
+            if (object->type != VAR_MAP)
+            {
+                return NULL;
+            }
+
+            map_t *m = map_lookup(object->data, tok);
+            object = &m->v;
+        }
+
+        tok = strtok_r(NULL, ".", &saveptr);
+        if (!tok) break;
+    }
+
+    return object;
+}
+
 map_table_t *json_to_map(bombyx_env_t *env, json_t *json)
 {
     size_t index;

@@ -46,4 +46,6 @@ BYTE var_is_less_equal(bombyx_env_t *, var *, var *);
 map_table_t *json_to_map(bombyx_env_t *env, json_t *);
 array_t *json_to_array(bombyx_env_t *env, json_t *);
 
+var *var_apath(bombyx_env_t *, void *, char *);
+
 #endif

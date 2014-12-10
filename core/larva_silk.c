@@ -189,27 +189,25 @@ void larva_silk(bombyx_env_t *env)
 
             v1 = stack_pop(env);
 
-            // TODO: parse APath and access JSON recursively
-
             vt = var_lookup(env->vars, token);
 
-            if (vt->v.type == VAR_MAP)
+            if (v1.type == VAR_STRING)
             {
-                if (v1.type != VAR_STRING)
+                var *pv = var_apath(env, &vt->v, v1.data);
+
+                if (pv)
                 {
-                    larva_error(env, "Map key must be a string.");
+                    op_copy(env, &v2, pv);
                 }
-                map_t *m = map_lookup(vt->v.data, v1.data);
-                v2.data = NULL;
-                op_copy(env, &v2, &m->v);
+                else
+                {
+                    memset(&v2, 0, sizeof(var));
+                }
+
                 stack_push(env, v2);
             }
-            else if (vt->v.type == VAR_ARRAY)
+            else if (v1.type == VAR_DOUBLE)
             {
-                if (v1.type != VAR_DOUBLE)
-                {
-                    larva_error(env, "Array index must be a number");
-                }
                 v2.data = NULL;
                 op_copy(env, &v2, ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]);
                 stack_push(env, v2);
