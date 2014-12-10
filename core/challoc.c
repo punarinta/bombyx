@@ -20,16 +20,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-struct chunk_allocator
-{
-     size_t n_chunks;            /* number of chunks this allocator holds */
-     size_t chunk_size;          /* size of single chunk in bytes         */
-     size_t current_chunk;       /* stack pointer in chunks               */
-     ChunkAllocator* next;       /* next allocator, if this one is full   */
-     unsigned char** chunks;     /* stack of free locations in memory     */
-     unsigned char* memory;      /* challoc returns memory from here      */
-};
-
 static ChunkAllocator* get_first_allocator_with_free_chunk(ChunkAllocator* start)
 {
     ChunkAllocator* iter = NULL;

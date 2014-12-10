@@ -64,7 +64,15 @@
  * calls to malloc()/free() is avoided.
  */
 
-typedef struct chunk_allocator ChunkAllocator;
+typedef struct chunk_allocator
+{
+     size_t n_chunks;               /* number of chunks this allocator holds */
+     size_t chunk_size;             /* size of single chunk in bytes         */
+     size_t current_chunk;          /* stack pointer in chunks               */
+     struct chunk_allocator* next;  /* next allocator, if this one is full   */
+     unsigned char** chunks;        /* stack of free locations in memory     */
+     unsigned char* memory;         /* challoc returns memory from here      */
+} ChunkAllocator;
 
 /*
  * These functions deal with the system's memory!
