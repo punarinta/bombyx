@@ -7,5 +7,6 @@ void *bytecopy(void * const, void const * const, size_t);
 double get_microtime();
 char *get_file_contents(char *);
 char *str_replace(const char *, const char *, const char *);
+char *strtok_r(char *, const char *, char **);
 
 #endif
