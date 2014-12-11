@@ -8,6 +8,7 @@
 #include "array.h"
 #include "larva.h"
 #include "bytecode.h"
+#include "expression.h"
 #include "common.h"
 #include "../vendor/jansson.h"
 
@@ -293,12 +294,26 @@ void op_swap(var *a, var *b)
 
 void op_and(bombyx_env_t *env, var *a, var *b)
 {
-    // TODO: implement
+    if (a->type == VAR_DOUBLE || b->type == VAR_DOUBLE)
+    {
+		*(double *)a->data = (fabs(*(double *)a->data) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD && fabs(*(double *)b->data) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1 : 0;
+    }
+    else
+    {
+        larva_error(env, "Operator '&&' is not defined for the given operand type.");
+    }
 }
 
 void op_or(bombyx_env_t *env, var *a, var *b)
 {
-    // TODO: implement
+    if (a->type == VAR_DOUBLE || b->type == VAR_DOUBLE)
+    {
+		*(double *)a->data = (fabs(*(double *)a->data) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD || fabs(*(double *)b->data) >= PARSER_BOOLEAN_EQUALITY_THRESHOLD) ? 1 : 0;
+    }
+    else
+    {
+        larva_error(env, "Operator '&&' is not defined for the given operand type.");
+    }
 }
 
 BYTE var_is_true(bombyx_env_t *env, var *a)
@@ -308,7 +323,7 @@ BYTE var_is_true(bombyx_env_t *env, var *a)
     else if (a->type == VAR_UNSET) return 0;
     else
     {
-        larva_error(env, "Comparison operator is not defined for the given operand type.");
+        larva_error(env, "Truth operator is not defined for the given operand type.");
     }
     return 0;
 }
@@ -320,9 +335,10 @@ BYTE var_cmp(bombyx_env_t *env, var *a, var *b)
 {
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return memcmp(a->data, b->data, sizeof(double)) ? 0 : 1;
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) ? 0 : 1;
+    else if (a->type == VAR_UNSET || b->type == VAR_UNSET) return 0;
     else
     {
-        larva_error(env, "Comparison operator is not defined for the given operand type.");
+        larva_error(env, "Comparison operator is not defined for the given operand type [%d] [%d].", a->type, b->type);
     }
     return 0;
 }
