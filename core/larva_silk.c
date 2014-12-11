@@ -152,7 +152,12 @@ void larva_silk(bombyx_env_t *env)
             if (v1.type == VAR_STRING)
             {
                 var *pv = var_apath(env, &vt->v, v1.data);
-                *pv = v2;
+
+                if (pv) *pv = v2;
+                else
+                {
+                    map_add(env, vt->v.data, v1.data, v2);
+                }
             }
             else if (v1.type == VAR_DOUBLE)
             {
