@@ -109,7 +109,7 @@ void larva_silk(bombyx_env_t *env)
             debug_verbose_puts("BCO_AS_VAR");
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
-            vt = var_lookup(env->vars, token);
+            vt = var_lookup_2(env->vars, token, size);
             if (!vt)
             {
                 larva_error(env, "Unknown variable '%s'.", token);
@@ -189,7 +189,7 @@ void larva_silk(bombyx_env_t *env)
 
             v1 = stack_pop(env);
 
-            vt = var_lookup(env->vars, token);
+            vt = var_lookup_2(env->vars, token, size);
 
             if (v1.type == VAR_STRING)
             {

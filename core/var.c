@@ -55,6 +55,22 @@ var_t *var_lookup(var_table_t *hashtable, char *str)
     return NULL;
 }
 
+/*
+    A bit faster than var_lookup(), but requires string length
+*/
+var_t *var_lookup_2(var_table_t *hashtable, char *str, size_t strlen)
+{
+    var_t *list;
+    unsigned int hashval = var_hash(hashtable, str);
+
+    for (list = hashtable->table[hashval]; list != NULL; list = list->next)
+    {
+        if (memcmp(str, list->v.name, strlen) == 0) return list;
+    }
+
+    return NULL;
+}
+
 var_t *var_add(var_table_t *hashtable, char *str, BYTE type, block_t *parent)
 {
     var_t *new_list;
