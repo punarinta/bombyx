@@ -121,15 +121,16 @@ void larva_silk(bombyx_env_t *env)
             case BCO_SET:
             debug_verbose_puts("BCO_SET");
             v2 = stack_pop(env);
-            if (!env->bc_stack[env->bc_stack_size - 1].ref)
+
+            if (!(env->bc_stack[env->bc_stack_size - 1].ref))
             {
             	larva_error(env, "Left part of an equation should be a variable.");
             }
 
             // note: v1 stays inside the stack
 
-            op_copy(env, &((var_t *)env->bc_stack[env->bc_stack_size - 1].ref)->v, &v2);
-            var_unset(env, &v2);
+            // copy directly as 'v2' is not needed anymore
+            op_assign(&vt->v, &v2);
             break;
 
             case BCO_AS_DOUBLE:

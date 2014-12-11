@@ -10,6 +10,13 @@
 #include "common.h"
 #include "../vendor/jansson.h"
 
+void op_assign(var *a, var *b)
+{
+    a->type = b->type;
+    a->data = b->data;
+    a->data_size = b->data_size;
+}
+
 void op_copy(bombyx_env_t *env, var *a, var *b)
 {
     if (a->data)

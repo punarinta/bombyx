@@ -165,7 +165,7 @@ void var_sync(bombyx_env_t *env, var *a)
 {
     if (a->ref)
     {
-        op_copy(env, &((var_t *)a->ref)->v, a);
+        op_copy(env, &(a->ref)->v, a);
     }
     else if (a->name)
     {

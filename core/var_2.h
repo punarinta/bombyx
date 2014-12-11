@@ -25,6 +25,7 @@ var var_as_var_t(bombyx_env_t *env, var_t *);
 
 void var_sync(bombyx_env_t *, var *);
 void op_copy(bombyx_env_t *env, var *, var *);
+void op_assign(var *, var *);
 void op_add(bombyx_env_t *, var *, var *);
 void op_subtract(bombyx_env_t *, var *, var *);
 void op_multiply(bombyx_env_t *, var *, var *);
