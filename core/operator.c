@@ -305,6 +305,7 @@ BYTE var_is_true(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE) return *(double *)a->data != 0;
     else if (a->type == VAR_STRING) return a->data_size > 1;
+    else if (a->type == VAR_UNSET) return 0;
     else
     {
         larva_error(env, "Comparison operator is not defined for the given operand type.");

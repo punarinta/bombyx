@@ -287,8 +287,18 @@ void larva_silk(bombyx_env_t *env)
             else if (v1.type == VAR_DOUBLE)
             {
                 v2.data = NULL;
-                op_copy(env, &v2, ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]);
-                stack_push(env, v2);
+                var *pv = ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ];
+                if (pv)
+                {
+                    op_copy(env, &v2, pv);
+                    stack_push(env, v2);
+                }
+                else
+                {
+                    // element doesn't exist
+                    // TODO: VERY DOUBTFUL
+                    memset(&env->bc_stack[env->bc_stack_size++], 0, sizeof(var));
+                }
             }
             else
             {
