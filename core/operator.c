@@ -196,6 +196,18 @@ void op_power(bombyx_env_t *env, var *a, var *b)
     }
 }
 
+void op_modulo(bombyx_env_t *env, var *a, var *b)
+{
+    if (a->type == VAR_DOUBLE || b->type == VAR_DOUBLE)
+    {
+        *(double *)a->data = fmod(*(double *)a->data, *(double *)b->data);
+    }
+    else
+    {
+        larva_error(env, "Operator '%' is not defined for the given operand type.");
+    }
+}
+
 void op_unary_minus(bombyx_env_t *env, var *a)
 {
     if (a->type == VAR_DOUBLE)

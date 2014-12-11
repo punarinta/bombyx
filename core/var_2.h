@@ -31,6 +31,7 @@ void op_subtract(bombyx_env_t *, var *, var *);
 void op_multiply(bombyx_env_t *, var *, var *);
 void op_divide(bombyx_env_t *, var *, var *);
 void op_power(bombyx_env_t *, var *, var *);
+void op_modulo(bombyx_env_t *, var *, var *);
 void op_invert(bombyx_env_t *, var *);
 void op_unary_minus(bombyx_env_t *, var *);
 void op_increment(bombyx_env_t *, var *);

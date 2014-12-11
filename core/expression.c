@@ -544,7 +544,7 @@ void parser_read_term(parser_data *pd)
 	// multiplication or division operand
 	char c = parser_peek(pd);
 
-	while (c == '*' || c == '/')
+	while (c == '*' || c == '/' || c == '%')
     {
 		// eat the character
 		parser_skip(pd);
@@ -560,6 +560,11 @@ void parser_read_term(parser_data *pd)
         {
         	parser_read_power(pd);
 			bc_add_cmd(pd->env, BCO_DIV);
+		}
+		else if (c == '%')
+        {
+        	parser_read_power(pd);
+			bc_add_cmd(pd->env, BCO_MOD);
 		}
 
 		parser_eat_whitespace(pd);
