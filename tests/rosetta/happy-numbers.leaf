@@ -1,0 +1,35 @@
+block isHappy(n)
+{
+    var n, total, past = []
+    while (1)
+    {
+        total = 0
+        while (n > 0)
+        {
+            total = total + (n % 10) ^ 2
+            n = n / 10
+        }
+        if (total == 1)
+        {
+        	return 1
+        }
+        if (past[total])
+        {
+        	return 0
+        }
+        n = total
+        past[total] = 0
+    }
+}
+
+var i = 0, c = 0
+
+while (c < 8)
+{
+    if (isHappy(i))
+    {
+        print(i + ' ')
+        ++c
+    }
+    ++i
+}

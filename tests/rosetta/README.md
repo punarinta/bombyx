@@ -1,0 +1,1 @@
+This directory contains tasks for http://rosettacode.org.
