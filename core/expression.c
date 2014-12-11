@@ -344,10 +344,22 @@ void parser_read_builtin(parser_data *pd)
             else
             {
                 parser_read_expr(pd);
-                bc_add_cmd(pd->env, BCO_ACCESS);
-                bc_add_token(pd->env, token);
 
                 if (parser_eat(pd) != ']') parser_error(pd, "Expected ']' in an array access operator.");
+
+                parser_eat_whitespace(pd);
+                if (parser_peek(pd) == '=')
+                {
+                    parser_skip(pd);
+                    parser_read_argument(pd);
+                    bc_add_cmd(pd->env, BCO_SET_ELEM);
+                }
+                else
+                {
+                    bc_add_cmd(pd->env, BCO_ACCESS);
+                }
+
+                bc_add_token(pd->env, token);
             }
         }
         else if (parser_peek(pd) == ':')
