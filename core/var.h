@@ -21,12 +21,12 @@ typedef unsigned int  DWORD;
 
 typedef struct
 {
-    BYTE type;          // variable type
-    BYTE level;         // used to clear garbage from this level
-    char *name;         // variable name
-    void *data;         // pointer to the data (any object)
-    DWORD data_size;    // size of memory allocated for 'data'
-    void *ref;          // reference to var_t that the var originated from
+    BYTE type;              // variable type
+    BYTE level;             // used to clear garbage from this level
+    char *name;             // variable name
+    void *data;             // pointer to the data (any object)
+    DWORD data_size;        // size of memory allocated for 'data'
+    struct _var_t_ *ref;    // reference to var_t that the var originated from
 } var;
 
 typedef struct _var_t_

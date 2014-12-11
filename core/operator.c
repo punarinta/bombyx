@@ -230,13 +230,12 @@ void op_increment(bombyx_env_t *env, var *a)
     if (a->type == VAR_DOUBLE)
     {
         ++*(double *)a->data;
+        if (a->ref) *(double *)a->ref->v.data = *(double *)a->data;
     }
     else
     {
         larva_error(env, "Operator '++' is not defined for the given operand type.");
     }
-
-    if (a->ref) op_copy(env, &((var_t *)a->ref)->v, a);
 }
 
 void op_decrement(bombyx_env_t *env, var *a)
@@ -244,17 +243,17 @@ void op_decrement(bombyx_env_t *env, var *a)
     if (a->type == VAR_DOUBLE)
     {
         --*(double *)a->data;
+        if (a->ref) *(double *)a->ref->v.data = *(double *)a->data;
     }
     else
     {
         larva_error(env, "Operator '--' is not defined for the given operand type.");
     }
-
-    if (a->ref) op_copy(env, &((var_t *)a->ref)->v, a);
 }
 
 void op_swap(var *a, var *b)
 {
+    // TODO: don't swap name and ref
     var t = *a;
     *a = *b;
     *b = t;
