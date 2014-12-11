@@ -329,7 +329,17 @@ void parser_read_builtin(parser_data *pd)
             // TODO: find out if whitespace skipping is needed here
             if (parser_peek(pd) == ']')
             {
-                parser_error(pd, "Operator '[]' requires an operand.");
+                parser_skip(pd);
+                parser_eat_whitespace(pd);
+
+                if (parser_peek(pd) == '=')
+                {
+                    parser_skip(pd);
+                    parser_read_argument(pd);
+                    bc_add_cmd(pd->env, BCO_ADD_ELEM);
+                    bc_add_token(pd->env, token);
+                }
+                else parser_error(pd, "Operator '[]' requires an operand.");
             }
             else
             {

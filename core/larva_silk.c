@@ -133,6 +133,74 @@ void larva_silk(bombyx_env_t *env)
             op_assign(&vt->v, &v2);
             break;
 
+            case BCO_SET_ELEM:
+            debug_verbose_puts("BCO_SET_ELEM");
+            v2 = stack_pop(env); // value
+            v1 = stack_pop(env); // index
+
+            // get vt name
+            size = env->bytecode[env->bc_pos++];
+            memcpy(token, env->bytecode + env->bc_pos, size);
+            token[size] = 0;
+            env->bc_pos += size;
+
+            if (!(vt = var_lookup_2(env->vars, token, size)))
+            {
+                larva_error(env, "Variable '%s' does not exist.", token);
+            }
+
+            if (v1.type == VAR_STRING)
+            {
+                var *pv = var_apath(env, &vt->v, v1.data);
+                *pv = v2;
+            }
+            else if (v1.type == VAR_DOUBLE)
+            {
+                *((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ] = v2;
+            }
+            else
+            {
+                fprintf(stderr, "Object '%s' is not accessible with [] operator.", token);
+                larva_error(env, 0);
+            }
+
+            // push the value to stack, note that 'v1' and 'v2' cannot be unset here
+            memset(&v1, 0, sizeof(var));
+            op_copy(env, &v1, &v2);
+            stack_push(env, v1);
+            break;
+
+            case BCO_ADD_ELEM:
+            debug_verbose_puts("BCO_ADD_ELEM");
+            v1 = stack_pop(env); // value
+
+            // get vt name
+            size = env->bytecode[env->bc_pos++];
+            memcpy(token, env->bytecode + env->bc_pos, size);
+            token[size] = 0;
+            env->bc_pos += size;
+
+            if (!(vt = var_lookup_2(env->vars, token, size)))
+            {
+                larva_error(env, "Variable '%s' does not exist.", token);
+            }
+
+            if (vt->v.type == VAR_ARRAY)
+            {
+                array_push(vt->v.data, v1);
+            }
+            else
+            {
+                fprintf(stderr, "Pushing with [] operator works only for arrays.");
+                larva_error(env, 0);
+            }
+
+            // push the value to stack, note that 'v1' cannot be unset here
+            memset(&v2, 0, sizeof(var));
+            op_copy(env, &v2, &v1);
+            stack_push(env, v2);
+            break;
+
             case BCO_AS_DOUBLE:
             if (skip_mode)
             {
@@ -187,10 +255,14 @@ void larva_silk(bombyx_env_t *env)
             debug_verbose_puts("BCO_ACCESS");
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
+            env->bc_pos += size;
 
             v1 = stack_pop(env);
 
-            vt = var_lookup_2(env->vars, token, size);
+            if (!(vt = var_lookup_2(env->vars, token, size)))
+            {
+                larva_error(env, "Variable '%s' does not exist.", token);
+            }
 
             if (v1.type == VAR_STRING)
             {
@@ -215,8 +287,7 @@ void larva_silk(bombyx_env_t *env)
             }
             else
             {
-                fprintf(stderr, "Object '%s' is not accessible with [] operator.", token);
-                larva_error(env, 0);
+                larva_error(env, "Object '%s' is not accessible with [] operator.", token);
             }
             break;
 
