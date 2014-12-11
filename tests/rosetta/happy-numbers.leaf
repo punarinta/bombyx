@@ -1,25 +1,21 @@
 block isHappy(n)
 {
-    var n, total, past = []
-    while (1)
+    var m, digit
+    var cycle = []
+
+    while(n != 1 && cycle[n] != 1)
     {
-        total = 0
+        cycle[n] = 1
+        m = 0
         while (n > 0)
         {
-            total = total + (n % 10) ^ 2
-            n = n / 10
+            digit = n % 10
+            m = m + digit ^ 2
+            n = (n  - digit) / 10
         }
-        if (total == 1)
-        {
-        	return 1
-        }
-        if (past[total])
-        {
-        	return 0
-        }
-        n = total
-        past[total] = 0
+        n = m
     }
+    return (n == 1)
 }
 
 var i = 0, c = 0
