@@ -7,7 +7,7 @@ core/*.c \
 console.c \
 \
 -std=c99 \
--O0 -g -o bombyx -ldl -ljansson
+-O0 -g -o bombyx -ldl -Lvendor/ -ljansson
 
 # -O3 -DNDEBUG -o bombyx -ldl -Lvendor/ -ljansson
 
