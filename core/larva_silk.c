@@ -665,6 +665,15 @@ void larva_silk(bombyx_env_t *env)
             env->bc_stack[env->bc_stack_size++] = v1;
             break;
 
+            case BCO_POW:
+            debug_verbose_puts("BCO_POW");
+            v2 = stack_pop(env);
+            v1 = stack_pop(env);
+            op_power(env, &v1, &v2);
+            var_unset(env, &v2);
+            env->bc_stack[env->bc_stack_size++] = v1;
+            break;
+
             case BCO_INCR:
             debug_verbose_puts("BCO_INCR");
             op_increment(env, &env->bc_stack[env->bc_stack_size - 1]);

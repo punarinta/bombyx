@@ -1,3 +1,4 @@
+#include <math.h>
 #include "var.h"
 #include "var_2.h"
 #include "map_2.h"
@@ -180,6 +181,18 @@ void op_divide(bombyx_env_t *env, var *a, var *b)
     else
     {
         larva_error(env, "Operator '/' is not defined for given operands.");
+    }
+}
+
+void op_power(bombyx_env_t *env, var *a, var *b)
+{
+    if (a->type == VAR_DOUBLE || b->type == VAR_DOUBLE)
+    {
+        *(double *)a->data = pow(*(double *)a->data, *(double *)b->data);
+    }
+    else
+    {
+        larva_error(env, "Operator '^' is not defined for the given operand type.");
     }
 }
 

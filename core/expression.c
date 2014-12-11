@@ -516,39 +516,21 @@ void parser_read_power(parser_data *pd)
 	parser_eat_whitespace(pd);
 
 	// attempt to read the exponentiation operator
-	/*while (parser_peek(pd) == '^')
+	while (parser_peek(pd) == '^')
     {
-        var *v1 = var_as_double(1.0), *s = var_as_double(1.0);
-
 		parser_skip(pd);
 		parser_eat_whitespace(pd);
 
-		// handles case of a negative immediately
-		// following exponentiation but leading
-		// the parenthetical exponent
 		if (parser_peek(pd) == '-')
         {
-			parser_skip(pd);
-			var_set_double(s, -1.0);
-			parser_eat_whitespace(pd);
-		}
+            parser_error(pd, "Wrap negative power into brackets.");
+        }
 
-		// read the second operand
-		var *term = parser_read_power(pd);
+		parser_read_power(pd);
+		parser_eat_whitespace(pd);
 
-		op_multiply(s, term);
-		op_copy(v1, s);
-
-		// perform the exponentiation
-		// TODO:
-	//	v0 = pow(v0, v1);
-
-	    parser_eat_whitespace(pd);
-
-		var_free(term);
-		var_free(v1);
-        var_free(s);
-	}*/
+		bc_add_cmd(pd->env, BCO_POW);
+	}
 }
 
 void parser_read_term(parser_data *pd)
