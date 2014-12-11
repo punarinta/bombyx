@@ -12,6 +12,9 @@
 #include <sys/stat.h>
 #include "fcgiapp.h"
 #include "core/common.h"
+#include "core/var_2.h"
+#include "core/cocoon_2.h"
+#include "core/challoc.h"
 #include "core/larva.h"
 
 static int socketId;    // is not written within the thread — safe
@@ -69,7 +72,13 @@ void *thread(void *a)
         return NULL;
     }
 
+    // alloc data storages for the thread
     env->wd = malloc(sizeof(web_data));
+    env->blocks             = block_table_create(MIN_BLOCKS);
+    env->vars               = var_table_create(MIN_VARIABLES);
+    env->cocoons            = cocoon_table_create(MIN_COCOONS);
+    env->pool_of_doubles    = chcreate(POOL_OF_DOUBLES_SIZE, sizeof(double));
+
 
     for (;;)
     {

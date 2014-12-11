@@ -12,8 +12,6 @@ void bc_free(bombyx_env_t *env)
 {
     if (env->bytecode) free(env->bytecode);
     env->bytecode = NULL;
-
-    chdestroy(&env->pool_of_doubles);
 }
 
 void bc_add_cmd(bombyx_env_t *env, BYTE cmd)
@@ -46,14 +44,13 @@ void bc_add_double(bombyx_env_t *env, double x)
 
 void bc_add_string(bombyx_env_t *env, char *str)
 {
-    unsigned int size = strlen(str);
+    uint16 size = strlen(str);
+    if (env->bc_pos >= env->bc_length - size - sizeof(uint16)) bc_grow(env);
 
-    if (env->bc_pos >= env->bc_length - size - 2) bc_grow(env);
+    memcpy(env->bytecode + env->bc_pos, &size, sizeof(uint16));
+    env->bc_pos += sizeof(uint16);
 
-    env->bytecode[env->bc_pos++] = size % 256;
-    env->bytecode[env->bc_pos++] = size / 256;
     memcpy(env->bytecode + env->bc_pos, str, size);
-
     env->bc_pos += size;
 }
 
@@ -81,8 +78,6 @@ void bc_ready(bombyx_env_t *env)
         env->bc_stack[i].name = NULL;
         env->bc_stack[i].data = NULL;
     }
-
-    env->pool_of_doubles = chcreate(POOL_OF_DOUBLES_SIZE, sizeof(double));
 }
 
 void bc_poo(bombyx_env_t *env)

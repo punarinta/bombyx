@@ -14,9 +14,10 @@
 void larva_init(bombyx_env_t *env, char *incoming_code, size_t len)
 {
 #ifndef BOMBYX_WEB
-    env->blocks       = block_table_create(MIN_BLOCKS);
-    env->vars         = var_table_create(MIN_VARIABLES);
-    env->cocoons      = cocoon_table_create(MIN_COCOONS);
+    env->blocks             = block_table_create(MIN_BLOCKS);
+    env->vars               = var_table_create(MIN_VARIABLES);
+    env->cocoons            = cocoon_table_create(MIN_COCOONS);
+    env->pool_of_doubles    = chcreate(POOL_OF_DOUBLES_SIZE, sizeof(double));
 #endif
 
     bc_init(env);
@@ -472,6 +473,9 @@ void larva_stop(bombyx_env_t *env)
     if (verbose)
     {
         puts("================= DUMP ===============");
+#ifdef BOMBYX_WEB
+        puts("BOMBYX_WEB = 1");
+#endif
         larva_poo(env);
         puts("=============== BYTECODE =============");
         printf("Ops count = %u.\n", env->bc_ops);
@@ -485,10 +489,12 @@ void larva_stop(bombyx_env_t *env)
     var_table_delete(env, env->vars, 1);
     block_table_delete(env->blocks, 1);
     cocoon_table_delete(env->cocoons, 1);
+    chclear(&env->pool_of_doubles);
 #else
     var_table_delete(env, env->vars, 0);
     block_table_delete(env->blocks, 0);
     cocoon_table_delete(env->cocoons, 0);
+    chdestroy(&env->pool_of_doubles);
 #endif
 
     if (env->code) free(env->code);

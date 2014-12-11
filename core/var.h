@@ -16,8 +16,9 @@
 #define VAR_CUSTOM      8
 #define VAR_ERROR       255
 
-typedef unsigned char BYTE;
-typedef unsigned int  DWORD;
+typedef unsigned char   BYTE;
+typedef unsigned int    DWORD;
+typedef unsigned short  uint16;
 
 typedef struct
 {

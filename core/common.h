@@ -25,16 +25,18 @@
     #include <mcheck.h>
 #endif
 
-#define MIN_VARIABLES       1000
-#define MAX_VARIABLES       100000
+#define MIN_VARIABLES           1000
+#define MAX_VARIABLES           100000
 
-#define MIN_BLOCKS       	1000
-#define MAX_BLOCKS       	100000
+#define MIN_BLOCKS       	    1000
+#define MAX_BLOCKS       	    100000
 
-#define MIN_COCOONS       	50
-#define MAX_COCOONS       	1000
+#define MIN_COCOONS       	    50
+#define MAX_COCOONS       	    1000
 
-#define BOMBYX_STACK_SIZE   256
+#define BOMBYX_STACK_SIZE       256
+#define POOL_OF_DOUBLES_SIZE    1024
+
 
 
 #ifdef WEB_BUILD

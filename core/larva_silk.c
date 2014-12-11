@@ -160,8 +160,8 @@ void larva_silk(bombyx_env_t *env)
             break;
 
             case BCO_FROM_JSON:
-            size = env->bytecode[env->bc_pos] + (env->bytecode[env->bc_pos + 1] << 8);
-            env->bc_pos += 2;
+            memcpy(&size, env->bytecode + env->bc_pos, sizeof(uint16));
+            env->bc_pos += sizeof(uint16);
             if (skip_mode)
             {
                 env->bc_pos += size;

@@ -3,8 +3,6 @@
 
 #define BC_INITIAL_SIZE         25000
 #define BC_GROW_SIZE            10000
-#define POOL_OF_DOUBLES_SIZE    1024
-
 
 #define IS_BCO_SKIPPABLE    224 // 0b11100000
 
