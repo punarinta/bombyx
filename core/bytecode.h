@@ -25,10 +25,10 @@
 #define BCO_ACCESS          13
 #define BCO_FROM_JSON       14
 #define BCO_XCALL           15
+#define BCO_SET_ELEM        16
+#define BCO_ADD_ELEM        17
 
 #define BCO_SET             32
-#define BCO_SET_ELEM        33
-#define BCO_ADD_ELEM        34
 #define BCO_ADD             35
 #define BCO_SUB             36
 #define BCO_MUL             37

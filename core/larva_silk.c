@@ -134,12 +134,18 @@ void larva_silk(bombyx_env_t *env)
             break;
 
             case BCO_SET_ELEM:
+            size = env->bytecode[env->bc_pos++];
+            if (skip_mode)
+            {
+                env->bc_pos += size;
+                break;
+            }
+
             debug_verbose_puts("BCO_SET_ELEM");
             v2 = stack_pop(env); // value
             v1 = stack_pop(env); // index
 
             // get vt name
-            size = env->bytecode[env->bc_pos++];
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
             env->bc_pos += size;
