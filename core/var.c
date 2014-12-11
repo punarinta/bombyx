@@ -82,7 +82,7 @@ var_t *var_add(var_table_t *hashtable, char *str, BYTE type, block_t *parent)
     current_list = var_lookup(hashtable, str);
 
     /* item already exists, dont insert it again. */
-    if (current_list != NULL) return NULL;
+    if (current_list != NULL) return current_list; // NULL;
 
     /* Insert into list */
     new_list->v.data = NULL;

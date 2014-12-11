@@ -52,6 +52,7 @@ void stack_poo(bombyx_env_t *env)
 void larva_silk(bombyx_env_t *env)
 {
     double d;
+    var *pv;
     var_t *vt;
     var v1, v2;
     env->gl_level = 0;
@@ -122,7 +123,7 @@ void larva_silk(bombyx_env_t *env)
             debug_verbose_puts("BCO_SET");
             v2 = stack_pop(env);
 
-            if (!(env->bc_stack[env->bc_stack_size - 1].ref))
+            if (!(vt = env->bc_stack[env->bc_stack_size - 1].ref))
             {
             	larva_error(env, "Left part of an equation should be a variable.");
             }
@@ -157,7 +158,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (v1.type == VAR_STRING)
             {
-                var *pv = var_apath(env, &vt->v, v1.data);
+                pv = var_apath(env, &vt->v, v1.data);
 
                 if (pv) *pv = v2;
                 else
@@ -167,7 +168,14 @@ void larva_silk(bombyx_env_t *env)
             }
             else if (v1.type == VAR_DOUBLE)
             {
-                *((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ] = v2;
+                if (((array_t *)(vt->v.data))->size > (unsigned int)*(double *)v1.data)
+                {
+                    *((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ] = v2;
+                }
+                else
+                {
+                    array_push(vt->v.data, v2);
+                }
             }
             else
             {
@@ -293,8 +301,8 @@ void larva_silk(bombyx_env_t *env)
             else if (v1.type == VAR_DOUBLE)
             {
                 v2.data = NULL;
-                var *pv = ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ];
-                if (pv)
+
+                if (((array_t *)(vt->v.data))->size > (unsigned int)*(double *)v1.data && (pv = ((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ]))
                 {
                     op_copy(env, &v2, pv);
                     stack_push(env, v2);
@@ -532,6 +540,18 @@ void larva_silk(bombyx_env_t *env)
 
             env->bc_stack[env->bc_stack_size++] = v1;
             parent_block = parent_block->parent;
+
+            if (env->run_flag[env->gl_level] != RUN_BLOCK)
+            {
+                // FFFUUU
+                while (env->run_flag[env->gl_level])
+                {
+                    env->bc_pos = env->ret_point[env->gl_level];
+                    --env->gl_level;
+                }
+
+                break;
+            }
 
             // get da fukk out
             env->bc_pos = env->ret_point[env->gl_level];
@@ -774,6 +794,10 @@ void larva_silk(bombyx_env_t *env)
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
             vt = var_add(env->vars, token, VAR_STRING, NULL);
+            if (!vt)
+            {
+                larva_error(env, "Cannot extract parameter. Saywhat?");
+            }
             op_copy(env, &vt->v, &env->bc_stack[--env->bc_stack_size]);
             env->bc_pos += size;
             break;
