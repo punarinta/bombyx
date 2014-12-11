@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "core/common.h"
+#include "core/bytecode.h"
 #include "core/larva.h"
 
 int main(int argc, char *argv[])
@@ -13,6 +14,7 @@ int main(int argc, char *argv[])
     verbose = 0;
     char *source;
     size_t newLen = 0;
+    BYTE compile_only = 0;
 
     if (argc < 2)
     {
@@ -25,6 +27,10 @@ int main(int argc, char *argv[])
         if (!strcmp(argv[i], "-v"))
         {
             verbose = 1;
+        }
+        if (!strcmp(argv[i], "-c"))
+        {
+            compile_only = 1;
         }
     }
 
@@ -98,7 +104,16 @@ int main(int argc, char *argv[])
         {
             larva_init(env, source, newLen);
             larva_digest(env);
-            larva_silk(env);
+
+            if (compile_only)
+            {
+                bc_ready(env);
+                bc_poo(env);
+            }
+            else
+            {
+                larva_silk(env);
+            }
             larva_stop(env);
         }
     }
