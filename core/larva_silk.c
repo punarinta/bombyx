@@ -1,11 +1,9 @@
 #include "common.h"
-#include "larva.h"
 #include "var_2.h"
 #include "map_2.h"
 #include "array_2.h"
 #include "cocoon_2.h"
 #include "expression.h"
-#include "map.h"
 #include "sys.h"
 #include "bytecode.h"
 #include "../vendor/jansson.h"
@@ -13,28 +11,23 @@
 // execute byte-code
 void larva_silk(bombyx_env_t *env)
 {
-    double d;
     var *pv;
+    double d;
     var_t *vt;
     var v1, v2;
-    env->gl_level = 0;
     BYTE level = 0;
-    env->run_flag[0] = 0;    // do we need this?
     size_t size = 0;
+    env->gl_level = 0;
     BYTE skip_mode = 0;
     int param_count = 0;
+    env->run_flag[0] = 0;    // do we need this?
     block_t *parent_block = NULL;
     char token[PARSER_MAX_TOKEN_SIZE];
     char token2[PARSER_MAX_TOKEN_SIZE];
 
     bc_ready(env);
 
-/*    puts("=============== BYTECODE =============");
-    bc_poo(env);
-    puts("======================================");*/
-//exit(0);
-
-    // reentry must be here, not above! => rewrite silk function later
+    // reentry must be here, not above => rewrite silk function later
 
     while (env->bc_pos < env->bc_length)
     {
@@ -809,7 +802,7 @@ void larva_silk(bombyx_env_t *env)
 
             case BCO_MICROTIME:
             debug_verbose_puts("BCO_MICROTIME");
-            env->bc_stack[env->bc_stack_size++] = var_as_double(env, get_microtime());
+            stack_push(env, var_as_double(env, get_microtime()));
             break;
 
             case BCO_AS_VOID:
