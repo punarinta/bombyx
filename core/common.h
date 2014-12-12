@@ -37,7 +37,8 @@
 #define BOMBYX_STACK_SIZE       256
 #define POOL_OF_DOUBLES_SIZE    1024
 
-
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 #ifdef WEB_BUILD
     #define web_puts(a, b) FCGX_PutS(b, a->request.out)

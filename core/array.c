@@ -1,3 +1,4 @@
+#include "common.h"
 #include "array.h"
 #include "var_2.h"
 
@@ -42,13 +43,48 @@ void array_push(array_t *array, var v)
     array->vars[array->size++] = pv;
 }
 
+/*
+    Warning: array_set_elem() uses direct variable copying, not an op_copy()
+*/
+void array_set_elem(bombyx_env_t *env, array_t *array, unsigned int index, var v)
+{
+    if (index >= array->size)
+    {
+        if (index >= array->max_size)
+        {
+            array->max_size = MAX(index + 1, array->max_size * 2);
+            array->vars = realloc(array->vars, sizeof(var*) * array->max_size);
+        }
+
+        // element does not exist
+        var *pv = malloc(sizeof(var));
+        *pv = v;
+        array->vars[index] = pv;
+
+        // fill all the orphan links with nulls
+        for (int i = array->size; i < index; i++)
+        {
+            array->vars[i] = NULL;
+        }
+
+        array->size = index + 1;
+    }
+    else
+    {
+        // element already exists
+        *array->vars[index] = v;
+    }
+}
+
 array_t *array_clone(bombyx_env_t *env, array_t *array)
 {
     array_t *new_array = malloc(sizeof(array_t));
 
     new_array->size = array->size;
-    new_array->max_size = array->max_size;
-    new_array->vars = malloc(sizeof(var*) * array->size);
+
+    // TODO: choose between assigning to size or max_size
+    new_array->max_size = MAX(array->size, MIN_ARRAY_SIZE);
+    new_array->vars = malloc(sizeof(var*) * array->max_size);
 
     if (array->vars)
     {

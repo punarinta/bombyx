@@ -130,13 +130,14 @@ void larva_silk(bombyx_env_t *env)
             }
             else if (v1.type == VAR_DOUBLE)
             {
-                if (((array_t *)(vt->v.data))->size > (unsigned int)*(double *)v1.data)
+                unsigned int i = (unsigned int)*(double *)v1.data;
+                if (((array_t *)(vt->v.data))->size > i)
                 {
-                    *((array_t *)(vt->v.data))->vars[ (unsigned int)*(double *)v1.data ] = v2;
+                    *((array_t *)(vt->v.data))->vars[i] = v2;
                 }
                 else
                 {
-                    array_push(vt->v.data, v2);
+                    array_set_elem(env, vt->v.data, i, v2);
                 }
             }
             else

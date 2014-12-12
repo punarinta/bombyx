@@ -456,7 +456,7 @@ void var_echo(bombyx_env_t *env, var *a)
             fprintf(stdout, "\n%.*s[\n", var_echo_level - 1, "\t\t\t\t\t");
             for (unsigned int i = 0; i < ((array_t *)a->data)->size; i++)
             {
-                if (((array_t *)a->data)->vars[i]->type)
+                if (((array_t *)a->data)->vars[i] && ((array_t *)a->data)->vars[i]->type)
                 {
                     fprintf(stdout, "%.*s\"%d\" : ", var_echo_level, "\t\t\t\t\t", i);
                     var_echo(env, ((array_t *)a->data)->vars[i]);

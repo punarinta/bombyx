@@ -10,6 +10,7 @@
 
 array_t *array_create(size_t);
 void array_push(array_t *, var);
+void array_set_elem(bombyx_env_t *, array_t *, unsigned int, var);
 void array_delete(bombyx_env_t *, array_t *);
 array_t *array_clone(bombyx_env_t *, array_t *);
 
