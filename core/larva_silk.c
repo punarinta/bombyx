@@ -116,22 +116,15 @@ void larva_silk(bombyx_env_t *env)
                 pv = var_apath(env, &vt->v, v1.data);
 
                 if (pv) *pv = v2;
-                else
-                {
-                    map_add(env, vt->v.data, v1.data, v2);
-                }
+                else    map_add(env, vt->v.data, v1.data, v2);
             }
             else if (v1.type == VAR_DOUBLE)
             {
-                unsigned int i = (unsigned int)*(double *)v1.data;
-                if (((array_t *)(vt->v.data))->size > i)
-                {
-                    *((array_t *)(vt->v.data))->vars[i] = v2;
-                }
-                else
-                {
-                    array_set_elem(env, vt->v.data, i, v2);
-                }
+                unsigned int i = round(*(double *)v1.data);
+                array_t *arr = (array_t *)vt->v.data;
+
+                if (i < arr->size && arr->vars[i])  op_assign(arr->vars[i], &v2);
+                else                                array_set_elem(env, arr, i, v2);
             }
             else
             {
@@ -543,8 +536,12 @@ void larva_silk(bombyx_env_t *env)
 
             if (!var_is_true(env, &v1))
             {
-                if (env->run_flag[env->gl_level] == RUN_IF) env->run_flag[env->gl_level] = RUN_ELSE;
-                else if (env->run_flag[env->gl_level] == RUN_WHILE)
+                if (env->run_flag[env->gl_level] == RUN_IF)
+                {
+                    env->run_flag[env->gl_level] = RUN_ELSE;
+                //    --env->gl_level;
+                }
+                else if (env->run_flag[env->gl_level] == RUN_WHILE /*|| env->run_flag[env->gl_level] == RUN_ELSE*/)
                 {
                     // just go up, this level will be completely skipped
                     --env->gl_level;

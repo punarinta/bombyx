@@ -71,6 +71,11 @@ void array_set_elem(bombyx_env_t *env, array_t *array, unsigned int index, var v
     }
     else
     {
+        if (!array->vars[index])
+        {
+            array->vars[index] = malloc(sizeof(var));
+        }
+
         // element already exists
         *array->vars[index] = v;
     }
