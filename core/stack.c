@@ -36,6 +36,7 @@ void stack_clear(bombyx_env_t *env)
 void stack_poo(bombyx_env_t *env)
 {
     puts("================ STACK ===============");
+    printf("Stack size = %u.\n", env->bc_stack_size);
     for (int i = env->bc_stack_size - 1; i >= 0; i--)
     {
         fprintf(stdout, "%04d: ", i);

@@ -7,6 +7,7 @@
 #include "sys.h"
 #include "bytecode.h"
 #include "expression.h"
+#include "debugger.h"
 
 /**
  *  Sets up the processor
@@ -478,11 +479,10 @@ void larva_stop(bombyx_env_t *env)
         puts("BOMBYX_WEB = 1");
 #endif
         larva_poo(env);
-        puts("=============== BYTECODE =============");
-        printf("Ops count = %u.\n", env->bc_ops);
-        printf("Code size = %u byte(s).\n", env->bc_length);
-        printf("Stack size = %u.\n", env->bc_stack_size);
         stack_poo(env);
+#ifdef BOMBYX_DEBUG
+        debug_env(env);
+#endif
     }
 
 #ifdef BOMBYX_WEB
