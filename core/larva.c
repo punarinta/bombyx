@@ -460,6 +460,7 @@ void larva_error(bombyx_env_t *env, char *err, ...)
     }
 
     web_printf(env, "\nError on line %d, sym %d.\n\n", line, sym);
+    printf("BC pos = %d\n", env->bc_pos);
 
     env->gl_error = 1;
     longjmp(env->error_exit, 1);
@@ -481,8 +482,7 @@ void larva_stop(bombyx_env_t *env)
         printf("Ops count = %u.\n", env->bc_ops);
         printf("Code size = %u byte(s).\n", env->bc_length);
         printf("Stack size = %u.\n", env->bc_stack_size);
-    //    bc_poo(env);
-        puts("======================================");
+        stack_poo(env);
     }
 
 #ifdef BOMBYX_WEB

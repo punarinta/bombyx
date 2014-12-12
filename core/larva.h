@@ -22,5 +22,7 @@ void larva_read_string_token(bombyx_env_t *, char *);
 
 void stack_push(bombyx_env_t *, var);
 var stack_pop(bombyx_env_t *);
+void stack_clear(bombyx_env_t *);
+void stack_poo(bombyx_env_t *);
 
 #endif
