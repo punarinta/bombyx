@@ -196,8 +196,11 @@ void larva_digest(bombyx_env_t *env)
             // variable is just initialized, but not defined
             if (env->code[env->code_pos] == '\n' || !env->code[env->code_pos])
             {
-                bc_add_cmd(env, is_param ? BCO_PARAM : BCO_VAR);
-                bc_add_token(env, token);
+                if (token[0] != ')')
+                {
+                    bc_add_cmd(env, is_param ? BCO_PARAM : BCO_VAR);
+                    bc_add_token(env, token);
+                }
                 continue;
             }
 
