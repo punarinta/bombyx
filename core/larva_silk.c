@@ -488,23 +488,20 @@ void larva_silk(bombyx_env_t *env)
             v1.ref = NULL;
 
             env->bc_stack[env->bc_stack_size++] = v1;
-            parent_block = parent_block->parent;
 
             if (env->run_flag[env->gl_level] != RUN_BLOCK)
             {
                 // FFFUUU
                 while (env->run_flag[env->gl_level])
                 {
-                    env->bc_pos = env->ret_point[env->gl_level];
-                    --env->gl_level;
+                    env->bc_pos = env->ret_point[env->gl_level--];
                 }
 
                 break;
             }
 
             // get da fukk out
-            env->bc_pos = env->ret_point[env->gl_level];
-            --env->gl_level;
+            env->bc_pos = env->ret_point[env->gl_level--];
             break;
 
             case BCO_WHILE:
@@ -527,7 +524,11 @@ void larva_silk(bombyx_env_t *env)
 
             ++env->gl_level;
 
-            if (env->run_flag[env->gl_level] == RUN_IF) skip_mode = 1;
+            if (env->run_flag[env->gl_level] == RUN_IF)
+            {
+                skip_mode = 1;
+                --env->gl_level;
+            }
             break;
 
             case BCO_CEIT:
@@ -539,7 +540,7 @@ void larva_silk(bombyx_env_t *env)
                 if (env->run_flag[env->gl_level] == RUN_IF)
                 {
                     env->run_flag[env->gl_level] = RUN_ELSE;
-                //    --env->gl_level;
+                    --env->gl_level;
                 }
                 else if (env->run_flag[env->gl_level] == RUN_WHILE /*|| env->run_flag[env->gl_level] == RUN_ELSE*/)
                 {
