@@ -544,6 +544,11 @@ void larva_silk(bombyx_env_t *env)
             if (!var_is_true(env, &v1))
             {
                 if (env->run_flag[env->gl_level] == RUN_IF) env->run_flag[env->gl_level] = RUN_ELSE;
+                else if (env->run_flag[env->gl_level] == RUN_WHILE)
+                {
+                    // just go up, this level will be completely skipped
+                    --env->gl_level;
+                }
                 skip_mode = 1;
             }
             var_unset(env, &v1);
