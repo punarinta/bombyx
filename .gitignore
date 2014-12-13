@@ -7,3 +7,4 @@ vendor/*.a
 *.out
 *.dSYM
 *.log
+1.leaf
