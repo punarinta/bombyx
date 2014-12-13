@@ -1,3 +1,0 @@
-use web
-
-var a = web::version()
