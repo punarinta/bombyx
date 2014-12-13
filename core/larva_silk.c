@@ -18,6 +18,7 @@ void larva_silk(bombyx_env_t *env)
     BYTE level = 0;
     size_t size = 0;
     env->gl_level = 0;
+    BYTE def_mode = 0;
     BYTE skip_mode = 0;
     int param_count = 0;
     env->run_flag[0] = 0;    // do we need this?
@@ -392,6 +393,7 @@ void larva_silk(bombyx_env_t *env)
 
             // we don't need it now
             skip_mode = 1;
+            def_mode = 1;
             break;
 
             case BCO_SKIP:
@@ -409,6 +411,11 @@ void larva_silk(bombyx_env_t *env)
             break;
 
             case BCO_BLOCK_END:
+            if (def_mode)
+            {
+                parent_block = parent_block->parent;
+                def_mode = 0;
+            }
             if (skip_mode)
             {
                 if (--level == 0) skip_mode = 0;
