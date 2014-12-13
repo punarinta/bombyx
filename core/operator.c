@@ -141,6 +141,28 @@ void op_add(bombyx_env_t *env, var *a, var *b)
 
         free(converted);
     }
+    else if (a->type == VAR_ARRAY && b->type == VAR_ARRAY)
+    {
+        array_t *aa = a->data, *ab = b->data;
+        size_t total_size = aa->size + ab->size;
+
+        if (aa->max_size < total_size)
+        {
+            aa->vars = realloc(aa->vars, sizeof(var*) * total_size);
+            aa->max_size = total_size;
+        }
+
+        // simply move all vars from B to A
+        for (size_t i = 0; i < ab->size; i++)
+        {
+            aa->vars[aa->size + i] = ab->vars[i];
+        }
+
+        aa->size = total_size;
+
+        // prevent unset crash
+        b->data = NULL;
+    }
     else
     {
         larva_error(env, "Operator '+' is not defined for given operands.");
