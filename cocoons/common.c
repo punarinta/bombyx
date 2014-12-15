@@ -5,6 +5,11 @@ void larva_error(bombyx_env_t *env, char *err, ...)
     // TODO
 }
 
+void runtime_error(bombyx_env_t *env, char *err, ...)
+{
+    // TODO
+}
+
 var cocoon_error(bombyx_env_t *env, char *err, ...)
 {
     char error_text[256];

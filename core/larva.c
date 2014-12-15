@@ -464,9 +464,26 @@ void larva_error(bombyx_env_t *env, char *err, ...)
     }
 
     web_printf(env, "\nError on line %d, sym %d.\n\n", line, sym);
-    printf("BC pos = %d\n", env->bc_pos);
 
     env->gl_error = 1;
+    longjmp(env->error_exit, 1);
+}
+
+void runtime_error(bombyx_env_t *env, char *err, ...)
+{
+    if (err)
+    {
+        char error_text[256];
+        va_list args;
+        va_start(args, err);
+        vsprintf(error_text, err, args);
+        web_puts(env, error_text);
+        va_end(args);
+    }
+
+    printf("Runtime error at BC pos = %d\n", env->bc_pos);
+
+    env->gl_error = 2;
     longjmp(env->error_exit, 1);
 }
 

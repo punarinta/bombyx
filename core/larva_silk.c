@@ -70,7 +70,7 @@ void larva_silk(bombyx_env_t *env)
             vt = var_lookup_2(env->vars, token, size);
             if (!vt)
             {
-                larva_error(env, "Unknown variable '%s'.", token);
+                runtime_error(env, "Unknown variable '%s'.", token);
             }
             env->bc_stack[env->bc_stack_size++] = var_as_var_t(env, vt);
             env->bc_pos += size;
@@ -82,7 +82,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (!(vt = env->bc_stack[env->bc_stack_size - 1].ref))
             {
-            	larva_error(env, "Left part of an equation should be a variable.");
+            	runtime_error(env, "Left part of an equation should be a variable.");
             }
 
             // note: v1 stays inside the stack
@@ -110,7 +110,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (!(vt = var_lookup_2(env->vars, token, size)))
             {
-                larva_error(env, "Variable '%s' does not exist.", token);
+                runtime_error(env, "Variable '%s' does not exist.", token);
             }
 
             if (v1.type == VAR_STRING)
@@ -131,7 +131,7 @@ void larva_silk(bombyx_env_t *env)
             else
             {
                 fprintf(stderr, "Object '%s' is not accessible with [] operator.", token);
-                larva_error(env, 0);
+                runtime_error(env, 0);
             }
 
             // push the value to stack, note that 'v1' and 'v2' cannot be unset here
@@ -152,7 +152,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (!(vt = var_lookup_2(env->vars, token, size)))
             {
-                larva_error(env, "Variable '%s' does not exist.", token);
+                runtime_error(env, "Variable '%s' does not exist.", token);
             }
 
             if (vt->v.type == VAR_ARRAY)
@@ -162,7 +162,7 @@ void larva_silk(bombyx_env_t *env)
             else
             {
                 fprintf(stderr, "Pushing with [] operator works only for arrays.");
-                larva_error(env, 0);
+                runtime_error(env, 0);
             }
 
             // push the value to stack, note that 'v1' cannot be unset here
@@ -231,7 +231,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (!(vt = var_lookup_2(env->vars, token, size)))
             {
-                larva_error(env, "Variable '%s' does not exist.", token);
+                runtime_error(env, "Variable '%s' does not exist.", token);
             }
 
             if (v1.type == VAR_STRING)
@@ -267,7 +267,7 @@ void larva_silk(bombyx_env_t *env)
             }
             else
             {
-                larva_error(env, "Object '%s' is not accessible with [] operator.", token);
+                runtime_error(env, "Object '%s' is not accessible with [] operator.", token);
             }
             break;
 
@@ -285,7 +285,7 @@ void larva_silk(bombyx_env_t *env)
             this_block = block_lookup(env->blocks, token);
             if (!this_block)
             {
-                larva_error(env, "Unknown function '%s'.", token);
+                runtime_error(env, "Unknown function '%s'.", token);
             }
             else
             {
@@ -319,7 +319,7 @@ void larva_silk(bombyx_env_t *env)
             cocoon_t *cocoon = cocoon_lookup(env->cocoons, token);
             if (!cocoon)
             {
-                larva_error(env, "Cocoon '%s' was not loaded.", token);
+                runtime_error(env, "Cocoon '%s' was not loaded.", token);
             }
             else
             {
@@ -337,7 +337,7 @@ void larva_silk(bombyx_env_t *env)
                 if ((error = dlerror()) != NULL)
                 {
                     fprintf(stderr, "Function '%s' does not exist in cocoon '%s'.\n", token2, token);
-                    larva_error(env, 0);
+                    runtime_error(env, 0);
                 }
 
                 // pass arguments
@@ -357,7 +357,7 @@ void larva_silk(bombyx_env_t *env)
 
                 if (v1.type == VAR_ERROR)
                 {
-                    larva_error(env, "%s(): %s", token2, (char *) v1.data);
+                    runtime_error(env, "%s(): %s", token2, (char *) v1.data);
                 }
 
                 stack_push(env, v1);
@@ -755,7 +755,7 @@ void larva_silk(bombyx_env_t *env)
 
             if (!(param_count--))
             {
-                larva_error(env, "Function requires more arguments.");
+                runtime_error(env, "Function requires more arguments.");
             }
 
             memcpy(token, env->bytecode + env->bc_pos, size);
@@ -763,7 +763,7 @@ void larva_silk(bombyx_env_t *env)
             vt = var_add(env->vars, token, VAR_STRING, NULL);
             if (!vt)
             {
-                larva_error(env, "Cannot extract parameter. Saywhat?");
+                runtime_error(env, "Cannot extract parameter. Saywhat?");
             }
             op_copy(env, &vt->v, &env->bc_stack[--env->bc_stack_size]);
             env->bc_pos += size;

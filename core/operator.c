@@ -165,7 +165,7 @@ void op_add(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '+' is not defined for given operands.");
+        runtime_error(env, "Operator '+' is not defined for given operands.");
     }
 
     if (r.data) free(r.data);
@@ -179,7 +179,7 @@ void op_subtract(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '-' is not defined for given operands.");
+        runtime_error(env, "Operator '-' is not defined for given operands.");
     }
 }
 
@@ -191,7 +191,7 @@ void op_multiply(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '*' is not defined for given operands.");
+        runtime_error(env, "Operator '*' is not defined for given operands.");
     }
 }
 
@@ -203,7 +203,7 @@ void op_divide(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '/' is not defined for given operands.");
+        runtime_error(env, "Operator '/' is not defined for given operands.");
     }
 }
 
@@ -215,7 +215,7 @@ void op_power(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '^' is not defined for the given operand type.");
+        runtime_error(env, "Operator '^' is not defined for the given operand type.");
     }
 }
 
@@ -227,7 +227,7 @@ void op_modulo(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '%' is not defined for the given operand type.");
+        runtime_error(env, "Operator '%' is not defined for the given operand type.");
     }
 }
 
@@ -261,7 +261,7 @@ void op_unary_minus(bombyx_env_t *env, var *a)
     }
     else
     {
-        larva_error(env, "Unary minus operator is not defined for the given operand.");
+        runtime_error(env, "Unary minus operator is not defined for the given operand.");
     }
 }
 
@@ -276,7 +276,7 @@ void op_invert(bombyx_env_t *env, var *a)
     }
     else
     {
-        larva_error(env, "Inversion operator is not defined for the given operand.");
+        runtime_error(env, "Inversion operator is not defined for the given operand.");
     }
 }
 
@@ -289,7 +289,7 @@ void op_increment(bombyx_env_t *env, var *a)
     }
     else
     {
-        larva_error(env, "Operator '++' is not defined for the given operand type.");
+        runtime_error(env, "Operator '++' is not defined for the given operand type.");
     }
 }
 
@@ -302,7 +302,7 @@ void op_decrement(bombyx_env_t *env, var *a)
     }
     else
     {
-        larva_error(env, "Operator '--' is not defined for the given operand type.");
+        runtime_error(env, "Operator '--' is not defined for the given operand type.");
     }
 }
 
@@ -322,7 +322,7 @@ void op_and(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '&&' is not defined for the given operand type.");
+        runtime_error(env, "Operator '&&' is not defined for the given operand type.");
     }
 }
 
@@ -334,7 +334,7 @@ void op_or(bombyx_env_t *env, var *a, var *b)
     }
     else
     {
-        larva_error(env, "Operator '&&' is not defined for the given operand type.");
+        runtime_error(env, "Operator '&&' is not defined for the given operand type.");
     }
 }
 
@@ -345,7 +345,7 @@ BYTE var_is_true(bombyx_env_t *env, var *a)
     else if (a->type == VAR_UNSET) return 0;
     else
     {
-        larva_error(env, "Truth operator is not defined for the given operand type.");
+        runtime_error(env, "Truth operator is not defined for the given operand type.");
     }
     return 0;
 }
@@ -360,7 +360,7 @@ BYTE var_cmp(bombyx_env_t *env, var *a, var *b)
     else if (a->type == VAR_UNSET || b->type == VAR_UNSET) return 0;
     else
     {
-        larva_error(env, "Comparison operator is not defined for the given operand type [%d] [%d].", a->type, b->type);
+        runtime_error(env, "Comparison operator is not defined for the given operand type [%d] [%d].", a->type, b->type);
     }
     return 0;
 }
@@ -372,7 +372,7 @@ BYTE var_is_more(bombyx_env_t *env, var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) > 0;
     else
     {
-        larva_error(env, "Operator '>' is not defined for the given operand type.");
+        runtime_error(env, "Operator '>' is not defined for the given operand type.");
     }
     return 0;
 }
@@ -384,7 +384,7 @@ BYTE var_is_less(bombyx_env_t *env, var *a, var *b)
     else if (a->type == VAR_STRING && b->type == VAR_STRING) return strcmp(a->data, b->data) < 0;
     else
     {
-        larva_error(env, "Operator '<' is not defined for the given operand type.");
+        runtime_error(env, "Operator '<' is not defined for the given operand type.");
     }
     return 0;
 }
@@ -394,7 +394,7 @@ BYTE var_is_more_equal(bombyx_env_t *env, var *a, var *b)
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data >= *(double *)b->data;
     else
     {
-        larva_error(env, "Operator '>=' is defined for numbers only.");
+        runtime_error(env, "Operator '>=' is defined for numbers only.");
     }
     return 0;
 }
@@ -404,7 +404,7 @@ BYTE var_is_less_equal(bombyx_env_t *env, var *a, var *b)
     if (a->type == VAR_DOUBLE && b->type == VAR_DOUBLE) return *(double *)a->data <= *(double *)b->data;
     else
     {
-        larva_error(env, "Operator '<=' is defined for numbers only.");
+        runtime_error(env, "Operator '<=' is defined for numbers only.");
     }
     return 0;
 }

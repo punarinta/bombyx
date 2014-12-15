@@ -176,7 +176,7 @@ void var_sync(bombyx_env_t *env, var *a)
         }
         else
         {
-            larva_error(env, "Variable '%s' not found.", a->name);
+            runtime_error(env, "Variable '%s' not found.", a->name);
         }
     }
 }
@@ -225,7 +225,7 @@ var var_from_json(bombyx_env_t *env, char *a)
     json_t *j = json_loads(a, 0, &error);  // JSON_DECODE_ANY
     if (!j)
     {
-        larva_error(env, "Cannot decode JSON variable '%s'.", a);
+        runtime_error(env, "Cannot decode JSON variable '%s'.", a);
     }
 
     if (json_is_object(j))
@@ -243,7 +243,7 @@ var var_from_json(bombyx_env_t *env, char *a)
     else
     {
         // this can be only array or object
-        larva_error(env, "JSON parsing error");
+        runtime_error(env, "JSON parsing error");
     }
 
     json_decref(j);
