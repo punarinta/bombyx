@@ -21,8 +21,9 @@ void larva_silk(bombyx_env_t *env)
     BYTE def_mode = 0;
     BYTE skip_mode = 0;
     int param_count = 0;
-    env->run_flag[0] = 0;    // do we need this?
-    block_t *parent_block = NULL;
+    env->run_flag[0] = 0;                   // do we need this?
+    block_t *this_block = NULL;             // the block you are in
+    block_t *parent_block = NULL;           // used during block definition
     char token[PARSER_MAX_TOKEN_SIZE];
     char token2[PARSER_MAX_TOKEN_SIZE];
 
@@ -281,7 +282,7 @@ void larva_silk(bombyx_env_t *env)
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
             env->bc_pos += size;
-            block_t *this_block = block_lookup(env->blocks, token);
+            this_block = block_lookup(env->blocks, token);
             if (!this_block)
             {
                 larva_error(env, "Unknown function '%s'.", token);
@@ -370,14 +371,16 @@ void larva_silk(bombyx_env_t *env)
                 env->bc_pos += size;
                 break;
             }
+
+            // all these will be skipped if you're in a block just being defined
             debug_verbose_puts("BCO_BLOCK_DEF");
             memcpy(token, env->bytecode + env->bc_pos, size);
             token[size] = 0;
             env->bc_pos += size;
 
-            if (parent_block)
+            if (this_block)
             {
-                char *parent_name = parent_block->name;
+                char *parent_name = this_block->name;
                 size_t pnl = strlen(parent_name);
                 memcpy(token + pnl + 1, token, size);
                 memcpy(token, parent_name, pnl);
@@ -385,7 +388,7 @@ void larva_silk(bombyx_env_t *env)
                 token[pnl + 1 + size] = '\0';
             }
 
-            parent_block = block_add(env->blocks, token, env->bc_pos, parent_block);
+            parent_block = block_add(env->blocks, token, env->bc_pos, this_block);
 
             // replace the block definition with nulls and skipmode
             memset(env->bytecode + env->bc_pos - size - 2, BCO_IDLE, size + 1);
@@ -416,6 +419,7 @@ void larva_silk(bombyx_env_t *env)
                 parent_block = parent_block->parent;
                 def_mode = 0;
             }
+
             if (skip_mode)
             {
                 if (--level == 0) skip_mode = 0;
@@ -436,11 +440,8 @@ void larva_silk(bombyx_env_t *env)
 
                     // push null to stack
                     // TODO: replace 0 with NULL VAR_STRING
-                    env->bc_stack[env->bc_stack_size++] = var_as_double(env, 0);
-                    parent_block = parent_block->parent;
-
-                    env->bc_pos = env->ret_point[env->gl_level];
-                    --env->gl_level;
+                    stack_push(env, var_as_double(env, 0));
+                    env->bc_pos = env->ret_point[env->gl_level--];
                     break;
                 }
                 else
